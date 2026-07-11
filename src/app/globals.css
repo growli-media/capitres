@@ -1,26 +1,315 @@
 @import "tailwindcss";
 
+/* ------------------------------------------------------------------ */
+/* CAPITRES design tokens — palette traced from real brand assets      */
+/* (capitres.com wordmark, logo and product photography).              */
+/* See design-system/MASTER.md for provenance of every hex value.      */
+/* ------------------------------------------------------------------ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Locale-aware font + typesetting variables. Latin default.         */
+  --font-display-active: var(--font-archivo), system-ui, sans-serif;
+  --font-body-active: var(--font-archivo), system-ui, sans-serif;
+  --ls-eyebrow: 0.22em;
+  --ls-cta: 0.14em;
+  --ls-display: -0.03em;
+  --leading-display-v: 0.92;
+  --display-stretch: 125%;
+  --display-transform: uppercase;
+  --display-weight: 800;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Arabic-script locales: never letter-space connected script,         */
+/* no uppercase concept, taller display leading, Kufi display face.    */
+html[lang="ar"],
+html[lang="ku"] {
+  --font-display-active: var(--font-noto-ar), system-ui, sans-serif;
+  --font-body-active: var(--font-noto-ar), system-ui, sans-serif;
+  --ls-eyebrow: 0em;
+  --ls-cta: 0em;
+  --ls-display: 0em;
+  --leading-display-v: 1.28;
+  --display-stretch: 100%;
+  --display-transform: none;
+  --display-weight: 800; /* same variable file as body — no extra bytes */
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@theme {
+  /* Core brand */
+  --color-ink: #0b0a09; /* wordmark black */
+  --color-ink-soft: #292725;
+  --color-paper: #f5f4f6; /* studio backdrop from product photography */
+  --color-studio: #ececee; /* product canvas tone */
+  --color-green: #065e37; /* "Iraq 80's Heritage" tee green */
+  --color-green-deep: #04482b;
+  --color-terracotta: #926149; /* "IRAQ 70" retro palette */
+  --color-sand: #cbae96; /* "IRAQ 70" highlight */
+  --color-line: #e3e2e5;
+  --color-line-strong: #c9c8cb;
+  --color-danger: #b3261e;
+
+  --breakpoint-3xl: 1800px;
+
+  --animate-marquee: marquee 32s linear infinite;
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
   }
 }
 
+@theme inline {
+  --font-display: var(--font-display-active);
+  --font-body: var(--font-body-active);
+
+  --tracking-eyebrow: var(--ls-eyebrow);
+  --tracking-cta: var(--ls-cta);
+  --tracking-display: var(--ls-display);
+
+  --leading-display: var(--leading-display-v);
+}
+
+/* ------------------------------------------------------------------ */
+/* Base                                                                */
+/* ------------------------------------------------------------------ */
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body-active);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  min-height: 100dvh;
+}
+
+::selection {
+  background: var(--color-green);
+  color: #ffffff;
+}
+
+:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+  border-radius: 1px;
+}
+
+/* RTL: marquee runs the other way */
+[dir="rtl"] .marquee-track {
+  animation-direction: reverse;
+}
+
+/* ------------------------------------------------------------------ */
+/* Component primitives                                                */
+/* ------------------------------------------------------------------ */
+
+@layer components {
+  .container-x {
+    margin-inline: auto;
+    width: 100%;
+    max-width: 96rem;
+    padding-inline: clamp(1.25rem, 4vw, 3.5rem);
+  }
+
+  .text-display {
+    font-family: var(--font-display-active);
+    font-weight: var(--display-weight);
+    font-stretch: var(--display-stretch);
+    text-transform: var(--display-transform);
+    letter-spacing: var(--ls-display);
+    line-height: var(--leading-display-v);
+    text-wrap: balance;
+  }
+
+  .text-eyebrow {
+    font-family: var(--font-body-active);
+    font-weight: 600;
+    font-size: 0.6875rem;
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: var(--display-transform);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+    min-height: 3rem;
+    padding-inline: 1.75rem;
+    font-family: var(--font-body-active);
+    font-weight: 600;
+    font-size: 0.8125rem;
+    letter-spacing: var(--ls-cta);
+    text-transform: var(--display-transform);
+    cursor: pointer;
+    transition:
+      background-color 200ms ease,
+      color 200ms ease,
+      border-color 200ms ease,
+      transform 200ms ease;
+    user-select: none;
+  }
+
+  .btn:active {
+    transform: scale(0.98);
+  }
+
+  .btn-ink {
+    background: var(--color-ink);
+    color: var(--color-paper);
+  }
+
+  .btn-ink:hover {
+    background: var(--color-green);
+    color: #ffffff;
+  }
+
+  .btn-paper {
+    background: var(--color-paper);
+    color: var(--color-ink);
+  }
+
+  .btn-paper:hover {
+    background: var(--color-green);
+    color: #ffffff;
+  }
+
+  .btn-outline {
+    border: 1px solid currentColor;
+    background: transparent;
+    color: inherit;
+  }
+
+  .btn-outline:hover {
+    background: var(--color-ink);
+    color: var(--color-paper);
+    border-color: var(--color-ink);
+  }
+
+  .btn[disabled],
+  .btn[aria-disabled="true"] {
+    opacity: 0.45;
+    pointer-events: none;
+  }
+
+  /* Animated underline that respects writing direction */
+  .link-underline {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-repeat: no-repeat;
+    background-size: 0% 1px;
+    background-position: 0% 100%;
+    transition: background-size 300ms ease;
+    padding-bottom: 2px;
+  }
+
+  [dir="rtl"] .link-underline {
+    background-position: 100% 100%;
+  }
+
+  .link-underline:hover,
+  .link-underline[aria-current="page"] {
+    background-size: 100% 1px;
+  }
+
+  .price {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Decorative ghost wordmark (footer sign-off). Rendered via a
+     pseudo-element so it stays purely presentational. */
+  .footer-watermark {
+    overflow: hidden;
+    padding-bottom: 0.5rem;
+    user-select: none;
+  }
+
+  .footer-watermark::after {
+    content: "Capitres";
+    display: block;
+    text-align: center;
+    font-family: var(--font-archivo), system-ui, sans-serif;
+    font-stretch: 125%;
+    font-weight: 900;
+    text-transform: uppercase;
+    font-size: 13.5vw;
+    line-height: 0.85;
+    white-space: nowrap;
+    color: color-mix(in srgb, var(--color-paper) 6%, transparent);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Hero entrance — pure CSS so above-the-fold content paints before    */
+/* hydration (keeps LCP off the JS critical path).                     */
+/* ------------------------------------------------------------------ */
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.hero-enter {
+  animation: rise-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.hero-enter-2 {
+  animation-delay: 90ms;
+}
+
+.hero-enter-3 {
+  animation-delay: 180ms;
+}
+
+.hero-enter-4 {
+  animation-delay: 270ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-enter {
+    animation: none;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Motion safety                                                       */
+/* ------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .marquee-track {
+    animation: none !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

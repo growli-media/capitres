@@ -1,0 +1,115 @@
+import type { StaticImageData } from "next/image";
+import type { LocalizedString } from "@/lib/content";
+
+export type Category =
+  | "tees"
+  | "jerseys"
+  | "outerwear"
+  | "accessories"
+  | "gift-cards";
+
+export type Gender = "men" | "women" | "unisex";
+
+/** Integer amount in Iraqi Dinar — Wayl's only settlement currency. */
+export interface Money {
+  amount: number;
+  currency: "IQD";
+}
+
+export interface ProductImage {
+  src: StaticImageData;
+  alt: LocalizedString;
+}
+
+export interface ProductColor {
+  key: string;
+  hex: string;
+  name: LocalizedString;
+}
+
+export interface ProductVariant {
+  id: string;
+  size: string;
+  /** Units on hand. 0 = sold out for this size. */
+  stock: number;
+}
+
+export interface Review {
+  id: string;
+  author: string;
+  rating: 1 | 2 | 3 | 4 | 5;
+  date: string;
+  /** Reviews are user-generated quotes — kept in their original language. */
+  text: string;
+}
+
+export interface Product {
+  id: string;
+  slug: string;
+  title: LocalizedString;
+  description: LocalizedString;
+  /** Longer heritage narrative shown in "The story" on the PDP. */
+  story?: LocalizedString;
+  details: LocalizedString[];
+  category: Category;
+  gender: Gender;
+  price: Money;
+  compareAtPrice?: Money;
+  colors: ProductColor[];
+  variants: ProductVariant[];
+  images: ProductImage[];
+  collectionSlugs: string[];
+  isNew?: boolean;
+  featured?: boolean;
+  releaseDate: string;
+  reviews: Review[];
+  /** Gift cards are configured, not size-picked. */
+  giftCard?: {
+    denominations: number[];
+  };
+}
+
+export interface Collection {
+  slug: string;
+  title: LocalizedString;
+  tagline: LocalizedString;
+  description: LocalizedString;
+  heroImage: ProductImage;
+  theme: "dark" | "light";
+  /** Archived drops render a story page with a waitlist instead of a grid. */
+  archived?: boolean;
+  order: number;
+}
+
+export type PostBlock =
+  | { type: "p"; text: LocalizedString }
+  | { type: "h2"; text: LocalizedString }
+  | { type: "quote"; text: LocalizedString; attribution?: LocalizedString }
+  | { type: "image"; image: ProductImage };
+
+export interface Post {
+  slug: string;
+  title: LocalizedString;
+  excerpt: LocalizedString;
+  cover: ProductImage;
+  date: string;
+  readingMinutes: number;
+  author: string;
+  body: PostBlock[];
+  relatedProductSlugs: string[];
+}
+
+export interface ProductFilter {
+  category?: Category | "all";
+  gender?: Gender;
+  sizes?: string[];
+  colors?: string[];
+  maxPrice?: number;
+  minPrice?: number;
+  inStockOnly?: boolean;
+  collection?: string;
+  onSale?: boolean;
+  isNew?: boolean;
+}
+
+export type ProductSort = "featured" | "newest" | "price-asc" | "price-desc";

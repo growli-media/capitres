@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CAPITRES — Storefront
 
-## Getting Started
+Trilingual (EN / AR / KU-Sorani) e-commerce build for Capitres —
+*Fashion Inspired by Football* — on Next.js 16 (App Router),
+TypeScript, Tailwind v4, Framer Motion, Lenis and next-intl, with
+payments through **Wayl** (Iraq's unified payment gateway).
 
-First, run the development server:
+## Run it
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # http://localhost:3000 → redirects to /en
+npm run build && npm start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Payments run in **mock mode** out of the box (a local simulated Wayl
+gateway at `/{locale}/pay-mock`), so the full order → payment →
+confirmation loop works offline. To go live, copy `.env.example` to
+`.env.local` and set `WAYL_API_TOKEN` (+ `WAYL_ENV=live`,
+`WAYL_WEBHOOK_SECRET`). No code changes required.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Map
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Area | Where |
+| --- | --- |
+| Locales & routing | `src/i18n/*`, `src/proxy.ts`, `messages/{en,ar,ku}.json` |
+| Catalog (products/collections/posts, trilingual) | `src/lib/catalog/` — swappable `CatalogProvider` |
+| Cart (persistent, zustand) | `src/lib/cart/store.ts` |
+| Commerce rules (shipping, promos, gift cards) | `src/lib/commerce/` |
+| Wayl client + webhook HMAC verify | `src/lib/payments/wayl.ts` |
+| Orders / form records (file-based, swappable) | `src/lib/orders/store.ts`, `src/lib/server/records.ts` |
+| API routes | `src/app/api/*` (checkout, orders, webhooks/wayl, mock-wayl, newsletter, contact, reviews, notify) |
+| Pages | `src/app/[locale]/*` |
+| Design tokens & rules | `src/app/globals.css`, `design-system/MASTER.md` |
+| Placeholders & assumptions | `TODO-ASSETS.md` |
 
-## Learn More
+## Swapping the backend
 
-To learn more about Next.js, take a look at the following resources:
+`catalog`, `orderStore` and the record appenders are interfaces with
+local implementations. Point them at Sanity/Postgres by implementing
+the interface and changing one export — pages and API routes only ever
+import the boundary.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Quality gates (last verified)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Lighthouse (prod build, mobile emulation): home **89 performance /
+  100 best-practices / 100 SEO**, CLS 0, TBT 40ms.
+- All 99 static paths prerender across the three locales.
+- Checkout E2E (mock Wayl): order → pay → status flip → confirmation +
+  cart clear. Stock oversell returns 409; webhooks with a bad HMAC
+  signature return 401.
