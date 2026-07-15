@@ -1,10 +1,13 @@
-K{
+{
   "name": "capitres",
   "version": "0.1.0",
   "private": true,
-  "scripts": {"scripts": {
-      "build": "npm run migrate && next build"O
-    }
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
     "@vercel/blob": "^2.6.1",
@@ -28,8 +31,6 @@ K{
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
     "tailwindcss": "^4",
-    "tsx": "^4.23.1",
     "typescript": "^5"
   }
 }
-
