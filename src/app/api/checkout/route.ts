@@ -179,6 +179,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "payment-init" }, { status: 502 });
   }
 
+  // Captured here because this is the one request in the whole payment
+  // flow that's actually the customer's browser — the Wayl webhook that
+  // later confirms payment is server-to-server and sees none of this.
+  const clientIp =
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    request.headers.get("x-real-ip") ||
+    undefined;
+  const userAgent = request.headers.get("user-agent") ?? undefined;
+  const fbp = request.cookies.get("_fbp")?.value;
+  const fbc = request.cookies.get("_fbc")?.value;
+
   await orderStore.create({
     ref,
     createdAt: new Date().toISOString(),
@@ -204,6 +215,10 @@ export async function POST(request: NextRequest) {
       total: totals.total,
     },
     promoCode: promo?.code,
+    adTracking:
+      clientIp || userAgent || fbp || fbc
+        ? { clientIp, userAgent, fbp, fbc }
+        : undefined,
   });
 
   return NextResponse.json({

@@ -9,6 +9,8 @@ import Header, { type NavCollection } from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import CartDrawer from "@/components/layout/CartDrawer";
 import SmoothScroll from "@/components/motion/SmoothScroll";
+import AnalyticsScripts from "@/components/analytics/AnalyticsScripts";
+import PageviewTracker from "@/components/analytics/PageviewTracker";
 import "../globals.css";
 
 /**
@@ -98,7 +100,9 @@ export default async function LocaleLayout({
       className={`${archivo.variable} ${notoArabic.variable}`}
     >
       <body>
+        <AnalyticsScripts />
         <NextIntlClientProvider>
+          <PageviewTracker />
           <SmoothScroll />
           <a
             href="#main"

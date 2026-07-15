@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import GiftCardConfigurator from "@/components/gift/GiftCardConfigurator";
 import { Reveal } from "@/components/motion/Reveal";
+import { catalog } from "@/lib/catalog";
 import { localizeDigits } from "@/lib/money";
 import wordmark from "@/images/brand/wordmark.png";
 
@@ -23,7 +25,11 @@ export default async function GiftCardsPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const t = await getTranslations({ locale, namespace: "giftCards" });
+  const [t, giftCardProduct] = await Promise.all([
+    getTranslations({ locale, namespace: "giftCards" }),
+    catalog.getProduct("gift-card"),
+  ]);
+  if (!giftCardProduct) notFound();
 
   const steps = [t("how1"), t("how2"), t("how3")];
 
@@ -89,7 +95,7 @@ export default async function GiftCardsPage({
           </Reveal>
           <Reveal delay={0.1}>
             <div className="mt-10">
-              <GiftCardConfigurator />
+              <GiftCardConfigurator product={giftCardProduct} />
             </div>
           </Reveal>
         </div>

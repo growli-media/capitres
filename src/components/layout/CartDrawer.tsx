@@ -11,7 +11,6 @@ import {
   useCartTotals,
   type CartLine,
 } from "@/lib/cart/store";
-import { getProductBySlugSync } from "@/lib/catalog";
 import { pick } from "@/lib/content";
 import { formatIQD } from "@/lib/money";
 import { FREE_SHIPPING_THRESHOLD } from "@/lib/commerce/config";
@@ -21,21 +20,17 @@ function LineRow({ line }: { line: CartLine }) {
   const t = useTranslations("cart");
   const tA11y = useTranslations("a11y");
   const { setQty, removeLine } = useCart();
-  const product = getProductBySlugSync(line.productSlug);
-  if (!product) return null;
-
-  const title = pick(product.title, locale);
-  const image = product.images[0];
+  const title = pick(line.title, locale);
 
   return (
     <li className="flex gap-4 py-5">
       <Link
-        href={`/products/${product.slug}`}
+        href={`/products/${line.productSlug}`}
         className="relative block h-24 w-20 shrink-0 cursor-pointer overflow-hidden bg-studio"
       >
         <Image
-          src={image.src}
-          alt={pick(image.alt, locale)}
+          src={line.image.src}
+          alt={pick(line.image.alt, locale)}
           fill
           sizes="80px"
           className="object-cover"

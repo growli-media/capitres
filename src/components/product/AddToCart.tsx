@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Check } from "@phosphor-icons/react";
 import { Link } from "@/i18n/navigation";
@@ -9,6 +9,7 @@ import { useCart } from "@/lib/cart/store";
 import { pick } from "@/lib/content";
 import { approxUsd, formatIQD } from "@/lib/money";
 import { isValidEmailClient } from "@/lib/validate";
+import { trackAddToCart, trackViewContent } from "@/lib/analytics/track";
 
 /** Buy box: size selection with live stock, quantity, add-to-cart. */
 export default function AddToCart({ product }: { product: Product }) {
@@ -31,6 +32,14 @@ export default function AddToCart({ product }: { product: Product }) {
     [product.variants, size],
   );
 
+  useEffect(() => {
+    trackViewContent({
+      slug: product.slug,
+      title: pick(product.title, locale),
+      price: product.price.amount,
+    });
+  }, [product.slug, product.title, product.price.amount, locale]);
+
   function onAdd() {
     if (!variant || variant.stock <= 0) return;
     addLine({
@@ -39,6 +48,14 @@ export default function AddToCart({ product }: { product: Product }) {
       size: variant.size,
       qty,
       unitAmount: product.price.amount,
+      title: product.title,
+      image: product.images[0],
+    });
+    trackAddToCart({
+      slug: product.slug,
+      title: pick(product.title, locale),
+      price: product.price.amount,
+      qty,
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);

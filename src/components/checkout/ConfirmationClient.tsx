@@ -6,14 +6,17 @@ import { CheckCircle, CircleNotch, XCircle } from "@phosphor-icons/react";
 import { Link } from "@/i18n/navigation";
 import { useCart } from "@/lib/cart/store";
 import { formatIQD } from "@/lib/money";
+import { trackPurchase } from "@/lib/analytics/track";
 
 interface OrderView {
   ref: string;
   status: string;
   mock: boolean;
   email: string;
+  phone: string;
   totals: { subtotal: number; discount: number; shipping: number; total: number };
   lines: {
+    productSlug: string;
     title: string;
     size?: string;
     qty: number;
@@ -37,6 +40,7 @@ export default function ConfirmationClient({ orderRef }: { orderRef: string }) {
   const [order, setOrder] = useState<OrderView | null>(null);
   const [notFound, setNotFound] = useState(false);
   const clearedRef = useRef(false);
+  const purchaseTrackedRef = useRef(false);
   const attemptsRef = useRef(0);
 
   const load = useCallback(async () => {
@@ -53,6 +57,21 @@ export default function ConfirmationClient({ orderRef }: { orderRef: string }) {
       if (PAID.includes(data.status) && !clearedRef.current) {
         clearedRef.current = true;
         clearCart();
+      }
+      if (PAID.includes(data.status) && !purchaseTrackedRef.current) {
+        purchaseTrackedRef.current = true;
+        trackPurchase({
+          ref: data.ref,
+          total: data.totals.total,
+          email: data.email,
+          phone: data.phone,
+          items: data.lines.map((l) => ({
+            slug: l.productSlug,
+            title: l.title,
+            price: l.unitAmount,
+            qty: l.qty,
+          })),
+        });
       }
     } catch {
       // network hiccup — the interval will retry

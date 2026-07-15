@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyWaylSignature, type WaylStatus } from "@/lib/payments/wayl";
 import { orderStore } from "@/lib/orders/store";
+import { sendMetaPurchaseEvent } from "@/lib/analytics/meta-capi";
+
+const PAID_STATUSES: WaylStatus[] = ["Complete", "Delivered"];
 
 /**
  * Wayl webhook receiver.
@@ -37,6 +40,11 @@ export async function POST(request: NextRequest) {
     );
     // TODO(production): on "Complete", trigger gift-card email delivery
     // and the order-confirmation email from here.
+
+    if (PAID_STATUSES.includes(payload.status)) {
+      const claimed = await orderStore.claimForMetaCapi(payload.referenceId);
+      if (claimed) await sendMetaPurchaseEvent(claimed);
+    }
   }
 
   return NextResponse.json({ received: true });

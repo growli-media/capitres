@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { CaretLeft, LockSimple, ShieldCheck } from "@phosphor-icons/react";
@@ -11,10 +11,10 @@ import {
   useCartTotals,
   type CartLine,
 } from "@/lib/cart/store";
-import { getProductBySlugSync } from "@/lib/catalog";
 import { pick } from "@/lib/content";
 import { formatIQD } from "@/lib/money";
 import { isValidEmailClient, isValidIraqiPhone } from "@/lib/validate";
+import { trackInitiateCheckout } from "@/lib/analytics/track";
 
 const GOVERNORATES = [
   "baghdad",
@@ -51,14 +51,12 @@ interface ShippingInfo {
 type FieldErrors = Partial<Record<keyof ShippingInfo, string>>;
 
 function SummaryLine({ line, locale }: { line: CartLine; locale: string }) {
-  const product = getProductBySlugSync(line.productSlug);
   const t = useTranslations("cart");
-  if (!product) return null;
   return (
     <li className="flex items-center gap-3 py-3">
       <div className="relative h-16 w-13 shrink-0 overflow-hidden bg-studio">
         <Image
-          src={product.images[0].src}
+          src={line.image.src}
           alt=""
           fill
           sizes="52px"
@@ -70,7 +68,7 @@ function SummaryLine({ line, locale }: { line: CartLine; locale: string }) {
       </div>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold">
-          {pick(product.title, locale)}
+          {pick(line.title, locale)}
         </p>
         <p className="text-xs text-ink/65">
           {line.giftCard
@@ -109,6 +107,21 @@ export default function CheckoutFlow() {
   const [payError, setPayError] = useState<string | null>(null);
 
   const hasPhysical = lines.some((l) => !l.giftCard);
+
+  const checkoutTrackedRef = useRef(false);
+  useEffect(() => {
+    if (!hasHydrated || lines.length === 0 || checkoutTrackedRef.current) return;
+    checkoutTrackedRef.current = true;
+    trackInitiateCheckout(
+      lines.map((l) => ({
+        slug: l.productSlug,
+        title: pick(l.title, locale),
+        price: l.unitAmount,
+        qty: l.qty,
+      })),
+      totals.total,
+    );
+  }, [hasHydrated, lines, locale, totals.total]);
 
   if (!hasHydrated) {
     return (

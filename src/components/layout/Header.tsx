@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Image, { type StaticImageData } from "next/image";
+import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import {
   ArrowUpRight,
@@ -13,6 +13,7 @@ import {
 import { Link, usePathname } from "@/i18n/navigation";
 import { pick, type LocalizedString } from "@/lib/content";
 import { useCart, useCartCount } from "@/lib/cart/store";
+import type { ImageSource } from "@/lib/catalog/types";
 import LanguageSwitcher from "./LanguageSwitcher";
 import logoMark from "@/images/brand/logo.png";
 
@@ -20,7 +21,7 @@ export interface NavCollection {
   slug: string;
   title: LocalizedString;
   tagline: LocalizedString;
-  image: StaticImageData;
+  image: ImageSource;
   imageAlt: LocalizedString;
   archived?: boolean;
 }

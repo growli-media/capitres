@@ -7,12 +7,19 @@ import { useCart } from "@/lib/cart/store";
 import { GIFT_CARD_DENOMINATIONS } from "@/lib/commerce/config";
 import { formatIQD } from "@/lib/money";
 import { isValidEmailClient } from "@/lib/validate";
+import { pick } from "@/lib/content";
+import { trackAddToCart } from "@/lib/analytics/track";
+import type { Product } from "@/lib/catalog/types";
 
 /**
  * Gift card builder: denomination, recipient, personal message.
  * Each configuration becomes its own cart line (qty 1).
  */
-export default function GiftCardConfigurator() {
+export default function GiftCardConfigurator({
+  product,
+}: {
+  product: Product;
+}) {
   const t = useTranslations("giftCards");
   const tErr = useTranslations("checkout.errors");
   const tProduct = useTranslations("product");
@@ -35,9 +42,11 @@ export default function GiftCardConfigurator() {
       return;
     }
     addLine({
-      productSlug: "gift-card",
+      productSlug: product.slug,
       qty: 1,
       unitAmount: denomination,
+      title: product.title,
+      image: product.images[0],
       giftCard: {
         denomination,
         recipientEmail: recipientEmail.trim(),
@@ -45,6 +54,11 @@ export default function GiftCardConfigurator() {
         senderName: senderName.trim(),
         message: message.trim(),
       },
+    });
+    trackAddToCart({
+      slug: product.slug,
+      title: pick(product.title, locale),
+      price: denomination,
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);

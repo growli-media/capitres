@@ -32,8 +32,10 @@ export async function GET(
     status: order.status,
     mock: order.mock,
     email: order.customer.email,
+    phone: order.customer.phone,
     totals: order.totals,
     lines: order.lines.map((l) => ({
+      productSlug: l.productSlug,
       title: l.title,
       size: l.size,
       qty: l.qty,

@@ -10,6 +10,10 @@ const nextConfig: NextConfig = {
   images: {
     formats: ["image/avif", "image/webp"],
     qualities: [45, 60, 75],
+    // Product photos uploaded through /admin land in Vercel Blob storage.
+    remotePatterns: [
+      { protocol: "https", hostname: "*.public.blob.vercel-storage.com" },
+    ],
   },
 };
 

@@ -16,8 +16,15 @@ export interface Money {
   currency: "IQD";
 }
 
+/**
+ * Local catalog data uses Next's static `import img from "*.jpg"` (gets
+ * blur placeholders + bundling). DB-backed products (added through the
+ * admin) store a plain uploaded URL instead. `next/image` accepts both.
+ */
+export type ImageSource = StaticImageData | string;
+
 export interface ProductImage {
-  src: StaticImageData;
+  src: ImageSource;
   alt: LocalizedString;
 }
 

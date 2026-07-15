@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { CaretLeft, CaretRight, MagnifyingGlassPlus, X } from "@phosphor-icons/react";
 import type { ProductImage } from "@/lib/catalog/types";
-import { pick } from "@/lib/content";
+import { imageSrcKey, pick } from "@/lib/content";
 
 /**
  * PDP gallery: framed studio image, arrow/thumb navigation for multiple
@@ -49,7 +49,7 @@ export default function ProductGallery({
           className="absolute inset-0 z-10 cursor-zoom-in"
         />
         <Image
-          key={current.src.src}
+          key={imageSrcKey(current.src)}
           src={current.src}
           alt={pick(current.alt, locale)}
           fill
@@ -96,7 +96,7 @@ export default function ProductGallery({
       {many && (
         <ul className="mt-3 flex gap-3">
           {images.map((img, i) => (
-            <li key={img.src.src}>
+            <li key={imageSrcKey(img.src)}>
               <button
                 type="button"
                 onClick={() => setIndex(i)}

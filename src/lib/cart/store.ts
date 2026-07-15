@@ -4,6 +4,8 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { PromoCode } from "@/lib/commerce/config";
 import { computeTotals, findPromo } from "@/lib/commerce/config";
+import type { LocalizedString } from "@/lib/content";
+import type { ProductImage } from "@/lib/catalog/types";
 
 export interface GiftCardDetails {
   denomination: number;
@@ -23,6 +25,15 @@ export interface CartLine {
   /** Unit price snapshot in IQD (server re-validates at checkout). */
   unitAmount: number;
   giftCard?: GiftCardDetails;
+  /**
+   * Product title + image captured at add-to-cart time. The cart and
+   * checkout UI render entirely from this snapshot — never a live catalog
+   * lookup — so a product that's later edited or removed from the admin
+   * doesn't break an in-progress cart, and the customer keeps seeing what
+   * they actually picked.
+   */
+  title: LocalizedString;
+  image: ProductImage;
 }
 
 interface CartState {
