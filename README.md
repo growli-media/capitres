@@ -61,3 +61,4 @@ import the boundary.
 - Checkout E2E (mock Wayl): order → pay → status flip → confirmation +
   cart clear. Stock oversell returns 409; webhooks with a bad HMAC
   signature return 401.
+# capitres

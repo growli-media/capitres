@@ -2,14 +2,10 @@
   "name": "capitres",
   "version": "0.1.0",
   "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint",
-    "db:dev": "node scripts/dev-db.mjs",
-    "db:migrate": "tsx scripts/migrate.mts"
-  },
+  "scripts": {"scripts": {
+      "build": "npm run migrate && next build",
+      "migrate": "node scripts/migrate.js"
+    }
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
     "@vercel/blob": "^2.6.1",
