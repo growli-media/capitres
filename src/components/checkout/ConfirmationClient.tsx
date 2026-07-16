@@ -19,6 +19,7 @@ interface OrderView {
     productSlug: string;
     title: string;
     size?: string;
+    color?: string;
     qty: number;
     unitAmount: number;
     isGiftCard: boolean;
@@ -219,7 +220,7 @@ export default function ConfirmationClient({ orderRef }: { orderRef: string }) {
               <div>
                 <p className="font-semibold">{l.title}</p>
                 <p className="text-xs text-ink/65">
-                  {l.size ?? ""} ×{l.qty}
+                  {[l.color, l.size].filter(Boolean).join(" — ")} ×{l.qty}
                 </p>
               </div>
               <p className="price font-semibold">

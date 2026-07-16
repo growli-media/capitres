@@ -172,6 +172,20 @@ export async function slugExists(slug: string, excludingId?: string): Promise<bo
 
 /* -------------------------- mutations -------------------------- */
 
+export interface ColorInput {
+  hex: string;
+  nameEn: string;
+  nameAr: string;
+  nameKu: string;
+}
+
+export interface ImageInput {
+  url: string;
+  altEn: string;
+  altAr: string;
+  altKu: string;
+}
+
 export interface ProductInput {
   slug: string;
   titleEn: string;
@@ -187,14 +201,8 @@ export interface ProductInput {
   gender: Gender;
   priceAmount: number;
   compareAtAmount: number | null;
-  colorHex: string | null;
-  colorNameEn: string;
-  colorNameAr: string;
-  colorNameKu: string;
-  imageUrl: string;
-  imageAltEn: string;
-  imageAltAr: string;
-  imageAltKu: string;
+  colors: ColorInput[];
+  images: ImageInput[];
   collectionSlugs: string[];
   isNew: boolean;
   featured: boolean;
@@ -215,24 +223,30 @@ function buildColors(input: ProductInput) {
   // The <input type="color"> always submits a value (defaults to
   // #000000), so it can't signal "no color was entered" — the English
   // name field is the real signal of intent.
-  if (!input.colorHex || !input.colorNameEn.trim()) return [];
-  return [
-    {
-      key: input.colorNameEn.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40) || "color",
-      hex: input.colorHex,
-      name: { en: input.colorNameEn, ar: input.colorNameAr, ku: input.colorNameKu },
-    },
-  ];
+  const seenKeys = new Set<string>();
+  return input.colors
+    .filter((c) => c.nameEn.trim())
+    .map((c) => {
+      const base = c.nameEn.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40) || "color";
+      let key = base;
+      let n = 2;
+      while (seenKeys.has(key)) key = `${base}-${n++}`;
+      seenKeys.add(key);
+      return {
+        key,
+        hex: c.hex,
+        name: { en: c.nameEn, ar: c.nameAr, ku: c.nameKu },
+      };
+    });
 }
 
 function buildImages(input: ProductInput) {
-  if (!input.imageUrl) return [];
-  return [
-    {
-      url: input.imageUrl,
-      alt: { en: input.imageAltEn, ar: input.imageAltAr, ku: input.imageAltKu },
-    },
-  ];
+  return input.images
+    .filter((img) => img.url.trim())
+    .map((img) => ({
+      url: img.url,
+      alt: { en: img.altEn, ar: img.altAr, ku: img.altKu },
+    }));
 }
 
 export async function createProduct(input: ProductInput): Promise<string> {

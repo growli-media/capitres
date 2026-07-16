@@ -24,8 +24,13 @@ export default function AddToCart({ product }: { product: Product }) {
   const [size, setSize] = useState<string | undefined>(
     inStockVariants[0]?.size,
   );
+  const [colorKey, setColorKey] = useState<string | undefined>(
+    product.colors[0]?.key,
+  );
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
+
+  const selectedColor = product.colors.find((c) => c.key === colorKey);
 
   const variant = useMemo(
     () => product.variants.find((v) => v.size === size),
@@ -46,6 +51,8 @@ export default function AddToCart({ product }: { product: Product }) {
       productSlug: product.slug,
       variantId: variant.id,
       size: variant.size,
+      colorKey: selectedColor?.key,
+      colorName: selectedColor?.name,
       qty,
       unitAmount: product.price.amount,
       title: product.title,
@@ -89,20 +96,39 @@ export default function AddToCart({ product }: { product: Product }) {
       {product.colors.length > 0 && (
         <div className="mt-7">
           <p className="text-eyebrow mb-3 text-ink/60">
-            {t("color")} —{" "}
-            <span className="normal-case tracking-normal text-ink">
-              {pick(product.colors[0].name, locale)}
-            </span>
+            {t("color")}
+            {selectedColor && (
+              <>
+                {" "}—{" "}
+                <span className="normal-case tracking-normal text-ink">
+                  {pick(selectedColor.name, locale)}
+                </span>
+              </>
+            )}
           </p>
-          <div className="flex gap-2">
-            {product.colors.map((c) => (
-              <span
-                key={c.key}
-                title={pick(c.name, locale)}
-                className="h-9 w-9 rounded-full border border-ink/20 ring-2 ring-ink ring-offset-2"
-                style={{ backgroundColor: c.hex }}
-              />
-            ))}
+          <div
+            className="flex flex-wrap gap-2"
+            role="radiogroup"
+            aria-label={t("color")}
+          >
+            {product.colors.map((c) => {
+              const active = c.key === colorKey;
+              return (
+                <button
+                  key={c.key}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  aria-label={pick(c.name, locale)}
+                  title={pick(c.name, locale)}
+                  onClick={() => setColorKey(c.key)}
+                  className={`h-9 w-9 cursor-pointer rounded-full border border-ink/20 transition-shadow ${
+                    active ? "ring-2 ring-ink ring-offset-2" : "hover:ring-2 hover:ring-ink/40 hover:ring-offset-2"
+                  }`}
+                  style={{ backgroundColor: c.hex }}
+                />
+              );
+            })}
           </div>
         </div>
       )}

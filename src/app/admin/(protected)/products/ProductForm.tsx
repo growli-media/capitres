@@ -2,10 +2,32 @@
 
 import { useActionState, useRef, useState } from "react";
 import Image from "next/image";
-import { UploadSimple } from "@phosphor-icons/react";
+import { Plus, Trash, UploadSimple } from "@phosphor-icons/react";
 import type { AdminProductRow, AdminVariant } from "@/lib/admin/products";
 import { createProductAction, updateProductAction, type FormState } from "./actions";
 import { uploadProductImage } from "./upload-action";
+
+interface ImageRow {
+  id: number;
+  url: string;
+  altEn: string;
+  altAr: string;
+  altKu: string;
+}
+
+interface ColorRow {
+  id: number;
+  hex: string;
+  nameEn: string;
+  nameAr: string;
+  nameKu: string;
+}
+
+let rowIdSeq = 0;
+function nextRowId() {
+  rowIdSeq += 1;
+  return rowIdSeq;
+}
 
 const CATEGORIES = ["tees", "jerseys", "outerwear", "accessories", "gift-cards"] as const;
 const GENDERS = ["men", "women", "unisex"] as const;
@@ -54,103 +76,178 @@ export default function ProductForm({
   );
 
   const [category, setCategory] = useState(product?.category ?? "tees");
-  const [imageUrl, setImageUrl] = useState(product?.images[0]?.url ?? "");
-  const [uploading, setUploading] = useState(false);
+  const [images, setImages] = useState<ImageRow[]>(() =>
+    product && product.images.length > 0
+      ? product.images.map((img) => ({
+          id: nextRowId(),
+          url: img.url,
+          altEn: img.alt.en,
+          altAr: img.alt.ar,
+          altKu: img.alt.ku,
+        }))
+      : [{ id: nextRowId(), url: "", altEn: "", altAr: "", altKu: "" }],
+  );
+  const [colors, setColors] = useState<ColorRow[]>(() =>
+    (product?.colors ?? []).map((c) => ({
+      id: nextRowId(),
+      hex: c.hex,
+      nameEn: c.name.en,
+      nameAr: c.name.ar,
+      nameKu: c.name.ku,
+    })),
+  );
+  const [uploadingId, setUploadingId] = useState<number | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRefs = useRef<Map<number, HTMLInputElement>>(new Map());
 
   const isGiftCard = category === "gift-cards";
   const sizesDefault = (variants ?? [])
     .filter((v) => v.size !== "DIGITAL")
     .map((v) => `${v.size}, ${v.stock}`)
     .join("\n");
-  const existingColor = product?.colors[0];
 
-  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function updateImage(id: number, patch: Partial<ImageRow>) {
+    setImages((rows) => rows.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+  }
+  function addImage() {
+    setImages((rows) => [...rows, { id: nextRowId(), url: "", altEn: "", altAr: "", altKu: "" }]);
+  }
+  function removeImage(id: number) {
+    setImages((rows) => rows.filter((r) => r.id !== id));
+  }
+
+  function updateColor(id: number, patch: Partial<ColorRow>) {
+    setColors((rows) => rows.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+  }
+  function addColor() {
+    setColors((rows) => [
+      ...rows,
+      { id: nextRowId(), hex: "#000000", nameEn: "", nameAr: "", nameKu: "" },
+    ]);
+  }
+  function removeColor(id: number) {
+    setColors((rows) => rows.filter((r) => r.id !== id));
+  }
+
+  async function handleFileChange(id: number, e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setUploading(true);
+    setUploadingId(id);
     setUploadError(null);
     const fd = new FormData();
     fd.set("file", file);
     const result = await uploadProductImage(fd);
-    setUploading(false);
+    setUploadingId(null);
     if (result.error) {
       setUploadError(result.error);
       return;
     }
-    if (result.url) setImageUrl(result.url);
+    if (result.url) updateImage(id, { url: result.url });
   }
 
   return (
     <form action={formAction} className="space-y-8">
-      {/* Photo */}
+      {/* Photos */}
       <section>
-        <h2 className="mb-3 text-sm font-semibold text-slate-900">Photo</h2>
-        <div className="flex items-start gap-5">
-          <div className="relative h-32 w-26 shrink-0 overflow-hidden rounded-lg bg-slate-100">
-            {imageUrl && (
-              <Image src={imageUrl} alt="" fill sizes="104px" className="object-cover" unoptimized />
-            )}
-          </div>
-          <div className="flex-1 space-y-3">
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                className="flex h-10 cursor-pointer items-center gap-2 rounded-lg border border-slate-300 bg-white px-3.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60"
-              >
-                <UploadSimple size={16} aria-hidden="true" />
-                {uploading ? "Uploading…" : "Upload photo"}
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp,image/avif"
-                className="hidden"
-                onChange={handleFileChange}
-              />
+        <h2 className="mb-3 text-sm font-semibold text-slate-900">Photos</h2>
+        <p className="mb-3 text-xs text-slate-400">
+          The first photo is the main one shown in listings — drag isn&rsquo;t
+          supported yet, so add them in the order you want.
+        </p>
+        <div className="space-y-5">
+          {images.map((row, i) => (
+            <div key={row.id} className="flex items-start gap-5 rounded-lg border border-slate-200 p-4">
+              <div className="relative h-32 w-26 shrink-0 overflow-hidden rounded-lg bg-slate-100">
+                {row.url && (
+                  <Image src={row.url} alt="" fill sizes="104px" className="object-cover" unoptimized />
+                )}
+              </div>
+              <div className="flex-1 space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRefs.current.get(row.id)?.click()}
+                      disabled={uploadingId === row.id}
+                      className="flex h-10 cursor-pointer items-center gap-2 rounded-lg border border-slate-300 bg-white px-3.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60"
+                    >
+                      <UploadSimple size={16} aria-hidden="true" />
+                      {uploadingId === row.id ? "Uploading…" : `Upload photo ${i + 1}`}
+                    </button>
+                    <input
+                      ref={(el) => {
+                        if (el) fileInputRefs.current.set(row.id, el);
+                        else fileInputRefs.current.delete(row.id);
+                      }}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/avif"
+                      className="hidden"
+                      onChange={(e) => handleFileChange(row.id, e)}
+                    />
+                  </div>
+                  {images.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeImage(row.id)}
+                      aria-label="Remove photo"
+                      className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                    >
+                      <Trash size={15} />
+                    </button>
+                  )}
+                </div>
+                <Field label="Or paste an image URL">
+                  <input
+                    type="text"
+                    name="imageUrl"
+                    value={row.url}
+                    onChange={(e) => updateImage(row.id, { url: e.target.value })}
+                    className={inputClass}
+                  />
+                </Field>
+                <div className="grid grid-cols-3 gap-3">
+                  <Field label="Alt text (EN)">
+                    <input
+                      type="text"
+                      name="imageAltEn"
+                      value={row.altEn}
+                      onChange={(e) => updateImage(row.id, { altEn: e.target.value })}
+                      className={inputClass}
+                    />
+                  </Field>
+                  <Field label="Alt text (AR)">
+                    <input
+                      type="text"
+                      name="imageAltAr"
+                      dir="rtl"
+                      value={row.altAr}
+                      onChange={(e) => updateImage(row.id, { altAr: e.target.value })}
+                      className={inputClass}
+                    />
+                  </Field>
+                  <Field label="Alt text (KU)">
+                    <input
+                      type="text"
+                      name="imageAltKu"
+                      dir="rtl"
+                      value={row.altKu}
+                      onChange={(e) => updateImage(row.id, { altKu: e.target.value })}
+                      className={inputClass}
+                    />
+                  </Field>
+                </div>
+              </div>
             </div>
-            {uploadError && <p className="text-xs text-amber-700">{uploadError}</p>}
-            <Field label="Or paste an image URL">
-              <input
-                type="text"
-                name="imageUrl"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                className={inputClass}
-              />
-            </Field>
-            <div className="grid grid-cols-3 gap-3">
-              <Field label="Alt text (EN)">
-                <input
-                  type="text"
-                  name="imageAltEn"
-                  defaultValue={product?.images[0]?.alt.en}
-                  className={inputClass}
-                />
-              </Field>
-              <Field label="Alt text (AR)">
-                <input
-                  type="text"
-                  name="imageAltAr"
-                  dir="rtl"
-                  defaultValue={product?.images[0]?.alt.ar}
-                  className={inputClass}
-                />
-              </Field>
-              <Field label="Alt text (KU)">
-                <input
-                  type="text"
-                  name="imageAltKu"
-                  dir="rtl"
-                  defaultValue={product?.images[0]?.alt.ku}
-                  className={inputClass}
-                />
-              </Field>
-            </div>
-          </div>
+          ))}
+          {uploadError && <p className="text-xs text-amber-700">{uploadError}</p>}
+          <button
+            type="button"
+            onClick={addImage}
+            className="flex h-10 cursor-pointer items-center gap-1.5 rounded-lg border border-dashed border-slate-300 px-3.5 text-sm font-medium text-slate-600 transition-colors hover:border-slate-400 hover:bg-slate-50"
+          >
+            <Plus size={14} aria-hidden="true" />
+            Add another photo
+          </button>
         </div>
       </section>
 
@@ -375,45 +472,74 @@ export default function ProductForm({
         </section>
       )}
 
-      {/* Colour */}
+      {/* Colours */}
       {!isGiftCard && (
         <section>
-          <h2 className="mb-3 text-sm font-semibold text-slate-900">Colour</h2>
-          <div className="grid grid-cols-4 gap-3">
-            <Field label="Swatch">
-              <input
-                type="color"
-                name="colorHex"
-                defaultValue={existingColor?.hex ?? "#000000"}
-                className="h-10 w-full cursor-pointer rounded-lg border border-slate-300"
-              />
-            </Field>
-            <Field label="Name (EN)">
-              <input
-                type="text"
-                name="colorNameEn"
-                defaultValue={existingColor?.name.en}
-                className={inputClass}
-              />
-            </Field>
-            <Field label="Name (AR)">
-              <input
-                type="text"
-                name="colorNameAr"
-                dir="rtl"
-                defaultValue={existingColor?.name.ar}
-                className={inputClass}
-              />
-            </Field>
-            <Field label="Name (KU)">
-              <input
-                type="text"
-                name="colorNameKu"
-                dir="rtl"
-                defaultValue={existingColor?.name.ku}
-                className={inputClass}
-              />
-            </Field>
+          <h2 className="mb-3 text-sm font-semibold text-slate-900">Colours</h2>
+          <p className="mb-3 text-xs text-slate-400">
+            Optional. Add one row per colour this product comes in — customers
+            pick between them on the product page. Leave empty for a
+            single-colour product.
+          </p>
+          <div className="space-y-3">
+            {colors.map((row) => (
+              <div key={row.id} className="grid grid-cols-[auto_1fr_1fr_1fr_auto] items-end gap-3">
+                <Field label="Swatch">
+                  <input
+                    type="color"
+                    value={row.hex}
+                    onChange={(e) => updateColor(row.id, { hex: e.target.value })}
+                    className="h-10 w-14 cursor-pointer rounded-lg border border-slate-300"
+                  />
+                  <input type="hidden" name="colorHex" value={row.hex} />
+                </Field>
+                <Field label="Name (EN)">
+                  <input
+                    type="text"
+                    name="colorNameEn"
+                    value={row.nameEn}
+                    onChange={(e) => updateColor(row.id, { nameEn: e.target.value })}
+                    className={inputClass}
+                  />
+                </Field>
+                <Field label="Name (AR)">
+                  <input
+                    type="text"
+                    name="colorNameAr"
+                    dir="rtl"
+                    value={row.nameAr}
+                    onChange={(e) => updateColor(row.id, { nameAr: e.target.value })}
+                    className={inputClass}
+                  />
+                </Field>
+                <Field label="Name (KU)">
+                  <input
+                    type="text"
+                    name="colorNameKu"
+                    dir="rtl"
+                    value={row.nameKu}
+                    onChange={(e) => updateColor(row.id, { nameKu: e.target.value })}
+                    className={inputClass}
+                  />
+                </Field>
+                <button
+                  type="button"
+                  onClick={() => removeColor(row.id)}
+                  aria-label="Remove colour"
+                  className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                >
+                  <Trash size={15} />
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={addColor}
+              className="flex h-10 cursor-pointer items-center gap-1.5 rounded-lg border border-dashed border-slate-300 px-3.5 text-sm font-medium text-slate-600 transition-colors hover:border-slate-400 hover:bg-slate-50"
+            >
+              <Plus size={14} aria-hidden="true" />
+              Add a colour
+            </button>
           </div>
         </section>
       )}

@@ -46,7 +46,11 @@ function LineRow({ line }: { line: CartLine }) {
                 {t("giftCardFor", { email: line.giftCard.recipientEmail })}
               </p>
             ) : (
-              <p className="mt-0.5 text-xs text-ink/65">{line.size}</p>
+              <p className="mt-0.5 text-xs text-ink/65">
+                {[line.colorName ? pick(line.colorName, locale) : null, line.size]
+                  .filter(Boolean)
+                  .join(" — ")}
+              </p>
             )}
           </div>
           <p className="price shrink-0 text-sm font-semibold">

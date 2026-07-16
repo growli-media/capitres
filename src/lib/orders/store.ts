@@ -19,6 +19,7 @@ export interface OrderLine {
   productSlug: string;
   title: string;
   size?: string;
+  color?: string;
   qty: number;
   unitAmount: number;
   giftCard?: {

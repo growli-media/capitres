@@ -73,7 +73,9 @@ function SummaryLine({ line, locale }: { line: CartLine; locale: string }) {
         <p className="text-xs text-ink/65">
           {line.giftCard
             ? t("giftCardFor", { email: line.giftCard.recipientEmail })
-            : line.size}
+            : [line.colorName ? pick(line.colorName, locale) : null, line.size]
+                .filter(Boolean)
+                .join(" — ")}
         </p>
       </div>
       <p className="price text-sm font-semibold">
@@ -197,6 +199,7 @@ export default function CheckoutFlow() {
           lines: lines.map((l) => ({
             productSlug: l.productSlug,
             variantId: l.variantId,
+            colorKey: l.colorKey,
             qty: l.qty,
             giftCard: l.giftCard,
           })),

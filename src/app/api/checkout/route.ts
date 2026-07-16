@@ -12,6 +12,7 @@ import { isValidEmail } from "@/lib/server/records";
 interface CheckoutLineInput {
   productSlug: string;
   variantId?: string;
+  colorKey?: string;
   qty: number;
   giftCard?: {
     denomination: number;
@@ -118,15 +119,20 @@ export async function POST(request: NextRequest) {
         { status: 409 },
       );
     }
+    const color = line.colorKey
+      ? product.colors.find((c) => c.key === line.colorKey)
+      : undefined;
+
     orderLines.push({
       productSlug: product.slug,
       title: product.title.en,
       size: variant.size,
+      color: color?.name.en,
       qty,
       unitAmount: product.price.amount,
     });
     waylLineItems.push({
-      label: `${product.title.en} ${variant.size} x${qty}`,
+      label: `${product.title.en}${color ? ` (${color.name.en})` : ""} ${variant.size} x${qty}`,
       amount: product.price.amount * qty,
       type: "increase",
     });

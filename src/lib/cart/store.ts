@@ -16,11 +16,13 @@ export interface GiftCardDetails {
 }
 
 export interface CartLine {
-  /** Stable identity for the line (product+variant, or unique per gift card). */
+  /** Stable identity for the line (product+variant+colour, or unique per gift card). */
   key: string;
   productSlug: string;
   variantId?: string;
   size?: string;
+  colorKey?: string;
+  colorName?: LocalizedString;
   qty: number;
   /** Unit price snapshot in IQD (server re-validates at checkout). */
   unitAmount: number;
@@ -66,7 +68,7 @@ export const useCart = create<CartState>()(
           line.key ??
           (line.giftCard
             ? `gift-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-            : `${line.productSlug}:${line.variantId}`);
+            : `${line.productSlug}:${line.variantId}:${line.colorKey ?? "default"}`);
         const existing = get().lines.find((l) => l.key === key);
         if (existing && !line.giftCard) {
           set({

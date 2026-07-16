@@ -10,6 +10,8 @@ import {
   setProductArchived,
   slugExists,
   updateProduct,
+  type ColorInput,
+  type ImageInput,
   type ProductInput,
 } from "@/lib/admin/products";
 
@@ -25,6 +27,39 @@ function linesOf(formData: FormData, key: string): string[] {
     .split("\n")
     .map((l) => l.trim())
     .filter(Boolean);
+}
+
+function allOf(formData: FormData, key: string): string[] {
+  return formData.getAll(key).map(String);
+}
+
+/** Repeated same-named inputs (one row per photo/color) arrive in DOM
+ * order via FormData.getAll — zip the parallel field lists back into
+ * one row per index. */
+function imagesOf(formData: FormData): ImageInput[] {
+  const urls = allOf(formData, "imageUrl");
+  const altEn = allOf(formData, "imageAltEn");
+  const altAr = allOf(formData, "imageAltAr");
+  const altKu = allOf(formData, "imageAltKu");
+  return urls.map((url, i) => ({
+    url: url.trim(),
+    altEn: (altEn[i] ?? "").trim(),
+    altAr: (altAr[i] ?? "").trim(),
+    altKu: (altKu[i] ?? "").trim(),
+  }));
+}
+
+function colorsOf(formData: FormData): ColorInput[] {
+  const hex = allOf(formData, "colorHex");
+  const nameEn = allOf(formData, "colorNameEn");
+  const nameAr = allOf(formData, "colorNameAr");
+  const nameKu = allOf(formData, "colorNameKu");
+  return hex.map((h, i) => ({
+    hex: h,
+    nameEn: (nameEn[i] ?? "").trim(),
+    nameAr: (nameAr[i] ?? "").trim(),
+    nameKu: (nameKu[i] ?? "").trim(),
+  }));
 }
 
 function slugify(value: string): string {
@@ -76,8 +111,10 @@ function parseInput(formData: FormData, fallbackSlug: string): ProductInput | { 
   const slug = slugify(String(formData.get("slug") ?? "") || fallbackSlug || titleEn);
   if (!slug) return { error: "Couldn't derive a URL slug — please set one." };
 
-  const imageUrl = String(formData.get("imageUrl") ?? "").trim();
-  if (!imageUrl) return { error: "Add a product photo (upload or paste a URL)." };
+  const images = imagesOf(formData);
+  if (!images.some((img) => img.url)) {
+    return { error: "Add at least one product photo (upload or paste a URL)." };
+  }
 
   const sizesRaw = String(formData.get("sizes") ?? "").trim();
   const variants = sizesRaw
@@ -120,14 +157,13 @@ function parseInput(formData: FormData, fallbackSlug: string): ProductInput | { 
     gender,
     priceAmount,
     compareAtAmount,
-    colorHex: String(formData.get("colorHex") ?? "").trim() || null,
-    colorNameEn: String(formData.get("colorNameEn") ?? "").trim(),
-    colorNameAr: String(formData.get("colorNameAr") ?? "").trim(),
-    colorNameKu: String(formData.get("colorNameKu") ?? "").trim(),
-    imageUrl,
-    imageAltEn: String(formData.get("imageAltEn") ?? "").trim() || titleEn,
-    imageAltAr: String(formData.get("imageAltAr") ?? "").trim() || titleAr,
-    imageAltKu: String(formData.get("imageAltKu") ?? "").trim() || titleKu,
+    colors: colorsOf(formData),
+    images: images.map((img) => ({
+      url: img.url,
+      altEn: img.altEn || titleEn,
+      altAr: img.altAr || titleAr,
+      altKu: img.altKu || titleKu,
+    })),
     collectionSlugs: formData.getAll("collectionSlugs").map(String),
     isNew: formData.get("isNew") === "on",
     featured: formData.get("featured") === "on",

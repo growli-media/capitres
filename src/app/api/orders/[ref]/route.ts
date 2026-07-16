@@ -38,6 +38,7 @@ export async function GET(
       productSlug: l.productSlug,
       title: l.title,
       size: l.size,
+      color: l.color,
       qty: l.qty,
       unitAmount: l.unitAmount,
       isGiftCard: Boolean(l.giftCard),
