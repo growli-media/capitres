@@ -2,7 +2,14 @@
 
 import { useActionState, useRef, useState } from "react";
 import Image from "next/image";
-import { Plus, Trash, UploadSimple } from "@phosphor-icons/react";
+import {
+  CaretDown,
+  CaretUp,
+  DotsSixVertical,
+  Plus,
+  Trash,
+  UploadSimple,
+} from "@phosphor-icons/react";
 import type { AdminProductRow, AdminVariant } from "@/lib/admin/products";
 import { createProductAction, updateProductAction, type FormState } from "./actions";
 import { uploadProductImage } from "./upload-action";
@@ -101,6 +108,9 @@ export default function ProductForm({
   );
   const [uploadingId, setUploadingId] = useState<number | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dropIndex, setDropIndex] = useState<number | null>(null);
+  const [addDragOver, setAddDragOver] = useState(false);
   const fileInputRefs = useRef<Map<number, HTMLInputElement>>(new Map());
 
   const isGiftCard = category === "gift-cards";
@@ -118,6 +128,15 @@ export default function ProductForm({
   function removeImage(id: number) {
     setImages((rows) => rows.filter((r) => r.id !== id));
   }
+  function moveImage(from: number, to: number) {
+    setImages((rows) => {
+      if (to < 0 || to >= rows.length || from === to) return rows;
+      const next = [...rows];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+  }
 
   function updateColor(id: number, patch: Partial<ColorRow>) {
     setColors((rows) => rows.map((r) => (r.id === id ? { ...r, ...patch } : r)));
@@ -132,9 +151,11 @@ export default function ProductForm({
     setColors((rows) => rows.filter((r) => r.id !== id));
   }
 
-  async function handleFileChange(id: number, e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  async function uploadFile(id: number, file: File) {
+    if (!file.type.startsWith("image/")) {
+      setUploadError("That doesn't look like an image file.");
+      return;
+    }
     setUploadingId(id);
     setUploadError(null);
     const fd = new FormData();
@@ -148,46 +169,139 @@ export default function ProductForm({
     if (result.url) updateImage(id, { url: result.url });
   }
 
+  function handleFileChange(id: number, e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) uploadFile(id, file);
+  }
+
+  /** A drop on a photo row: an external image file uploads into that row;
+   * an internal drag (a row being reordered) drops it into this slot. */
+  function handleRowDrop(e: React.DragEvent, id: number, index: number) {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      uploadFile(id, file);
+    } else if (dragIndex !== null) {
+      moveImage(dragIndex, index);
+    }
+    setDragIndex(null);
+    setDropIndex(null);
+  }
+
+  /** Dropping image files onto the "add" zone appends them as new photos. */
+  function handleAddDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setAddDragOver(false);
+    const files = Array.from(e.dataTransfer.files ?? []).filter((f) =>
+      f.type.startsWith("image/"),
+    );
+    for (const file of files) {
+      const id = nextRowId();
+      setImages((rows) => [...rows, { id, url: "", altEn: "", altAr: "", altKu: "" }]);
+      uploadFile(id, file);
+    }
+  }
+
   return (
     <form action={formAction} className="space-y-8">
       {/* Photos */}
       <section>
         <h2 className="mb-3 text-sm font-semibold text-slate-900">Photos</h2>
         <p className="mb-3 text-xs text-slate-400">
-          The first photo is the main one shown in listings — drag isn&rsquo;t
-          supported yet, so add them in the order you want.
+          The first photo (marked <span className="font-semibold text-slate-500">Main</span>)
+          is the one shown in listings. Drag the handle{" "}
+          <DotsSixVertical size={12} className="inline align-middle" aria-hidden="true" /> or
+          use the arrows to reorder, and drop an image onto a photo to replace it.
         </p>
-        <div className="space-y-5">
+        <div className="space-y-4">
           {images.map((row, i) => (
-            <div key={row.id} className="flex items-start gap-5 rounded-lg border border-slate-200 p-4">
-              <div className="relative h-32 w-26 shrink-0 overflow-hidden rounded-lg bg-slate-100">
-                {row.url && (
+            <div
+              key={row.id}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDropIndex(i);
+              }}
+              onDragLeave={() => setDropIndex((d) => (d === i ? null : d))}
+              onDrop={(e) => handleRowDrop(e, row.id, i)}
+              className={`flex items-start gap-3 rounded-lg border p-4 transition-colors ${
+                dragIndex === i ? "opacity-40" : ""
+              } ${
+                dropIndex === i && dragIndex !== null && dragIndex !== i
+                  ? "border-slate-900 bg-slate-50"
+                  : "border-slate-200"
+              }`}
+            >
+              {/* Reorder controls */}
+              <div className="flex flex-col items-center gap-0.5 pt-1 text-slate-300">
+                <button
+                  type="button"
+                  onClick={() => moveImage(i, i - 1)}
+                  disabled={i === 0}
+                  aria-label="Move photo up"
+                  className="flex h-6 w-6 cursor-pointer items-center justify-center rounded transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:cursor-not-allowed disabled:opacity-30"
+                >
+                  <CaretUp size={14} />
+                </button>
+                <span
+                  draggable
+                  onDragStart={() => setDragIndex(i)}
+                  onDragEnd={() => {
+                    setDragIndex(null);
+                    setDropIndex(null);
+                  }}
+                  aria-label="Drag to reorder"
+                  className="cursor-grab text-slate-400 transition-colors hover:text-slate-600 active:cursor-grabbing"
+                >
+                  <DotsSixVertical size={18} />
+                </span>
+                <button
+                  type="button"
+                  onClick={() => moveImage(i, i + 1)}
+                  disabled={i === images.length - 1}
+                  aria-label="Move photo down"
+                  className="flex h-6 w-6 cursor-pointer items-center justify-center rounded transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:cursor-not-allowed disabled:opacity-30"
+                >
+                  <CaretDown size={14} />
+                </button>
+              </div>
+
+              {/* Thumbnail (also a drop target for a replacement image) */}
+              <div className="relative h-32 w-26 shrink-0 overflow-hidden rounded-lg border border-slate-100 bg-slate-100">
+                {row.url ? (
                   <Image src={row.url} alt="" fill sizes="104px" className="object-cover" unoptimized />
+                ) : (
+                  <div className="flex h-full items-center justify-center px-2 text-center text-[11px] leading-tight text-slate-400">
+                    Drop image here or upload
+                  </div>
+                )}
+                {i === 0 && (
+                  <span className="absolute start-1 top-1 rounded bg-slate-900/80 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                    Main
+                  </span>
                 )}
               </div>
+
               <div className="flex-1 space-y-3">
                 <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => fileInputRefs.current.get(row.id)?.click()}
-                      disabled={uploadingId === row.id}
-                      className="flex h-10 cursor-pointer items-center gap-2 rounded-lg border border-slate-300 bg-white px-3.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60"
-                    >
-                      <UploadSimple size={16} aria-hidden="true" />
-                      {uploadingId === row.id ? "Uploading…" : `Upload photo ${i + 1}`}
-                    </button>
-                    <input
-                      ref={(el) => {
-                        if (el) fileInputRefs.current.set(row.id, el);
-                        else fileInputRefs.current.delete(row.id);
-                      }}
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp,image/avif"
-                      className="hidden"
-                      onChange={(e) => handleFileChange(row.id, e)}
-                    />
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRefs.current.get(row.id)?.click()}
+                    disabled={uploadingId === row.id}
+                    className="flex h-10 cursor-pointer items-center gap-2 rounded-lg border border-slate-300 bg-white px-3.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60"
+                  >
+                    <UploadSimple size={16} aria-hidden="true" />
+                    {uploadingId === row.id ? "Uploading…" : "Upload photo"}
+                  </button>
+                  <input
+                    ref={(el) => {
+                      if (el) fileInputRefs.current.set(row.id, el);
+                      else fileInputRefs.current.delete(row.id);
+                    }}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/avif"
+                    className="hidden"
+                    onChange={(e) => handleFileChange(row.id, e)}
+                  />
                   {images.length > 1 && (
                     <button
                       type="button"
@@ -243,14 +357,27 @@ export default function ProductForm({
             </div>
           ))}
           {uploadError && <p className="text-xs text-amber-700">{uploadError}</p>}
-          <button
-            type="button"
-            onClick={addImage}
-            className="flex h-10 cursor-pointer items-center gap-1.5 rounded-lg border border-dashed border-slate-300 px-3.5 text-sm font-medium text-slate-600 transition-colors hover:border-slate-400 hover:bg-slate-50"
+          <div
+            onDragOver={(e) => {
+              e.preventDefault();
+              setAddDragOver(true);
+            }}
+            onDragLeave={() => setAddDragOver(false)}
+            onDrop={handleAddDrop}
+            className={`flex items-center gap-2 rounded-lg border border-dashed px-3.5 py-2.5 transition-colors ${
+              addDragOver ? "border-slate-900 bg-slate-50" : "border-slate-300"
+            }`}
           >
-            <Plus size={14} aria-hidden="true" />
-            Add another photo
-          </button>
+            <button
+              type="button"
+              onClick={addImage}
+              className="flex h-8 cursor-pointer items-center gap-1.5 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
+            >
+              <Plus size={14} aria-hidden="true" />
+              Add another photo
+            </button>
+            <span className="text-xs text-slate-400">or drag images here</span>
+          </div>
         </div>
       </section>
 

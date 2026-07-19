@@ -78,26 +78,18 @@ export default async function AdminDashboardPage() {
     <div>
       <div className="mb-6 overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 px-6 py-5 text-white">
         <Quotes size={22} weight="fill" className="mb-2 text-white/40" aria-hidden="true" />
-        {quote.arabic ? (
-          <>
-            <p
-              dir="rtl"
-              lang="ar"
-              className="text-xl leading-loose md:text-2xl"
-              style={{ fontFamily: '"Noto Naskh Arabic", "Geeza Pro", "Al Bayan", serif' }}
-            >
-              {quote.arabic}
-            </p>
-            <p className="mt-2 text-sm leading-relaxed text-white/70 md:text-base">
-              {quote.text}
-            </p>
-          </>
-        ) : (
-          <p className="text-base font-medium leading-relaxed md:text-lg">
-            {quote.text}
-          </p>
-        )}
-        <p className="mt-2 text-xs font-medium uppercase tracking-wide text-white/50">
+        <p
+          dir="rtl"
+          lang="ar"
+          className="text-xl leading-loose md:text-2xl"
+          style={{ fontFamily: '"Noto Naskh Arabic", "Geeza Pro", "Al Bayan", serif' }}
+        >
+          {quote.arabic}
+        </p>
+        <p className="mt-2 text-sm leading-relaxed text-white/70 md:text-base">
+          {quote.text}
+        </p>
+        <p className="mt-3 text-xs font-medium uppercase tracking-wide text-white/50">
           {quote.author}
         </p>
       </div>
