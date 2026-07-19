@@ -9,6 +9,7 @@ import {
   SignOut,
   Stack,
   Star,
+  Tag,
   TShirt,
 } from "@phosphor-icons/react";
 import { logout } from "../logout-action";
@@ -17,6 +18,7 @@ const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", icon: ChartLineUp, exact: true },
   { href: "/admin/products", label: "Products", icon: TShirt, exact: false },
   { href: "/admin/collections", label: "Collections", icon: Stack, exact: false },
+  { href: "/admin/categories", label: "Categories", icon: Tag, exact: false },
   { href: "/admin/abandoned", label: "Abandoned carts", icon: ShoppingCartSimple, exact: false },
   { href: "/admin/orders", label: "Orders", icon: Receipt, exact: false },
   { href: "/admin/reviews", label: "Reviews", icon: Star, exact: false },

@@ -7,7 +7,10 @@ import ProductForm from "../ProductForm";
 export const metadata: Metadata = { title: "New product" };
 
 export default async function NewProductPage() {
-  const collections = await catalog.getCollections();
+  const [collections, categories] = await Promise.all([
+    catalog.getCollections(),
+    catalog.getCategories(),
+  ]);
 
   return (
     <div className="max-w-3xl">
@@ -24,6 +27,7 @@ export default async function NewProductPage() {
       <ProductForm
         mode="create"
         collections={collections.map((c) => ({ slug: c.slug, titleEn: c.title.en }))}
+        categories={categories.map((c) => ({ slug: c.slug, titleEn: c.title.en }))}
       />
     </div>
   );

@@ -1,12 +1,17 @@
 import type { StaticImageData } from "next/image";
 import type { LocalizedString } from "@/lib/content";
 
-export type Category =
-  | "tees"
-  | "jerseys"
-  | "outerwear"
-  | "accessories"
-  | "gift-cards";
+/** A product category slug. Categories are editable from the admin, so
+ * this is an open string rather than a fixed union — but "gift-cards"
+ * stays a reserved slug that drives gift-card behaviour. */
+export type Category = string;
+
+/** A category as shown in nav and the admin — slug plus localized name. */
+export interface CategoryOption {
+  slug: string;
+  title: LocalizedString;
+  sortOrder: number;
+}
 
 export type Gender = "men" | "women" | "unisex";
 

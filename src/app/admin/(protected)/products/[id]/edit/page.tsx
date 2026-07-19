@@ -18,9 +18,10 @@ export default async function EditProductPage({
   const { id } = await params;
   const { created } = await searchParams;
 
-  const [result, collections] = await Promise.all([
+  const [result, collections, categories] = await Promise.all([
     getAdminProduct(id),
     catalog.getCollections(),
+    catalog.getCategories(),
   ]);
   if (!result) notFound();
 
@@ -49,6 +50,7 @@ export default async function EditProductPage({
         product={result.product}
         variants={result.variants}
         collections={collections.map((c) => ({ slug: c.slug, titleEn: c.title.en }))}
+        categories={categories.map((c) => ({ slug: c.slug, titleEn: c.title.en }))}
       />
     </div>
   );

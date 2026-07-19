@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { Category, Gender } from "@/lib/catalog/types";
+import { catalog } from "@/lib/catalog";
 import {
   createProduct,
   deleteProductPermanently,
@@ -19,8 +20,11 @@ export interface FormState {
   error?: string;
 }
 
-const CATEGORIES: Category[] = ["tees", "jerseys", "outerwear", "accessories", "gift-cards"];
 const GENDERS: Gender[] = ["men", "women", "unisex"];
+
+async function validCategorySlugs(): Promise<string[]> {
+  return (await catalog.getCategories()).map((c) => c.slug);
+}
 
 function linesOf(formData: FormData, key: string): string[] {
   return String(formData.get(key) ?? "")
@@ -71,7 +75,11 @@ function slugify(value: string): string {
     .slice(0, 80);
 }
 
-function parseInput(formData: FormData, fallbackSlug: string): ProductInput | { error: string } {
+function parseInput(
+  formData: FormData,
+  fallbackSlug: string,
+  validCategories: string[],
+): ProductInput | { error: string } {
   const titleEn = String(formData.get("titleEn") ?? "").trim();
   const titleAr = String(formData.get("titleAr") ?? "").trim();
   const titleKu = String(formData.get("titleKu") ?? "").trim();
@@ -87,7 +95,7 @@ function parseInput(formData: FormData, fallbackSlug: string): ProductInput | { 
   }
 
   const category = String(formData.get("category") ?? "") as Category;
-  if (!CATEGORIES.includes(category)) return { error: "Choose a valid category." };
+  if (!validCategories.includes(category)) return { error: "Choose a valid category." };
   const gender = String(formData.get("gender") ?? "") as Gender;
   if (!GENDERS.includes(gender)) return { error: "Choose a valid gender." };
 
@@ -180,7 +188,7 @@ export async function createProductAction(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const parsed = parseInput(formData, "");
+  const parsed = parseInput(formData, "", await validCategorySlugs());
   if ("error" in parsed) return parsed;
 
   if (await slugExists(parsed.slug)) {
@@ -198,7 +206,7 @@ export async function updateProductAction(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const parsed = parseInput(formData, currentSlug);
+  const parsed = parseInput(formData, currentSlug, await validCategorySlugs());
   if ("error" in parsed) return parsed;
 
   // Slug is read-only from the edit form (see ProductForm), but guard

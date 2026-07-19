@@ -1,5 +1,6 @@
 import "server-only";
 import { sql } from "@/lib/db/client";
+import { dbReadCategories } from "../categories";
 import { applyFilter, applySort } from "../filter-sort";
 import type {
   Collection,
@@ -236,6 +237,11 @@ export const postgresProvider: CatalogProvider = {
       select * from collections where slug = ${slug} limit 1
     `;
     return rows[0] ? toCollection(rows[0]) : undefined;
+  },
+
+  async getCategories() {
+    const rows = await dbReadCategories(false);
+    return rows.map(({ slug, title, sortOrder }) => ({ slug, title, sortOrder }));
   },
 
   async getPosts() {

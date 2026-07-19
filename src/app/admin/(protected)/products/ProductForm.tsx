@@ -29,7 +29,6 @@ function nextRowId() {
   return rowIdSeq;
 }
 
-const CATEGORIES = ["tees", "jerseys", "outerwear", "accessories", "gift-cards"] as const;
 const GENDERS = ["men", "women", "unisex"] as const;
 
 function Field({
@@ -60,11 +59,13 @@ export default function ProductForm({
   product,
   variants,
   collections,
+  categories,
 }: {
   mode: "create" | "edit";
   product?: AdminProductRow;
   variants?: AdminVariant[];
   collections: { slug: string; titleEn: string }[];
+  categories: { slug: string; titleEn: string }[];
 }) {
   const boundAction =
     mode === "edit" && product
@@ -75,7 +76,9 @@ export default function ProductForm({
     {},
   );
 
-  const [category, setCategory] = useState(product?.category ?? "tees");
+  const [category, setCategory] = useState(
+    product?.category ?? categories[0]?.slug ?? "tees",
+  );
   const [images, setImages] = useState<ImageRow[]>(() =>
     product && product.images.length > 0
       ? product.images.map((img) => ({
@@ -385,12 +388,12 @@ export default function ProductForm({
           <select
             name="category"
             value={category}
-            onChange={(e) => setCategory(e.target.value as typeof category)}
+            onChange={(e) => setCategory(e.target.value)}
             className={`${inputClass} cursor-pointer`}
           >
-            {CATEGORIES.map((c) => (
-              <option key={c} value={c}>
-                {c}
+            {categories.map((c) => (
+              <option key={c.slug} value={c.slug}>
+                {c.titleEn}
               </option>
             ))}
           </select>

@@ -5,7 +5,10 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Archivo, Noto_Sans_Arabic } from "next/font/google";
 import { routing, isRtl } from "@/i18n/routing";
 import { catalog } from "@/lib/catalog";
-import Header, { type NavCollection } from "@/components/layout/Header";
+import Header, {
+  type NavCategory,
+  type NavCollection,
+} from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import CartDrawer from "@/components/layout/CartDrawer";
 import SmoothScroll from "@/components/motion/SmoothScroll";
@@ -83,7 +86,10 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
 
   const t = await getTranslations({ locale, namespace: "a11y" });
-  const collections = await catalog.getCollections();
+  const [collections, categories] = await Promise.all([
+    catalog.getCollections(),
+    catalog.getCategories(),
+  ]);
   const navCollections: NavCollection[] = collections.map((c) => ({
     slug: c.slug,
     title: c.title,
@@ -91,6 +97,10 @@ export default async function LocaleLayout({
     image: c.heroImage.src,
     imageAlt: c.heroImage.alt,
     archived: c.archived,
+  }));
+  const navCategories: NavCategory[] = categories.map((c) => ({
+    slug: c.slug,
+    title: c.title,
   }));
 
   return (
@@ -110,7 +120,7 @@ export default async function LocaleLayout({
           >
             {t("skipToContent")}
           </a>
-          <Header collections={navCollections} />
+          <Header collections={navCollections} categories={navCategories} />
           <main id="main">{children}</main>
           <Footer />
           <CartDrawer />

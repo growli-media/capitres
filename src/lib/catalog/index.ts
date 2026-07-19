@@ -1,4 +1,5 @@
 import type {
+  CategoryOption,
   Collection,
   Post,
   Product,
@@ -8,6 +9,7 @@ import type {
 import { products } from "./data/products";
 import { collections } from "./data/collections";
 import { posts } from "./data/posts";
+import { DEFAULT_CATEGORIES } from "./categories";
 import { postgresProvider } from "./providers/postgres";
 import { applyFilter, applySort } from "./filter-sort";
 import { isInStock, isOnSale } from "./predicates";
@@ -25,6 +27,7 @@ export interface CatalogProvider {
   getProduct(slug: string): Promise<Product | undefined>;
   getCollections(): Promise<Collection[]>;
   getCollection(slug: string): Promise<Collection | undefined>;
+  getCategories(): Promise<CategoryOption[]>;
   getPosts(): Promise<Post[]>;
   getPost(slug: string): Promise<Post | undefined>;
 }
@@ -43,6 +46,9 @@ const localProvider: CatalogProvider = {
   },
   async getCollection(slug) {
     return collections.find((c) => c.slug === slug);
+  },
+  async getCategories() {
+    return DEFAULT_CATEGORIES;
   },
   async getPosts() {
     return [...posts].sort((a, b) => b.date.localeCompare(a.date));

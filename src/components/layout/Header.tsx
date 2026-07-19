@@ -26,6 +26,11 @@ export interface NavCollection {
   archived?: boolean;
 }
 
+export interface NavCategory {
+  slug: string;
+  title: LocalizedString;
+}
+
 type MegaPanel = "shop" | "collections" | null;
 
 /**
@@ -35,8 +40,10 @@ type MegaPanel = "shop" | "collections" | null;
  */
 export default function Header({
   collections,
+  categories,
 }: {
   collections: NavCollection[];
+  categories: NavCategory[];
 }) {
   const locale = useLocale();
   const t = useTranslations("nav");
@@ -100,13 +107,11 @@ export default function Header({
     { href: "/gift-cards", label: t("giftCards") },
   ];
 
-  const categoryLinks = (
-    ["tees", "jerseys", "outerwear", "accessories", "gift-cards"] as const
-  ).map((c) => ({
-    href: c === "gift-cards" ? "/gift-cards" : `/shop?category=${c}`,
-    key: c,
+  const categoryLinks = categories.map((c) => ({
+    href: c.slug === "gift-cards" ? "/gift-cards" : `/shop?category=${c.slug}`,
+    slug: c.slug,
+    title: c.title,
   }));
-  const tCat = useTranslations("categories");
 
   const featured = collections[0];
 
@@ -285,12 +290,12 @@ export default function Header({
               <p className="text-eyebrow mb-5 text-ink/60">{t("byCategory")}</p>
               <ul className="space-y-1">
                 {categoryLinks.map((c) => (
-                  <li key={c.key}>
+                  <li key={c.slug}>
                     <Link
                       href={c.href}
                       className="link-underline inline-flex min-h-9 items-center text-[15px] font-medium"
                     >
-                      {tCat(c.key)}
+                      {pick(c.title, locale)}
                     </Link>
                   </li>
                 ))}
