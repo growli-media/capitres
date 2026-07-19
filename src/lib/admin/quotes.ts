@@ -3,9 +3,33 @@
 export interface Quote {
   text: string;
   author: string;
+  /** Optional original Arabic (shown above the English translation). */
+  arabic?: string;
 }
 
 export const MOTIVATION_QUOTES: Quote[] = [
+  // Iraqi poetry — al-Mutanabbi, born in Kufa, Iraq; the poet whose name
+  // marks Baghdad's storied literary street. Verses on ambition and grit.
+  {
+    arabic: "إذا غامَرتَ في شَرَفٍ مَرومِ، فلا تَقنَعْ بما دونَ النُّجومِ",
+    text: "If you set out for glory, do not settle for less than the stars.",
+    author: "Al-Mutanabbi",
+  },
+  {
+    arabic: "على قَدْرِ أهلِ العَزمِ تأتي العَزائمُ، وتأتي على قَدْرِ الكِرامِ المَكارمُ",
+    text: "Resolutions come to the measure of the resolute, and honors to the measure of the honorable.",
+    author: "Al-Mutanabbi",
+  },
+  {
+    arabic: "وإذا كانَتِ النُّفوسُ كِباراً، تَعِبَتْ في مُرادِها الأجسامُ",
+    text: "When souls are great, the body wearies in pursuit of their longing.",
+    author: "Al-Mutanabbi",
+  },
+  {
+    arabic: "الخَيلُ والليلُ والبَيداءُ تَعرِفُني، والسَّيفُ والرُّمحُ والقِرطاسُ والقَلَمُ",
+    text: "The horses, the night, and the desert know me — and the sword, the spear, the parchment, and the pen.",
+    author: "Al-Mutanabbi",
+  },
   { text: "Every big brand started with a single order. Yours are on the way.", author: "Capitres" },
   { text: "Whether you think you can or you think you can't — you're right.", author: "Henry Ford" },
   { text: "The secret of getting ahead is getting started.", author: "Mark Twain" },
