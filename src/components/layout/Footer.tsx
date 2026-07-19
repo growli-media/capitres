@@ -3,6 +3,7 @@ import { useTranslations } from "next-intl";
 import { InstagramLogo } from "@phosphor-icons/react/dist/ssr";
 import { Link } from "@/i18n/navigation";
 import NewsletterForm from "./NewsletterForm";
+import PaymentMethods from "./PaymentMethods";
 import logoMark from "@/images/brand/logo.png";
 
 export default function Footer() {
@@ -97,6 +98,12 @@ export default function Footer() {
             </div>
           ))}
         </nav>
+      </div>
+
+      {/* Accepted payments */}
+      <div className="container-x flex flex-col gap-3 border-t border-paper/15 py-5 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-eyebrow text-paper/50">{t("acceptedPayments")}</p>
+        <PaymentMethods />
       </div>
 
       {/* Bottom bar */}
