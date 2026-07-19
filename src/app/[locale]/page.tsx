@@ -213,7 +213,7 @@ export default async function HomePage({
               alt=""
               fill
               sizes="(min-width: 768px) 50vw, 100vw"
-              className="object-cover"
+              className="object-contain p-8 md:p-12"
             />
           </div>
         </Parallax>

@@ -24,69 +24,89 @@ const NAV_ITEMS = [
 
 export default function AdminNav({
   abandonedCount,
+  onNavigate,
 }: {
   abandonedCount: number;
+  onNavigate?: () => void;
 }) {
   const pathname = usePathname();
 
   return (
-    <nav className="flex h-full flex-col justify-between p-4">
-      <div>
-        <Link href="/admin" className="mb-8 flex items-center gap-2 px-2 pt-2">
-          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-slate-900 text-xs font-black text-white">
-            C
-          </span>
-          <span className="text-sm font-bold tracking-tight">
-            Capitres Admin
-          </span>
-        </Link>
+    <nav className="flex h-full flex-col">
+      <Link
+        href="/admin"
+        onClick={onNavigate}
+        className="flex items-center gap-2 px-6 pt-5 pb-1"
+      >
+        <span className="flex h-7 w-7 items-center justify-center rounded-md bg-slate-900 text-xs font-black text-white">
+          C
+        </span>
+        <span className="text-sm font-bold tracking-tight">Capitres Admin</span>
+      </Link>
 
-        <ul className="space-y-1">
-          {NAV_ITEMS.map((item) => {
-            const active = item.exact
-              ? pathname === item.href
-              : pathname.startsWith(item.href);
-            const Icon = item.icon;
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  aria-current={active ? "page" : undefined}
-                  className={`flex min-h-11 items-center justify-between gap-3 rounded-lg px-3 text-sm font-medium transition-colors ${
-                    active
-                      ? "bg-slate-900 text-white"
-                      : "text-slate-600 hover:bg-slate-200/70 hover:text-slate-900"
-                  }`}
-                >
-                  <span className="flex items-center gap-3">
-                    <Icon size={18} aria-hidden="true" />
-                    {item.label}
+      <ul className="mt-6 flex-1 space-y-1 overflow-y-auto px-4">
+        {NAV_ITEMS.map((item) => {
+          const active = item.exact
+            ? pathname === item.href
+            : pathname.startsWith(item.href);
+          const Icon = item.icon;
+          return (
+            <li key={item.href}>
+              <Link
+                href={item.href}
+                onClick={onNavigate}
+                aria-current={active ? "page" : undefined}
+                className={`flex min-h-11 items-center justify-between gap-3 rounded-lg px-3 text-sm font-medium transition-colors ${
+                  active
+                    ? "bg-slate-900 text-white"
+                    : "text-slate-600 hover:bg-slate-200/70 hover:text-slate-900"
+                }`}
+              >
+                <span className="flex items-center gap-3">
+                  <Icon size={18} aria-hidden="true" />
+                  {item.label}
+                </span>
+                {item.href === "/admin/abandoned" && abandonedCount > 0 && (
+                  <span
+                    className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-bold ${
+                      active ? "bg-white text-slate-900" : "bg-red-500 text-white"
+                    }`}
+                  >
+                    {abandonedCount}
                   </span>
-                  {item.href === "/admin/abandoned" && abandonedCount > 0 && (
-                    <span
-                      className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-bold ${
-                        active ? "bg-white text-slate-900" : "bg-red-500 text-white"
-                      }`}
-                    >
-                      {abandonedCount}
-                    </span>
-                  )}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
+                )}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
 
-      <form action={logout}>
-        <button
-          type="submit"
-          className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-lg px-3 text-sm font-medium text-slate-500 transition-colors hover:bg-slate-200/70 hover:text-slate-900"
-        >
-          <SignOut size={18} aria-hidden="true" />
-          Log out
-        </button>
-      </form>
+      <div className="border-t border-slate-100 px-4 pt-3 pb-4">
+        <form action={logout}>
+          <button
+            type="submit"
+            className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-lg px-3 text-sm font-medium text-slate-500 transition-colors hover:bg-slate-200/70 hover:text-slate-900"
+          >
+            <SignOut size={18} aria-hidden="true" />
+            Log out
+          </button>
+        </form>
+        <div className="mt-3 px-3 text-[11px] leading-relaxed text-slate-400">
+          <p>
+            Made by{" "}
+            <a
+              href="https://growli.media"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-bold text-slate-600 transition-colors hover:text-slate-900"
+            >
+              Growli Media
+            </a>{" "}
+            in Germany
+          </p>
+          <p className="font-light italic">Growth through creativity</p>
+        </div>
+      </div>
     </nav>
   );
 }

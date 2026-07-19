@@ -9,6 +9,21 @@ export default function LoginForm() {
   return (
     <form action={formAction} className="space-y-5">
       <div>
+        <label htmlFor="username" className="mb-2 block text-sm font-medium text-slate-700">
+          Username
+        </label>
+        <input
+          id="username"
+          name="username"
+          type="text"
+          required
+          autoFocus
+          autoComplete="username"
+          className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm outline-none transition-colors focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10"
+        />
+      </div>
+
+      <div>
         <label htmlFor="password" className="mb-2 block text-sm font-medium text-slate-700">
           Password
         </label>
@@ -17,7 +32,6 @@ export default function LoginForm() {
           name="password"
           type="password"
           required
-          autoFocus
           autoComplete="current-password"
           className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm outline-none transition-colors focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10"
         />

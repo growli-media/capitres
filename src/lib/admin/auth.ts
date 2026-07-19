@@ -3,9 +3,10 @@ import crypto from "node:crypto";
 import { cookies } from "next/headers";
 
 /**
- * Single shared admin session — one password (ADMIN_PASSWORD), one
- * HMAC-signed cookie. No per-user accounts: this dashboard has exactly
- * one operator (the client), so a full auth system would be overkill.
+ * Single shared admin login — a fixed username (ADMIN_USERNAME, default
+ * "admin") and password (ADMIN_PASSWORD), guarding an HMAC-signed cookie.
+ * One operator, no per-user accounts or password reset — that would need
+ * a users table and an email service, out of scope for this dashboard.
  */
 
 const COOKIE_NAME = "capitres_admin_session";
@@ -32,14 +33,27 @@ function timingSafeEqual(a: string, b: string): boolean {
   return crypto.timingSafeEqual(bufA, bufB);
 }
 
-export function verifyPassword(candidate: string): boolean {
-  const real = process.env.ADMIN_PASSWORD;
-  if (!real || real === "change-me") return false;
-  // Pad to a fixed length before comparing so the check is constant-time
-  // regardless of the guessed password's length.
-  const a = Buffer.from(candidate.padEnd(64, "\0"));
-  const b = Buffer.from(real.padEnd(64, "\0"));
-  return a.length === b.length && crypto.timingSafeEqual(a, b);
+/**
+ * Constant-time string equality that also hides the inputs' lengths: we
+ * compare secret-keyed HMACs (always a fixed-length hex digest) rather
+ * than the raw strings, so neither timing nor buffer length leaks
+ * anything about the real credential.
+ */
+function secretEqual(candidate: string, real: string): boolean {
+  const a = Buffer.from(sign(candidate));
+  const b = Buffer.from(sign(real));
+  return crypto.timingSafeEqual(a, b);
+}
+
+export function verifyCredentials(username: string, password: string): boolean {
+  const realPassword = process.env.ADMIN_PASSWORD;
+  if (!realPassword || realPassword === "change-me") return false;
+  const realUsername = process.env.ADMIN_USERNAME || "admin";
+  // Evaluate both every time (no short-circuit) so a correct username
+  // can't be distinguished from a wrong one by response timing.
+  const userOk = secretEqual(username, realUsername);
+  const passOk = secretEqual(password, realPassword);
+  return userOk && passOk;
 }
 
 function makeToken(): string {

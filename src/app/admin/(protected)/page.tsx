@@ -7,10 +7,12 @@ import {
   ShoppingCartSimple,
   CaretRight,
 } from "@phosphor-icons/react/dist/ssr";
+import { Quotes } from "@phosphor-icons/react/dist/ssr";
 import { getDashboardKpis, getTopProducts } from "@/lib/admin/dashboard";
 import { getAbandonedCount } from "@/lib/admin/queries";
 import { orderStore } from "@/lib/orders/store";
 import { formatIQD } from "@/lib/money";
+import { randomQuote } from "@/lib/admin/quotes";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -70,9 +72,20 @@ export default async function AdminDashboardPage() {
     getAbandonedCount(),
     orderStore.list(),
   ]);
+  const quote = randomQuote();
 
   return (
     <div>
+      <div className="mb-6 overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 px-6 py-5 text-white">
+        <Quotes size={22} weight="fill" className="mb-2 text-white/40" aria-hidden="true" />
+        <p className="text-base font-medium leading-relaxed md:text-lg">
+          {quote.text}
+        </p>
+        <p className="mt-2 text-xs font-medium uppercase tracking-wide text-white/50">
+          {quote.author}
+        </p>
+      </div>
+
       <h1 className="text-2xl font-bold tracking-tight text-slate-900">Dashboard</h1>
       <p className="mt-1 text-sm text-slate-500">
         Revenue counts paid orders only. Numbers update as soon as an order&rsquo;s
