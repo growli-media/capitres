@@ -10,10 +10,10 @@ const nextConfig: NextConfig = {
   images: {
     formats: ["image/avif", "image/webp"],
     qualities: [45, 60, 75],
-    // Product photos uploaded through /admin land in Vercel Blob storage.
-    remotePatterns: [
-      { protocol: "https", hostname: "*.public.blob.vercel-storage.com" },
-    ],
+    // Product & collection photos can be uploaded (Vercel Blob) or pasted
+    // from any image host in /admin, so allow any HTTPS source. next/image
+    // only fetches and re-encodes remote images, never executes them.
+    remotePatterns: [{ protocol: "https", hostname: "**" }],
   },
 };
 

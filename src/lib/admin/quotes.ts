@@ -10,11 +10,13 @@ export interface Quote {
   weight?: number;
 }
 
-// Iraqi poetry — al-Mutanabbi, born in Kufa, Iraq; the poet whose name
-// marks Baghdad's storied literary street. Weighted to appear most often.
+// Weighting: Iraqi poetry appears most often, then the wider Arab poets,
+// then the world's voices — all still in the mix.
 const IRAQI_WEIGHT = 3;
+const ARAB_WEIGHT = 2;
 
 export const MOTIVATION_QUOTES: Quote[] = [
+  // ---- Iraqi poetry — al-Mutanabbi, born in Kufa, Iraq ----
   {
     arabic: "إذا غامَرتَ في شَرَفٍ مَرومٍ، فلا تَقنَعْ بما دونَ النُّجومِ",
     text: "If you set out for glory, do not settle for less than the stars.",
@@ -64,19 +66,80 @@ export const MOTIVATION_QUOTES: Quote[] = [
     weight: IRAQI_WEIGHT,
   },
 
-  // Capitres & Growli — our own lines.
+  // ---- The wider Arab poets ----
   {
-    arabic: "كلُّ علامةٍ كبيرةٍ بدأت بطلبٍ واحد، وطلباتُك في الطريق.",
-    text: "Every big brand started with a single order. Yours are on the way.",
-    author: "Capitres",
+    arabic: "إذا الشَّعبُ يوماً أرادَ الحياةَ، فلا بُدَّ أن يَستجيبَ القَدَرْ",
+    text: "If the people one day will to live, then destiny must answer the call.",
+    author: "Abu al-Qasim al-Shabbi",
+    weight: ARAB_WEIGHT,
   },
   {
-    arabic: "النموُّ من خلال الإبداع.",
-    text: "Growth through creativity.",
-    author: "Growli Media",
+    arabic: "ومَن لا يُحِبُّ صُعودَ الجِبالِ، يَعِشْ أبدَ الدهرِ بينَ الحُفَرْ",
+    text: "Whoever does not love to climb mountains will live forever among the pits.",
+    author: "Abu al-Qasim al-Shabbi",
+    weight: ARAB_WEIGHT,
+  },
+  {
+    arabic: "وما نَيلُ المَطالِبِ بالتَّمنّي، ولكن تُؤخَذُ الدُّنيا غِلابا",
+    text: "What you seek is not won by wishing; the world is taken by striving.",
+    author: "Ahmad Shawqi",
+    weight: ARAB_WEIGHT,
+  },
+  {
+    arabic: "على هذهِ الأرضِ ما يَستحقُّ الحياة",
+    text: "On this earth, there is what makes life worth living.",
+    author: "Mahmoud Darwish",
+    weight: ARAB_WEIGHT,
+  },
+  {
+    arabic: "قالَ: السماءُ كئيبةٌ! وتَجَهَّما، قلتُ: ابتَسِمْ، يكفي التَّجَهُّمُ في السَّما",
+    text: "He said, 'The sky is gloomy,' and frowned. I said, 'Smile — the gloom of the sky is enough.'",
+    author: "Elia Abu Madi",
+    weight: ARAB_WEIGHT,
+  },
+  {
+    arabic: "العملُ هو الحبُّ وقد صارَ مَرئيّاً.",
+    text: "Work is love made visible.",
+    author: "Kahlil Gibran",
+    weight: ARAB_WEIGHT,
   },
 
-  // A few universal lines, kept bilingual.
+  // ---- Voices from around the world ----
+  {
+    arabic: "رحلةُ الألفِ ميلٍ تبدأُ بخطوةٍ واحدة.",
+    text: "A journey of a thousand miles begins with a single step.",
+    author: "Lao Tzu",
+  },
+  {
+    arabic: "اسقُطْ سبعَ مرّاتٍ، وانهَضْ ثمانيَ.",
+    text: "Fall seven times, stand up eight.",
+    author: "Japanese proverb",
+  },
+  {
+    arabic: "قد تُواجهُ هزائمَ كثيرة، لكن يجبُ ألّا تُهزَم.",
+    text: "You may encounter many defeats, but you must not be defeated.",
+    author: "Maya Angelou",
+  },
+  {
+    arabic: "ابقَ متعطِّشاً، ابقَ جسوراً.",
+    text: "Stay hungry, stay foolish.",
+    author: "Steve Jobs",
+  },
+  {
+    arabic: "آمِنْ بأنّكَ تستطيع، تكنْ قد قطعتَ نصفَ الطريق.",
+    text: "Believe you can and you're halfway there.",
+    author: "Theodore Roosevelt",
+  },
+  {
+    arabic: "لا تستسلِمْ أبداً — لا، لا، لا.",
+    text: "Never give in — never, never, never.",
+    author: "Winston Churchill",
+  },
+  {
+    arabic: "التفاؤلُ هو الإيمانُ الذي يقودُ إلى الإنجاز.",
+    text: "Optimism is the faith that leads to achievement.",
+    author: "Helen Keller",
+  },
   {
     arabic: "يبدو الأمرُ مستحيلاً دائماً إلى أن يتحقَّق.",
     text: "It always seems impossible until it's done.",
@@ -91,6 +154,18 @@ export const MOTIVATION_QUOTES: Quote[] = [
     arabic: "النجاحُ حصيلةُ جهودٍ صغيرةٍ تتكرَّرُ يوماً بعد يوم.",
     text: "Success is the sum of small efforts repeated day after day.",
     author: "Robert Collier",
+  },
+
+  // ---- Our own lines ----
+  {
+    arabic: "كلُّ علامةٍ كبيرةٍ بدأت بطلبٍ واحد، وطلباتُك في الطريق.",
+    text: "Every big brand started with a single order. Yours are on the way.",
+    author: "Capitres",
+  },
+  {
+    arabic: "النموُّ من خلال الإبداع.",
+    text: "Growth through creativity.",
+    author: "Growli Media",
   },
 ];
 
