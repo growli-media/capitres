@@ -145,6 +145,22 @@ body {
     text-transform: var(--display-transform);
   }
 
+  /* Editorial nav micro-type — uppercase + tracked in Latin, plain in
+     Arabic script. Hover fades rather than colours (monochrome system). */
+  .nav-link {
+    font-family: var(--font-body-active);
+    font-weight: 600;
+    font-size: 0.6875rem;
+    letter-spacing: var(--ls-cta);
+    text-transform: var(--display-transform);
+    transition: opacity 200ms ease;
+  }
+
+  .nav-link:hover,
+  .nav-link[aria-expanded="true"] {
+    opacity: 0.55;
+  }
+
   .btn {
     display: inline-flex;
     align-items: center;
