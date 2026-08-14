@@ -7,11 +7,11 @@ import { pick } from "@/lib/content";
 import { SOCIAL } from "@/lib/site";
 import { routing } from "@/i18n/routing";
 import Marquee from "@/components/layout/Marquee";
+import HeroMedia from "@/components/layout/HeroMedia";
 import NewsletterForm from "@/components/layout/NewsletterForm";
 import ProductCard from "@/components/product/ProductCard";
 import {
   Parallax,
-  ParallaxScale,
   Reveal,
   RevealGroup,
   RevealItem,
@@ -48,30 +48,22 @@ export default async function HomePage({
     <>
       {/* ---------------- Hero ---------------- */}
       <section className="relative overflow-hidden bg-ink text-paper">
-        <ParallaxScale className="absolute inset-0">
-          <Image
-            src={heroImage}
-            alt=""
-            fill
-            priority
-            fetchPriority="high"
-            sizes="100vw"
-            quality={45}
-            className="object-cover object-[50%_30%] opacity-70"
-          />
-        </ParallaxScale>
+        <HeroMedia
+          poster={heroImage}
+          videoSrc="https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4"
+        />
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-gradient-to-t from-ink via-ink/35 to-ink/25"
+          className="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/25 to-ink/45"
         />
-        <div className="container-x relative flex min-h-[92dvh] flex-col justify-end pb-14 pt-32 md:pb-20">
+        <div className="container-x relative flex min-h-[100svh] flex-col justify-end pb-16 pt-32 md:pb-24">
           <p className="hero-enter text-eyebrow mb-5 text-paper/70">
             {t("eyebrow")}
           </p>
           <h1 className="hero-enter hero-enter-2 text-display max-w-5xl text-[clamp(2.9rem,9.5vw,8.75rem)]">
             {t("titleA")}
             <br />
-            <span className="text-paper/85">{t("titleB")}</span>
+            <span className="text-paper/80">{t("titleB")}</span>
           </h1>
           <p className="hero-enter hero-enter-3 mt-6 max-w-md text-base text-paper/75 md:text-lg">
             {t("sub")}
@@ -87,6 +79,12 @@ export default async function HomePage({
               {t("ctaStory")}
             </Link>
           </div>
+        </div>
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 bottom-7 flex justify-center"
+        >
+          <span className="scroll-cue" />
         </div>
       </section>
 

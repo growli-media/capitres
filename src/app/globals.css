@@ -295,6 +295,44 @@ body {
   animation-delay: 270ms;
 }
 
+/* Hero scroll affordance — a thin line with a highlight running down it. */
+.scroll-cue {
+  display: block;
+  width: 1px;
+  height: 44px;
+  background: color-mix(in srgb, var(--color-paper) 28%, transparent);
+  position: relative;
+  overflow: hidden;
+}
+
+.scroll-cue::after {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0;
+  width: 1px;
+  height: 45%;
+  background: var(--color-paper);
+  animation: scroll-cue-run 2.2s var(--ease-editorial) infinite;
+}
+
+@keyframes scroll-cue-run {
+  0% {
+    transform: translateY(-110%);
+  }
+  100% {
+    transform: translateY(260%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-cue::after {
+    animation: none;
+    height: 100%;
+    opacity: 0.4;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hero-enter {
     animation: none;
