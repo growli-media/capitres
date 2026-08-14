@@ -44,7 +44,7 @@ export default async function MockPayPage({
         {/* Faux gateway chrome */}
         <div className="flex items-center justify-between border-b border-line bg-ink px-6 py-4 text-paper">
           <p className="text-sm font-black uppercase tracking-widest">Wayl</p>
-          <span className="text-eyebrow bg-terracotta px-2 py-1 text-white">
+          <span className="text-eyebrow bg-paper px-2 py-1 text-ink">
             TEST
           </span>
         </div>

@@ -70,7 +70,7 @@ export default async function CollectionsPage({
               >
                 <div>
                   {c.archived && (
-                    <p className="text-eyebrow mb-4 inline-block bg-terracotta px-2.5 py-1.5 text-white">
+                    <p className="text-eyebrow mb-4 inline-block border border-current px-2.5 py-1.5 opacity-60">
                       {t("archived")}
                     </p>
                   )}
@@ -79,7 +79,7 @@ export default async function CollectionsPage({
                   </h2>
                   <p
                     className={`mt-3 text-sm font-semibold ${
-                      c.theme === "dark" ? "text-green" : "text-green"
+                      c.theme === "dark" ? "text-paper/60" : "text-ink/55"
                     }`}
                   >
                     {pick(c.tagline, locale)}

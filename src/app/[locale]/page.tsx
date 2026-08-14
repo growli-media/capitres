@@ -50,10 +50,9 @@ export default async function HomePage({
           Pulled up under the sticky header so the transparent bar overlays
           the full-bleed image (header solidifies on scroll). */}
       <section className="relative -mt-16 overflow-hidden bg-ink text-paper md:-mt-[4.75rem]">
-        <HeroMedia
-          poster={heroImage}
-          videoSrc="https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4"
-        />
+        {/* Cinematic still now; to run a campaign film drop it at
+            /public/hero.mp4 and add  videoSrc="/hero.mp4"  below. */}
+        <HeroMedia poster={heroImage} />
         <div
           aria-hidden="true"
           className="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/25 to-ink/45"
@@ -94,11 +93,11 @@ export default async function HomePage({
       <div className="border-y border-line bg-ink py-3.5 text-paper">
         <Marquee>
           <span className="text-eyebrow">{tHome("marquee")}</span>
-          <span aria-hidden="true" className="text-green">
+          <span aria-hidden="true" className="text-paper/35">
             ●
           </span>
           <span className="text-eyebrow">{tHome("marqueeAlt")}</span>
-          <span aria-hidden="true" className="text-terracotta">
+          <span aria-hidden="true" className="text-paper/35">
             ●
           </span>
         </Marquee>
@@ -246,7 +245,7 @@ export default async function HomePage({
         <section className="bg-ink py-20 text-paper md:py-28">
           <div className="container-x">
             <Reveal>
-              <p className="text-eyebrow mb-3 text-green">
+              <p className="text-eyebrow mb-3 text-paper/55">
                 {tHome("heritageEyebrow")}
               </p>
             </Reveal>

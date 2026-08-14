@@ -74,9 +74,7 @@ export default function AddToCart({ product }: { product: Product }) {
       <div className="flex flex-wrap items-baseline gap-3">
         <p className="price text-2xl font-bold">
           {product.compareAtPrice ? (
-            <span className="text-terracotta">
-              {formatIQD(product.price.amount, locale)}
-            </span>
+            <span>{formatIQD(product.price.amount, locale)}</span>
           ) : (
             formatIQD(product.price.amount, locale)
           )}
@@ -180,11 +178,11 @@ export default function AddToCart({ product }: { product: Product }) {
         {soldOut ? (
           <span className="text-danger">{t("outOfStock")}</span>
         ) : variant && variant.stock <= 3 ? (
-          <span className="text-terracotta">
+          <span className="text-ink">
             {t("lowStock", { count: variant.stock })}
           </span>
         ) : (
-          <span className="text-green">{t("inStock")}</span>
+          <span className="text-ash">{t("inStock")}</span>
         )}
       </div>
 
