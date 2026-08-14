@@ -46,8 +46,10 @@ export default async function HomePage({
 
   return (
     <>
-      {/* ---------------- Hero ---------------- */}
-      <section className="relative overflow-hidden bg-ink text-paper">
+      {/* ---------------- Hero ----------------
+          Pulled up under the sticky header so the transparent bar overlays
+          the full-bleed image (header solidifies on scroll). */}
+      <section className="relative -mt-16 overflow-hidden bg-ink text-paper md:-mt-[4.75rem]">
         <HeroMedia
           poster={heroImage}
           videoSrc="https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4"
