@@ -48,12 +48,12 @@ export default function HeroMedia({
         priority
         fetchPriority="high"
         sizes="100vw"
-        quality={55}
-        className="object-cover object-[50%_28%] grayscale contrast-[1.04]"
+        quality={60}
+        className="object-cover object-[50%_28%]"
       />
       {!reducedMotion && videoSrc && (
         <video
-          className="absolute inset-0 h-full w-full object-cover object-[50%_28%] grayscale contrast-[1.04]"
+          className="absolute inset-0 h-full w-full object-cover object-[50%_28%]"
           autoPlay
           muted
           loop
