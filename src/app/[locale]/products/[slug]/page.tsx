@@ -134,7 +134,7 @@ export default async function ProductPage({
               <ul className="space-y-2 pb-5 text-sm leading-relaxed text-ink/70">
                 {product.details.map((d, i) => (
                   <li key={i} className="flex gap-2">
-                    <span aria-hidden="true" className="text-green">
+                    <span aria-hidden="true" className="text-ink/40">
                       —
                     </span>
                     {pick(d, locale)}
@@ -162,8 +162,8 @@ export default async function ProductPage({
 
           {/* Heritage story */}
           {product.story && (
-            <blockquote className="mt-9 border-s-2 border-green bg-studio p-6">
-              <p className="text-eyebrow mb-3 text-green">{t("heritage")}</p>
+            <blockquote className="mt-9 border-s-2 border-ink bg-studio p-6">
+              <p className="text-eyebrow mb-3 text-ink/60">{t("heritage")}</p>
               <p className="leading-relaxed text-ink/80">
                 {pick(product.story, locale)}
               </p>
@@ -252,12 +252,15 @@ export default async function ProductPage({
                 {t("related")}
               </h2>
             </Reveal>
-            <ul className="grid grid-cols-2 gap-x-5 gap-y-10 lg:grid-cols-4">
+            <ul className="no-scrollbar -mx-1 flex snap-x snap-mandatory gap-5 overflow-x-auto px-1 pb-2">
               {relatedProducts.map((p) => (
-                <li key={p.id}>
+                <li
+                  key={p.id}
+                  className="w-[68vw] shrink-0 snap-start sm:w-[42vw] lg:w-[29vw] xl:w-[23vw]"
+                >
                   <ProductCard
                     product={p}
-                    sizes="(min-width: 1024px) 25vw, 50vw"
+                    sizes="(min-width: 1280px) 23vw, (min-width: 1024px) 29vw, (min-width: 640px) 42vw, 68vw"
                   />
                 </li>
               ))}
