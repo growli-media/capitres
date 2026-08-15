@@ -115,38 +115,99 @@ export default function Header({
 
   const featured = collections[0];
 
+  // Transparent, light-on-dark over the homepage hero; solid on scroll or
+  // whenever a menu is open. Every other page keeps a solid bar.
+  const overHero = pathname === "/" && !scrolled && !panel && !mobileOpen;
+
   return (
     <header
       className={`sticky top-0 z-40 border-b transition-colors duration-300 ${
-        scrolled || panel || mobileOpen
-          ? "border-line bg-paper/95 backdrop-blur-md"
-          : "border-transparent bg-paper/80 backdrop-blur-sm"
+        overHero
+          ? "border-transparent bg-transparent text-paper"
+          : "border-line bg-paper/95 text-ink backdrop-blur-md"
       }`}
       onMouseLeave={scheduleClose}
       onMouseEnter={cancelClose}
     >
-      <div className="container-x flex h-16 items-center justify-between gap-4 md:h-[4.5rem]">
-        {/* Mobile menu trigger */}
-        <button
-          type="button"
-          className="flex min-h-11 min-w-11 cursor-pointer items-center justify-center lg:hidden"
-          aria-expanded={mobileOpen}
-          aria-controls="mobile-menu"
-          aria-label={mobileOpen ? tA11y("closeMenu") : tA11y("openMenu")}
-          onClick={() => setMobileOpen((v) => !v)}
-        >
-          {mobileOpen ? <X size={24} /> : <List size={24} />}
-        </button>
+      <div className="container-x grid h-16 grid-cols-[1fr_auto_1fr] items-center gap-4 md:h-[4.75rem]">
+        {/* Left: mobile trigger + desktop left-nav (Shop / Collections) */}
+        <div className="flex items-center justify-start gap-1">
+          <button
+            type="button"
+            className="-ms-2 flex min-h-11 min-w-11 cursor-pointer items-center justify-center lg:hidden"
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-menu"
+            aria-label={mobileOpen ? tA11y("closeMenu") : tA11y("openMenu")}
+            onClick={() => setMobileOpen((v) => !v)}
+          >
+            {mobileOpen ? <X size={22} /> : <List size={22} />}
+          </button>
+          <nav
+            aria-label={tA11y("mainNav")}
+            className="hidden items-center lg:flex"
+          >
+            <ul className="flex items-center">
+              <li
+                onMouseEnter={() => {
+                  cancelClose();
+                  setPanel("shop");
+                }}
+              >
+                <button
+                  type="button"
+                  aria-expanded={panel === "shop"}
+                  aria-controls="mega-shop"
+                  onClick={() => setPanel(panel === "shop" ? null : "shop")}
+                  className="nav-link flex min-h-11 cursor-pointer items-center gap-1 pe-5"
+                >
+                  {t("shop")}
+                  <CaretDown
+                    size={10}
+                    aria-hidden="true"
+                    className={`transition-transform duration-200 ${panel === "shop" ? "rotate-180" : ""}`}
+                  />
+                </button>
+              </li>
+              <li
+                onMouseEnter={() => {
+                  cancelClose();
+                  setPanel("collections");
+                }}
+              >
+                <button
+                  type="button"
+                  aria-expanded={panel === "collections"}
+                  aria-controls="mega-collections"
+                  onClick={() =>
+                    setPanel(panel === "collections" ? null : "collections")
+                  }
+                  className="nav-link flex min-h-11 cursor-pointer items-center gap-1 pe-5"
+                >
+                  {t("collections")}
+                  <CaretDown
+                    size={10}
+                    aria-hidden="true"
+                    className={`transition-transform duration-200 ${panel === "collections" ? "rotate-180" : ""}`}
+                  />
+                </button>
+              </li>
+            </ul>
+          </nav>
+        </div>
 
-        {/* Wordmark — stays Latin in every locale, like the garment prints */}
-        <Link href="/" className="flex cursor-pointer items-center gap-2.5">
+        {/* Center: wordmark — stays Latin in every locale, like the prints */}
+        <Link
+          href="/"
+          onMouseEnter={() => setPanel(null)}
+          className="flex cursor-pointer items-center justify-center gap-2.5"
+        >
           <Image
             src={logoMark}
             alt=""
             width={30}
             height={30}
             priority
-            className="h-[26px] w-[26px] md:h-[30px] md:w-[30px]"
+            className={`h-[23px] w-[23px] md:h-[27px] md:w-[27px] ${overHero ? "invert" : ""}`}
           />
           <span
             className="pt-0.5 text-lg font-black uppercase tracking-tight md:text-xl"
@@ -156,93 +217,43 @@ export default function Header({
           </span>
         </Link>
 
-        {/* Desktop nav */}
-        <nav
-          aria-label={tA11y("mainNav")}
-          className="hidden flex-1 items-center justify-center lg:flex"
-        >
-          <ul className="flex items-center gap-1">
-            <li
-              onMouseEnter={() => {
-                cancelClose();
-                setPanel("shop");
-              }}
-            >
-              <button
-                type="button"
-                aria-expanded={panel === "shop"}
-                aria-controls="mega-shop"
-                onClick={() => setPanel(panel === "shop" ? null : "shop")}
-                className={`flex min-h-11 cursor-pointer items-center gap-1 px-4 text-sm font-semibold transition-colors hover:text-green ${
-                  panel === "shop" ? "text-green" : ""
-                }`}
-              >
-                {t("shop")}
-                <CaretDown
-                  size={12}
-                  aria-hidden="true"
-                  className={`transition-transform duration-200 ${panel === "shop" ? "rotate-180" : ""}`}
-                />
-              </button>
-            </li>
-            <li
-              onMouseEnter={() => {
-                cancelClose();
-                setPanel("collections");
-              }}
-            >
-              <button
-                type="button"
-                aria-expanded={panel === "collections"}
-                aria-controls="mega-collections"
-                onClick={() =>
-                  setPanel(panel === "collections" ? null : "collections")
-                }
-                className={`flex min-h-11 cursor-pointer items-center gap-1 px-4 text-sm font-semibold transition-colors hover:text-green ${
-                  panel === "collections" ? "text-green" : ""
-                }`}
-              >
-                {t("collections")}
-                <CaretDown
-                  size={12}
-                  aria-hidden="true"
-                  className={`transition-transform duration-200 ${panel === "collections" ? "rotate-180" : ""}`}
-                />
-              </button>
-            </li>
-            {[
-              { href: "/blog", label: t("journal") },
-              { href: "/about", label: t("about") },
-              { href: "/contact", label: t("contact") },
-            ].map((item) => (
-              <li key={item.href} onMouseEnter={() => setPanel(null)}>
-                <Link
-                  href={item.href}
-                  className="flex min-h-11 items-center px-4 text-sm font-semibold transition-colors hover:text-green"
-                >
-                  {item.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
-
-        {/* Actions */}
-        <div className="flex items-center gap-1">
-          <div className="hidden sm:block">
+        {/* Right: desktop right-nav (Journal / Our Story / Contact) + actions */}
+        <div className="flex items-center justify-end gap-1">
+          <nav
+            aria-label={tA11y("mainNav")}
+            className="hidden items-center lg:flex"
+          >
+            <ul className="flex items-center">
+              {[
+                { href: "/blog", label: t("journal") },
+                { href: "/about", label: t("about") },
+                { href: "/contact", label: t("contact") },
+              ].map((item) => (
+                <li key={item.href} onMouseEnter={() => setPanel(null)}>
+                  <Link
+                    href={item.href}
+                    className="nav-link flex min-h-11 items-center ps-5"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          <div className="hidden ps-3 sm:block">
             <LanguageSwitcher />
           </div>
           <button
             type="button"
             onClick={openCart}
             aria-label={tA11y("openCart", { count })}
-            className="relative flex min-h-11 min-w-11 cursor-pointer items-center justify-center transition-colors hover:text-green"
+            className="relative -me-2 flex min-h-11 min-w-11 cursor-pointer items-center justify-center transition-opacity hover:opacity-60"
           >
-            <ShoppingBag size={22} />
+            <ShoppingBag size={21} />
             {count > 0 && (
               <span
                 aria-hidden="true"
-                className="absolute -end-0.5 top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-green px-1 text-[11px] font-bold text-white"
+                className="absolute end-1 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-ink px-1 text-[10px] font-bold text-paper"
               >
                 {count}
               </span>

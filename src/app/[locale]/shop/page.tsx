@@ -9,6 +9,7 @@ import type {
   ProductSort,
 } from "@/lib/catalog/types";
 import ProductCard from "@/components/product/ProductCard";
+import ProductGrid from "@/components/shop/ProductGrid";
 import ShopFilters, { type ColorOption } from "@/components/shop/ShopFilters";
 import { PRICE_RANGES } from "@/lib/commerce/filters";
 import { Link } from "@/i18n/navigation";
@@ -98,7 +99,7 @@ export default async function ShopPage({
             </Link>
           </div>
         ) : (
-          <ul className="grid grid-cols-2 gap-x-5 gap-y-10 lg:grid-cols-3 xl:grid-cols-4">
+          <ProductGrid>
             {products.map((p, i) => (
               <li key={p.id}>
                 <ProductCard
@@ -108,7 +109,7 @@ export default async function ShopPage({
                 />
               </li>
             ))}
-          </ul>
+          </ProductGrid>
         )}
       </section>
     </>

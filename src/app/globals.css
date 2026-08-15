@@ -35,20 +35,29 @@ html[lang="ku"] {
 }
 
 @theme {
-  /* Core brand */
-  --color-ink: #0b0a09; /* wordmark black */
-  --color-ink-soft: #292725;
-  --color-paper: #f5f4f6; /* studio backdrop from product photography */
-  --color-studio: #ececee; /* product canvas tone */
-  --color-green: #065e37; /* "Iraq 80's Heritage" tee green */
-  --color-green-deep: #04482b;
-  --color-terracotta: #926149; /* "IRAQ 70" retro palette */
-  --color-sand: #cbae96; /* "IRAQ 70" highlight */
-  --color-line: #e3e2e5;
-  --color-line-strong: #c9c8cb;
-  --color-danger: #b3261e;
+  /* Near-monochrome editorial palette — black, white, ecru, greys.
+     Photography and video supply the colour; the accent stays ink so the
+     whole site reads monochrome from one place. Legacy accent tokens are
+     repointed to neutrals and phased out per page during the redesign. */
+  --color-ink: #0a0a0a; /* near-black */
+  --color-ink-soft: #2a2926;
+  --color-paper: #f4f3ef; /* warm ecru ground */
+  --color-studio: #eceae4; /* image canvas tone */
+  --color-mist: #e6e4dd; /* faint fill */
+  --color-smoke: #b7b5ac; /* muted borders */
+  --color-ash: #6d6b64; /* secondary text */
+  --color-green: #0a0a0a; /* accent monochromed to ink */
+  --color-green-deep: #000000;
+  --color-terracotta: #8a6b57;
+  --color-sand: #cbae96;
+  --color-line: #dedcd4;
+  --color-line-strong: #c6c4bb;
+  --color-danger: #9a1c15;
 
   --breakpoint-3xl: 1800px;
+
+  /* Editorial motion — smooth, decisive easing for scroll reveals. */
+  --ease-editorial: cubic-bezier(0.22, 1, 0.36, 1);
 
   --animate-marquee: marquee 32s linear infinite;
 
@@ -136,6 +145,22 @@ body {
     text-transform: var(--display-transform);
   }
 
+  /* Editorial nav micro-type — uppercase + tracked in Latin, plain in
+     Arabic script. Hover fades rather than colours (monochrome system). */
+  .nav-link {
+    font-family: var(--font-body-active);
+    font-weight: 600;
+    font-size: 0.6875rem;
+    letter-spacing: var(--ls-cta);
+    text-transform: var(--display-transform);
+    transition: opacity 200ms ease;
+  }
+
+  .nav-link:hover,
+  .nav-link[aria-expanded="true"] {
+    opacity: 0.55;
+  }
+
   .btn {
     display: inline-flex;
     align-items: center;
@@ -167,8 +192,8 @@ body {
   }
 
   .btn-ink:hover {
-    background: var(--color-green);
-    color: #ffffff;
+    background: var(--color-ink-soft);
+    color: var(--color-paper);
   }
 
   .btn-paper {
@@ -284,6 +309,44 @@ body {
 
 .hero-enter-4 {
   animation-delay: 270ms;
+}
+
+/* Hero scroll affordance — a thin line with a highlight running down it. */
+.scroll-cue {
+  display: block;
+  width: 1px;
+  height: 44px;
+  background: color-mix(in srgb, var(--color-paper) 28%, transparent);
+  position: relative;
+  overflow: hidden;
+}
+
+.scroll-cue::after {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0;
+  width: 1px;
+  height: 45%;
+  background: var(--color-paper);
+  animation: scroll-cue-run 2.2s var(--ease-editorial) infinite;
+}
+
+@keyframes scroll-cue-run {
+  0% {
+    transform: translateY(-110%);
+  }
+  100% {
+    transform: translateY(260%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-cue::after {
+    animation: none;
+    height: 100%;
+    opacity: 0.4;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

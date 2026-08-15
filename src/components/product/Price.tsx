@@ -14,7 +14,7 @@ export default function Price({
   const onSale = compareAt !== undefined && compareAt > amount;
   return (
     <span className={`price inline-flex items-baseline gap-2 ${className}`}>
-      <span className={onSale ? "text-terracotta" : undefined}>
+      <span className={onSale ? "font-semibold" : undefined}>
         {formatIQD(amount, locale)}
       </span>
       {onSale && (

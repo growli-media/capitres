@@ -39,6 +39,18 @@ export default function ProductCard({
           priority={priority}
           className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]"
         />
+        {/* Editorial hover swap — reveals the second shot on hover; a
+            single-image product simply keeps the slow zoom above. */}
+        {product.images[1] && (
+          <Image
+            src={product.images[1].src}
+            alt=""
+            aria-hidden="true"
+            fill
+            sizes={sizes}
+            className="object-cover opacity-0 transition-[opacity,transform] duration-700 ease-out group-hover:scale-[1.05] group-hover:opacity-100"
+          />
+        )}
         <div className="absolute start-3 top-3 flex flex-col items-start gap-2">
           {product.isNew && (
             <span className="text-eyebrow bg-ink px-2.5 py-1.5 text-paper">
@@ -46,7 +58,7 @@ export default function ProductCard({
             </span>
           )}
           {onSale && (
-            <span className="text-eyebrow bg-terracotta px-2.5 py-1.5 text-white">
+            <span className="text-eyebrow bg-paper px-2.5 py-1.5 text-ink">
               {t("sale")}
             </span>
           )}
