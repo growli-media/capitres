@@ -174,7 +174,7 @@ export default function CartDrawer() {
             type="button"
             onClick={close}
             aria-label={tA11y("closeCart")}
-            className="flex min-h-11 min-w-11 cursor-pointer items-center justify-center transition-colors hover:text-green"
+            className="flex min-h-11 min-w-11 cursor-pointer items-center justify-center transition-opacity hover:opacity-55"
           >
             <X size={22} />
           </button>

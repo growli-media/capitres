@@ -54,7 +54,7 @@ export default function LanguageSwitcher({
   const toneClasses =
     tone === "paper"
       ? "text-paper hover:text-white"
-      : "text-ink hover:text-green";
+      : "text-ink hover:text-ash";
 
   return (
     <div ref={rootRef} className="relative">
@@ -88,7 +88,7 @@ export default function LanguageSwitcher({
                 lang={l}
                 dir={l === "en" ? "ltr" : "rtl"}
                 className={`flex min-h-11 w-full cursor-pointer items-center justify-between px-4 text-sm transition-colors hover:bg-studio ${
-                  l === locale ? "font-bold text-green" : "text-ink"
+                  l === locale ? "font-bold text-ink" : "text-ink"
                 }`}
               >
                 <span>{localeNames[l]}</span>
