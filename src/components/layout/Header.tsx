@@ -278,74 +278,103 @@ export default function Header({
         {panel === "shop" && (
           <div
             id="mega-shop"
-            className="container-x grid grid-cols-12 gap-10 py-10"
+            className="container-x grid grid-cols-12 gap-10 py-12"
           >
-            <div className="col-span-3">
-              <p className="text-eyebrow mb-5 text-ink/60">{t("shop")}</p>
-              <ul className="space-y-1">
-                {shopLinks.map((l) => (
-                  <li key={l.href}>
+            {/* Three link columns — YSL-style */}
+            <div className="col-span-7 grid grid-cols-3 gap-8">
+              <div>
+                <p className="text-eyebrow mb-6 text-ink/45">{t("shop")}</p>
+                <ul className="space-y-3">
+                  {shopLinks.map((l) => (
+                    <li key={l.href}>
+                      <Link
+                        href={l.href}
+                        className={`link-underline inline-flex items-center text-sm ${
+                          l.emphasis ? "font-bold" : "font-medium"
+                        }`}
+                      >
+                        {l.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <p className="text-eyebrow mb-6 text-ink/45">
+                  {t("byCategory")}
+                </p>
+                <ul className="space-y-3">
+                  {categoryLinks.map((c) => (
+                    <li key={c.slug}>
+                      <Link
+                        href={c.href}
+                        className="link-underline inline-flex items-center text-sm font-medium"
+                      >
+                        {pick(c.title, locale)}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <p className="text-eyebrow mb-6 text-ink/45">
+                  {t("collections")}
+                </p>
+                <ul className="space-y-3">
+                  {collections
+                    .filter((c) => !c.archived)
+                    .slice(0, 6)
+                    .map((c) => (
+                      <li key={c.slug}>
+                        <Link
+                          href={`/collections/${c.slug}`}
+                          className="link-underline inline-flex items-center text-sm font-medium"
+                        >
+                          {pick(c.title, locale)}
+                        </Link>
+                      </li>
+                    ))}
+                  <li>
                     <Link
-                      href={l.href}
-                      className={`link-underline inline-flex min-h-9 items-center text-[15px] ${
-                        l.emphasis ? "font-bold" : "font-medium"
-                      }`}
+                      href="/collections"
+                      className="link-underline inline-flex items-center text-sm text-ink/55"
                     >
-                      {l.label}
+                      {t("explore")}
                     </Link>
                   </li>
-                ))}
-              </ul>
-            </div>
-            <div className="col-span-3">
-              <p className="text-eyebrow mb-5 text-ink/60">{t("byCategory")}</p>
-              <ul className="space-y-1">
-                {categoryLinks.map((c) => (
-                  <li key={c.slug}>
-                    <Link
-                      href={c.href}
-                      className="link-underline inline-flex min-h-9 items-center text-[15px] font-medium"
-                    >
-                      {pick(c.title, locale)}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+                </ul>
+              </div>
             </div>
             {featured && (
               <Link
                 href={`/collections/${featured.slug}`}
-                className="group col-span-6 grid cursor-pointer grid-cols-2 overflow-hidden bg-ink text-paper"
+                className="group relative col-span-5 min-h-64 cursor-pointer overflow-hidden bg-ink text-paper"
               >
-                <div className="flex flex-col justify-between p-6">
-                  <p className="text-eyebrow text-paper/60">
-                    {t("featuredCollection")}
-                  </p>
+                <Image
+                  src={featured.image}
+                  alt={pick(featured.imageAlt, locale)}
+                  fill
+                  sizes="40vw"
+                  className="object-cover opacity-80 transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-ink/70 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 flex items-end justify-between p-6">
                   <div>
-                    <p className="text-display text-2xl">
+                    <p className="text-eyebrow text-paper/70">
+                      {t("featuredCollection")}
+                    </p>
+                    <p className="text-display mt-1 text-2xl">
                       {pick(featured.title, locale)}
                     </p>
-                    <p className="mt-2 text-sm text-paper/70">
-                      {pick(featured.tagline, locale)}
-                    </p>
-                    <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-paper">
-                      {t("explore")}
-                      <ArrowUpRight
-                        size={16}
-                        aria-hidden="true"
-                        className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 rtl:-scale-x-100 rtl:group-hover:-translate-x-0.5"
-                      />
-                    </span>
                   </div>
-                </div>
-                <div className="relative min-h-52 overflow-hidden">
-                  <Image
-                    src={featured.image}
-                    alt={pick(featured.imageAlt, locale)}
-                    fill
-                    sizes="20vw"
-                    className="object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
+                  <span className="inline-flex items-center gap-1.5 text-sm font-semibold">
+                    {t("explore")}
+                    <ArrowUpRight
+                      size={16}
+                      aria-hidden="true"
+                      className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 rtl:-scale-x-100"
+                    />
+                  </span>
                 </div>
               </Link>
             )}
