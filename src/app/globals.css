@@ -90,16 +90,18 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Homepage full-page snap: lock to one full-screen panel at a time so a
-   small scroll advances to the next photo instead of free-scrolling.
-   Toggled by <HomeScrollSnap> only while the homepage is mounted. */
+/* Homepage full-page snap: lock to one full-screen panel at a time.
+   scroll-behavior is forced to auto here — the global `smooth` makes the
+   browser crawl to each snap point (the "laggy/slow" feel); auto snaps
+   crisply and stays responsive to every scroll. Toggled by <HomeScrollSnap>
+   only while the homepage is mounted. */
 html.snap-y {
   scroll-snap-type: y mandatory;
+  scroll-behavior: auto;
 }
 
 .snap-panel {
   scroll-snap-align: start;
-  scroll-snap-stop: always;
 }
 
 @media (prefers-reduced-motion: reduce) {
