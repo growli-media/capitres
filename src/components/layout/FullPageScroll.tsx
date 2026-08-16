@@ -5,13 +5,13 @@ import { useEffect } from "react";
 /**
  * Desktop full-page controller for the homepage. Each section is a static
  * full-screen photo; the panels are CSS-sticky so the next one covers the
- * previous from the bottom. This locks scrolling to one photo at a time: a
- * single wheel/keyboard step animates (slowly, gently) to the next stop and
- * blocks input until it lands — no resting in the middle.
+ * previous from the bottom. Every wheel/keyboard step is handled instantly:
+ * it re-aims at the next stop and animates there with a fast, snappy ease —
+ * no cooldown and no input-blocking, so consecutive scrolls chain smoothly
+ * and it never feels late. Scrolling stays locked to one photo per step.
  *
- * Only runs on pointer-capable desktop widths and when motion is allowed;
- * touch/mobile and reduced-motion fall back to normal scrolling. It also
- * stands down whenever a scroll-locking overlay (cart, mobile menu) is open.
+ * Desktop + motion only; touch/mobile and reduced-motion free-scroll. Stands
+ * down whenever a scroll-locking overlay (cart, mobile menu) is open.
  */
 export default function FullPageScroll() {
   useEffect(() => {
@@ -22,9 +22,8 @@ export default function FullPageScroll() {
     const main = document.getElementById("main");
     if (!main) return;
 
-    // Absolute document top of an element via the offsetParent chain — stable
-    // under position:sticky (offsetTop reflects flow, not the sticky offset)
-    // and correct even when the sections sit inside a wrapper div.
+    // Absolute document top via the offsetParent chain — stable under
+    // position:sticky and correct even inside a wrapper div.
     const absTop = (el: HTMLElement) => {
       let y = 0;
       let node: HTMLElement | null = el;
@@ -58,33 +57,28 @@ export default function FullPageScroll() {
       return bi;
     };
 
-    let index = nearest(window.scrollY);
-    let animating = false;
-    let lastLanded = 0;
+    let target = nearest(window.scrollY);
+    let raf: number | null = null;
+    let startY = 0;
+    let startTime = 0;
+    const DURATION = 430; // fast, snappy cover
+    const ease = (t: number) => 1 - Math.pow(1 - t, 3); // easeOutCubic
 
-    const easeInOutCubic = (t: number) =>
-      t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    const tick = (now: number) => {
+      const p = Math.min(1, (now - startTime) / DURATION);
+      const targetY = stops[target];
+      window.scrollTo(0, Math.round(startY + (targetY - startY) * ease(p)));
+      raf = p < 1 ? requestAnimationFrame(tick) : null;
+    };
 
-    const go = (to: number) => {
-      to = Math.max(0, Math.min(stops.length - 1, to));
-      if (animating || to === index) return;
-      index = to;
-      animating = true;
-      const startY = window.scrollY;
-      const dist = stops[to] - startY;
-      const duration = 1000; // gentle glide
-      const t0 = performance.now();
-      const frame = (now: number) => {
-        const p = Math.min(1, (now - t0) / duration);
-        window.scrollTo(0, Math.round(startY + dist * easeInOutCubic(p)));
-        if (p < 1) {
-          requestAnimationFrame(frame);
-        } else {
-          animating = false;
-          lastLanded = performance.now();
-        }
-      };
-      requestAnimationFrame(frame);
+    const step = (dir: number) => {
+      const nt = Math.max(0, Math.min(stops.length - 1, target + dir));
+      if (nt === target) return;
+      target = nt;
+      startY = window.scrollY; // re-aim from wherever we are right now
+      startTime = performance.now();
+      if (raf) cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(tick);
     };
 
     const locked = () => document.body.style.overflow === "hidden";
@@ -92,9 +86,8 @@ export default function FullPageScroll() {
     const onWheel = (e: WheelEvent) => {
       if (locked()) return;
       e.preventDefault();
-      if (animating || performance.now() - lastLanded < 140) return;
       if (Math.abs(e.deltaY) < 4) return;
-      go(index + (e.deltaY > 0 ? 1 : -1));
+      step(e.deltaY > 0 ? 1 : -1);
     };
 
     const onKey = (e: KeyboardEvent) => {
@@ -103,22 +96,23 @@ export default function FullPageScroll() {
       if (el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) return;
       if (e.key === "ArrowDown" || e.key === "PageDown" || e.key === " ") {
         e.preventDefault();
-        go(index + 1);
+        step(1);
       } else if (e.key === "ArrowUp" || e.key === "PageUp") {
         e.preventDefault();
-        go(index - 1);
+        step(-1);
       }
     };
 
     const onResize = () => {
       measure();
-      index = nearest(window.scrollY);
+      target = nearest(window.scrollY);
     };
 
     window.addEventListener("wheel", onWheel, { passive: false });
     window.addEventListener("keydown", onKey);
     window.addEventListener("resize", onResize);
     return () => {
+      if (raf) cancelAnimationFrame(raf);
       window.removeEventListener("wheel", onWheel);
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("resize", onResize);
