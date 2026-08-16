@@ -2,15 +2,18 @@
 
 import { useEffect } from "react";
 import Lenis from "lenis";
+import { usePathname } from "@/i18n/navigation";
 
 /**
- * Site-wide smooth momentum scrolling (the buttery, YSL-like feel) — it
- * normalises high-resolution mouse wheels so scrolling glides instead of
- * jumping. A gentle, slightly slow duration keeps full-screen sections
- * calm to move through. Disabled for prefers-reduced-motion.
+ * Site-wide smooth momentum scrolling (the buttery feel) — it normalises
+ * high-resolution mouse wheels so scrolling glides instead of jumping.
+ * Disabled for prefers-reduced-motion and on the homepage, which runs its
+ * own locked full-page controller (<FullPageScroll>) that owns the wheel.
  */
 export default function SmoothScroll() {
+  const pathname = usePathname();
   useEffect(() => {
+    if (pathname === "/") return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       return;
     }
@@ -31,7 +34,7 @@ export default function SmoothScroll() {
       cancelAnimationFrame(frame);
       lenis.destroy();
     };
-  }, []);
+  }, [pathname]);
 
   return null;
 }
