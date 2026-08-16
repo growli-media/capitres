@@ -107,15 +107,15 @@ export default async function ProductPage({
               ? pick(primaryCollection.title, locale)
               : tNav("shopAll")}
           </p>
-          <h1 className="text-display mt-2 text-4xl md:text-5xl">
+          <h1 className="text-display mt-2 text-xl md:text-2xl">
             {pick(product.title, locale)}
           </h1>
 
-          <p className="mt-5 leading-relaxed text-ink/70">
+          <p className="mt-4 max-w-md text-sm leading-relaxed text-ink/65">
             {pick(product.description, locale)}
           </p>
 
-          <div className="mt-7">
+          <div className="mt-6">
             <AddToCart product={product} />
           </div>
 

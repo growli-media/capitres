@@ -44,7 +44,7 @@ export default async function HomePage({
           the media. Drop a campaign film at /public/hero.mp4 and add
           videoSrc="/hero.mp4" below to run motion; until then the poster
           carries a slow cinematic drift. */}
-      <section className="relative -mt-16 h-[100svh] overflow-hidden bg-ink text-paper md:-mt-[4.75rem]">
+      <section className="sticky top-0 -mt-16 h-[100svh] overflow-hidden bg-ink text-paper md:-mt-[4.75rem]">
         <HeroMedia poster={heroImage} /* videoSrc="/hero.mp4" */ />
         <div
           aria-hidden="true"

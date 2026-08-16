@@ -72,7 +72,7 @@ export default function AddToCart({ product }: { product: Product }) {
     <div>
       {/* Price */}
       <div className="flex flex-wrap items-baseline gap-3">
-        <p className="price text-2xl font-bold">
+        <p className="price text-base font-semibold">
           {product.compareAtPrice ? (
             <span>{formatIQD(product.price.amount, locale)}</span>
           ) : (
@@ -92,8 +92,8 @@ export default function AddToCart({ product }: { product: Product }) {
 
       {/* Colour */}
       {product.colors.length > 0 && (
-        <div className="mt-7">
-          <p className="text-eyebrow mb-3 text-ink/60">
+        <div className="mt-6">
+          <p className="text-eyebrow mb-2.5 text-ink/55">
             {t("color")}
             {selectedColor && (
               <>
@@ -120,8 +120,10 @@ export default function AddToCart({ product }: { product: Product }) {
                   aria-label={pick(c.name, locale)}
                   title={pick(c.name, locale)}
                   onClick={() => setColorKey(c.key)}
-                  className={`h-9 w-9 cursor-pointer rounded-full border border-ink/20 transition-shadow ${
-                    active ? "ring-2 ring-ink ring-offset-2" : "hover:ring-2 hover:ring-ink/40 hover:ring-offset-2"
+                  className={`h-6 w-6 cursor-pointer rounded-full border border-ink/20 transition-shadow ${
+                    active
+                      ? "ring-1 ring-ink ring-offset-2"
+                      : "hover:ring-1 hover:ring-ink/40 hover:ring-offset-2"
                   }`}
                   style={{ backgroundColor: c.hex }}
                 />
@@ -133,8 +135,8 @@ export default function AddToCart({ product }: { product: Product }) {
 
       {/* Sizes */}
       {!product.giftCard && (
-        <fieldset className="mt-7">
-          <legend className="text-eyebrow mb-3 text-ink/60">{t("size")}</legend>
+        <fieldset className="mt-6">
+          <legend className="text-eyebrow mb-2.5 text-ink/55">{t("size")}</legend>
           <div
             className="flex flex-wrap gap-2"
             role="radiogroup"
@@ -151,7 +153,7 @@ export default function AddToCart({ product }: { product: Product }) {
                   aria-checked={active}
                   disabled={out}
                   onClick={() => setSize(v.size)}
-                  className={`relative flex h-12 min-w-14 items-center justify-center border px-4 text-sm font-semibold transition-colors ${
+                  className={`relative flex h-9 min-w-10 items-center justify-center border px-2.5 text-xs font-semibold transition-colors ${
                     active
                       ? "cursor-pointer border-ink bg-ink text-paper"
                       : out
