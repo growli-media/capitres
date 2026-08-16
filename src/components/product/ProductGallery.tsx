@@ -121,7 +121,9 @@ export default function ProductGallery({
               data-idx={i}
               onClick={() => setZoomSrc(img.src)}
               aria-label={t("zoomImage")}
-              className="group relative block aspect-[4/5] w-full cursor-zoom-in overflow-hidden bg-studio"
+              className={`group relative block w-full cursor-zoom-in overflow-hidden bg-studio ${
+                many ? "aspect-[4/5]" : "h-[100svh]"
+              }`}
             >
               <Image
                 src={img.src}
