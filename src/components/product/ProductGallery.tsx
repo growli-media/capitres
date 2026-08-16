@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
-import { CaretLeft, CaretRight, MagnifyingGlassPlus, X } from "@phosphor-icons/react";
+import { X } from "@phosphor-icons/react";
 import type { ProductImage } from "@/lib/catalog/types";
 import { imageSrcKey, pick } from "@/lib/content";
 
 /**
- * PDP gallery: framed studio image, arrow/thumb navigation for multiple
- * shots, click-to-zoom lightbox (Escape or click to dismiss).
+ * PDP gallery, Saint-Laurent style. Desktop: every shot stacked vertically —
+ * you simply scroll the images while the product info stays put (that column
+ * is sticky in the parent). A live "1 / 4" counter tracks the shot in view.
+ * Mobile: a swipeable snap carousel. Any image opens a full-screen zoom.
  */
 export default function ProductGallery({
   images,
@@ -20,16 +22,35 @@ export default function ProductGallery({
 }) {
   const locale = useLocale();
   const t = useTranslations("a11y");
-  const [index, setIndex] = useState(0);
-  const [zoom, setZoom] = useState(false);
-
-  const current = images[index];
+  const [active, setActive] = useState(0);
+  const [zoomSrc, setZoomSrc] = useState<ProductImage["src"] | null>(null);
   const many = images.length > 1;
+  const stackRef = useRef<HTMLDivElement>(null);
 
+  // Desktop: report which stacked image is centred in the viewport.
   useEffect(() => {
-    if (!zoom) return;
+    const root = stackRef.current;
+    if (!root) return;
+    const items = Array.from(root.querySelectorAll<HTMLElement>("[data-idx]"));
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            setActive(Number((e.target as HTMLElement).dataset.idx));
+          }
+        }
+      },
+      { threshold: 0.55 },
+    );
+    items.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, [images.length]);
+
+  // Zoom lightbox: escape to close, lock body scroll.
+  useEffect(() => {
+    if (!zoomSrc) return;
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setZoom(false);
+      if (e.key === "Escape") setZoomSrc(null);
     }
     document.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
@@ -37,111 +58,110 @@ export default function ProductGallery({
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
     };
-  }, [zoom]);
+  }, [zoomSrc]);
+
+  function onMobileScroll(e: React.UIEvent<HTMLDivElement>) {
+    const el = e.currentTarget;
+    setActive(Math.round(el.scrollLeft / el.clientWidth));
+  }
+
+  const zoomImg = zoomSrc
+    ? images.find((i) => i.src === zoomSrc)
+    : undefined;
+  const zoomAlt = zoomImg ? pick(zoomImg.alt, locale) : "";
 
   return (
     <div>
-      <div className="group relative aspect-[4/5] overflow-hidden bg-studio">
-        <button
-          type="button"
-          onClick={() => setZoom(true)}
-          aria-label={t("zoomImage")}
-          className="absolute inset-0 z-10 cursor-zoom-in"
-        />
-        <Image
-          key={imageSrcKey(current.src)}
-          src={current.src}
-          alt={pick(current.alt, locale)}
-          fill
-          priority
-          sizes="(min-width: 1024px) 50vw, 100vw"
-          className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
-        />
-        {badge && (
-          <span className="text-eyebrow absolute start-4 top-4 z-20 bg-ink px-2.5 py-1.5 text-paper">
-            {badge}
-          </span>
-        )}
-        <span
-          aria-hidden="true"
-          className="absolute bottom-4 end-4 z-20 flex h-10 w-10 items-center justify-center bg-paper/85 text-ink opacity-0 backdrop-blur transition-opacity duration-300 group-hover:opacity-100"
+      {/* Mobile: swipe carousel */}
+      <div className="lg:hidden">
+        <div
+          onScroll={onMobileScroll}
+          className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto"
         >
-          <MagnifyingGlassPlus size={18} />
-        </span>
-
+          {images.map((img, i) => (
+            <div
+              key={imageSrcKey(img.src)}
+              className="relative aspect-[4/5] w-full shrink-0 snap-center bg-studio"
+            >
+              <Image
+                src={img.src}
+                alt={pick(img.alt, locale)}
+                fill
+                priority={i === 0}
+                sizes="100vw"
+                className="object-cover"
+              />
+              {badge && i === 0 && (
+                <span className="text-eyebrow absolute start-4 top-4 bg-ink px-2.5 py-1.5 text-paper">
+                  {badge}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
         {many && (
-          <>
-            <button
-              type="button"
-              aria-label={t("prevImage")}
-              onClick={() =>
-                setIndex((i) => (i - 1 + images.length) % images.length)
-              }
-              className="absolute start-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center bg-paper/85 backdrop-blur transition-colors hover:bg-paper"
-            >
-              <CaretLeft size={18} className="rtl:-scale-x-100" />
-            </button>
-            <button
-              type="button"
-              aria-label={t("nextImage")}
-              onClick={() => setIndex((i) => (i + 1) % images.length)}
-              className="absolute end-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center bg-paper/85 backdrop-blur transition-colors hover:bg-paper"
-            >
-              <CaretRight size={18} className="rtl:-scale-x-100" />
-            </button>
-          </>
+          <p className="text-eyebrow mt-3 text-ink/60">
+            {active + 1} / {images.length}
+          </p>
         )}
       </div>
 
-      {many && (
-        <ul className="mt-3 flex gap-3">
+      {/* Desktop: vertical stack you scroll, with a live counter */}
+      <div ref={stackRef} className="relative hidden lg:block">
+        {many && (
+          <p className="text-eyebrow pointer-events-none sticky top-24 z-20 mb-3 w-fit bg-paper/70 px-2 py-1 text-ink/70 backdrop-blur">
+            {active + 1} / {images.length}
+          </p>
+        )}
+        <div className={many ? "-mt-9 space-y-3" : ""}>
           {images.map((img, i) => (
-            <li key={imageSrcKey(img.src)}>
-              <button
-                type="button"
-                onClick={() => setIndex(i)}
-                aria-label={t("imageOf", { index: i + 1, total: images.length })}
-                aria-current={i === index}
-                className={`relative block h-20 w-16 cursor-pointer overflow-hidden bg-studio transition-opacity ${
-                  i === index
-                    ? "ring-2 ring-ink ring-offset-2"
-                    : "opacity-70 hover:opacity-100"
-                }`}
-              >
-                <Image
-                  src={img.src}
-                  alt=""
-                  fill
-                  sizes="64px"
-                  className="object-cover"
-                />
-              </button>
-            </li>
+            <button
+              key={imageSrcKey(img.src)}
+              type="button"
+              data-idx={i}
+              onClick={() => setZoomSrc(img.src)}
+              aria-label={t("zoomImage")}
+              className="group relative block aspect-[4/5] w-full cursor-zoom-in overflow-hidden bg-studio"
+            >
+              <Image
+                src={img.src}
+                alt={pick(img.alt, locale)}
+                fill
+                priority={i === 0}
+                sizes="50vw"
+                className="object-cover transition-transform duration-700 group-hover:scale-[1.02]"
+              />
+              {badge && i === 0 && (
+                <span className="text-eyebrow absolute start-4 top-4 z-10 bg-ink px-2.5 py-1.5 text-paper">
+                  {badge}
+                </span>
+              )}
+            </button>
           ))}
-        </ul>
-      )}
+        </div>
+      </div>
 
       {/* Zoom lightbox */}
-      {zoom && (
+      {zoomSrc && (
         <div
           role="dialog"
           aria-modal="true"
-          aria-label={pick(current.alt, locale)}
+          aria-label={zoomAlt}
           className="fixed inset-0 z-[60] flex cursor-zoom-out items-center justify-center bg-ink/95 p-4"
-          onClick={() => setZoom(false)}
+          onClick={() => setZoomSrc(null)}
         >
           <button
             type="button"
             aria-label={t("closeZoom")}
-            onClick={() => setZoom(false)}
-            className="absolute end-4 top-4 z-10 flex h-12 w-12 cursor-pointer items-center justify-center bg-paper text-ink transition-colors hover:bg-green hover:text-white"
+            onClick={() => setZoomSrc(null)}
+            className="absolute end-4 top-4 z-10 flex h-12 w-12 cursor-pointer items-center justify-center bg-paper text-ink transition-colors hover:bg-ink hover:text-paper"
           >
             <X size={20} />
           </button>
           <div className="relative h-full max-h-[92dvh] w-full max-w-5xl">
             <Image
-              src={current.src}
-              alt={pick(current.alt, locale)}
+              src={zoomSrc}
+              alt={zoomAlt}
               fill
               sizes="100vw"
               className="object-contain"
