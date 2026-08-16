@@ -83,23 +83,44 @@ export default function FullPageScroll() {
 
     const locked = () => document.body.style.overflow === "hidden";
 
+    // Sensitivity control: require a deliberate scroll (accumulate to
+    // THRESHOLD) before advancing, and pace advances to at most one per GAP —
+    // so it steps one photo at a time instead of firing on every wheel tick.
+    const THRESHOLD = 40;
+    const GAP = 420;
+    let accum = 0;
+    let lastStep = -Infinity;
+
+    const tryStep = (dir: number, now: number) => {
+      if (now - lastStep < GAP) return;
+      lastStep = now;
+      accum = 0;
+      step(dir);
+    };
+
     const onWheel = (e: WheelEvent) => {
       if (locked()) return;
       e.preventDefault();
-      if (Math.abs(e.deltaY) < 4) return;
-      step(e.deltaY > 0 ? 1 : -1);
+      const now = performance.now();
+      if (now - lastStep < GAP) {
+        accum = 0; // still settling on the current photo — ignore
+        return;
+      }
+      accum += e.deltaY;
+      if (Math.abs(accum) >= THRESHOLD) tryStep(accum > 0 ? 1 : -1, now);
     };
 
     const onKey = (e: KeyboardEvent) => {
       if (locked()) return;
       const el = e.target as HTMLElement | null;
       if (el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) return;
+      const now = performance.now();
       if (e.key === "ArrowDown" || e.key === "PageDown" || e.key === " ") {
         e.preventDefault();
-        step(1);
+        tryStep(1, now);
       } else if (e.key === "ArrowUp" || e.key === "PageUp") {
         e.preventDefault();
-        step(-1);
+        tryStep(-1, now);
       }
     };
 

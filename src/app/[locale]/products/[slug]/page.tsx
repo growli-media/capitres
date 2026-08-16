@@ -101,7 +101,7 @@ export default async function ProductPage({
       <section className="container-x grid gap-10 pb-20 lg:grid-cols-2 lg:gap-16">
         <ProductGallery images={product.images} badge={badge} />
 
-        <div className="lg:sticky lg:top-0 lg:flex lg:min-h-[100svh] lg:flex-col lg:justify-center lg:py-16">
+        <div className="lg:sticky lg:top-0 lg:flex lg:h-[100svh] lg:flex-col lg:justify-center lg:py-10">
           <p className="text-eyebrow text-ink/55">
             {primaryCollection
               ? pick(primaryCollection.title, locale)
