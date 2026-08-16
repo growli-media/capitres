@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { CaretRight, Star } from "@phosphor-icons/react/dist/ssr";
+import { CaretRight } from "@phosphor-icons/react/dist/ssr";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { catalog } from "@/lib/catalog";
 import { pick } from "@/lib/content";
-import { formatIQD, localizeDigits } from "@/lib/money";
+import { formatIQD } from "@/lib/money";
 import { FREE_SHIPPING_THRESHOLD } from "@/lib/commerce/config";
 import ProductCard from "@/components/product/ProductCard";
 import ProductGallery from "@/components/product/ProductGallery";
 import AddToCart from "@/components/product/AddToCart";
-import ReviewForm from "@/components/product/ReviewForm";
+import ProductReviews from "@/components/product/ProductReviews";
 import { Reveal } from "@/components/motion/Reveal";
 
 export async function generateStaticParams() {
@@ -169,76 +169,14 @@ export default async function ProductPage({
               </p>
             </blockquote>
           )}
-        </div>
-      </section>
 
-      {/* Reviews */}
-      <section className="border-t border-line py-16 md:py-24">
-        <div className="container-x grid gap-12 lg:grid-cols-2 lg:gap-20">
-          <div>
-            <h2 className="text-display text-3xl md:text-4xl">
-              {t("reviews")}
-            </h2>
-            <div className="mt-3 flex items-center gap-3">
-              {avgRating !== null && (
-                <span
-                  role="img"
-                  className="flex items-center gap-1"
-                  aria-label={t("stars", {
-                    count: localizeDigits(avgRating, locale),
-                  })}
-                >
-                  {[1, 2, 3, 4, 5].map((n) => (
-                    <Star
-                      key={n}
-                      size={16}
-                      weight={avgRating >= n - 0.25 ? "fill" : "regular"}
-                      aria-hidden="true"
-                    />
-                  ))}
-                </span>
-              )}
-              <p className="text-sm text-ink/65">
-                {t("reviewsCount", { count: reviews.length })}
-              </p>
-            </div>
-
-            <ul className="mt-8 space-y-7">
-              {reviews.map((r) => (
-                <li key={r.id} className="border-b border-line pb-7">
-                  <div className="flex items-center justify-between gap-4">
-                    <p className="font-bold">{r.author}</p>
-                    <span
-                      role="img"
-                      className="flex gap-0.5"
-                      aria-label={t("stars", {
-                        count: localizeDigits(r.rating, locale),
-                      })}
-                    >
-                      {[1, 2, 3, 4, 5].map((n) => (
-                        <Star
-                          key={n}
-                          size={13}
-                          weight={r.rating >= n ? "fill" : "regular"}
-                          aria-hidden="true"
-                        />
-                      ))}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-xs text-ink/60">
-                    {localizeDigits(r.date, locale)}
-                  </p>
-                  <p className="mt-3 leading-relaxed text-ink/75">{r.text}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="lg:pt-14">
-            <h3 className="text-eyebrow mb-6 text-ink/60">
-              {t("writeReview")}
-            </h3>
-            <ReviewForm productSlug={product.slug} />
+          {/* Reviews — five stars only; opens a popup to read / write */}
+          <div className="mt-8 border-t border-line pt-6">
+            <ProductReviews
+              productSlug={product.slug}
+              reviews={reviews}
+              avgRating={avgRating}
+            />
           </div>
         </div>
       </section>

@@ -113,7 +113,7 @@ export default function ProductGallery({
             {active + 1} / {images.length}
           </p>
         )}
-        <div className={many ? "-mt-9 space-y-3" : ""}>
+        <div className={many ? "-mt-9" : ""}>
           {images.map((img, i) => (
             <button
               key={imageSrcKey(img.src)}
@@ -121,9 +121,7 @@ export default function ProductGallery({
               data-idx={i}
               onClick={() => setZoomSrc(img.src)}
               aria-label={t("zoomImage")}
-              className={`group relative block w-full cursor-zoom-in overflow-hidden bg-studio ${
-                many ? "aspect-[4/5]" : "h-[100svh]"
-              }`}
+              className="group relative block h-[100svh] w-full cursor-zoom-in overflow-hidden bg-studio"
             >
               <Image
                 src={img.src}
