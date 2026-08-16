@@ -33,7 +33,7 @@ export default function FullBleedPanel({
       : "items-start text-start";
 
   return (
-    <section className="snap-panel relative h-[100svh] w-full overflow-hidden bg-ink">
+    <section className="relative h-[100svh] w-full overflow-hidden bg-ink">
       <Image
         src={image}
         alt={alt}

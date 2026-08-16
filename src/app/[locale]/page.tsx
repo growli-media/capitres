@@ -5,7 +5,7 @@ import { pick } from "@/lib/content";
 import { routing } from "@/i18n/routing";
 import HeroMedia from "@/components/layout/HeroMedia";
 import FullBleedPanel from "@/components/layout/FullBleedPanel";
-import HomeScrollSnap from "@/components/layout/HomeScrollSnap";
+import SplitPanel from "@/components/layout/SplitPanel";
 import heroImage from "@/images/brand/hero-editorial.jpg";
 
 export function generateStaticParams() {
@@ -31,22 +31,25 @@ export default async function HomePage({
 
   const liveCollections = collections.filter((c) => !c.archived);
   const heritage = collections.find((c) => c.slug === "heritage-capsule");
-  // Collections shown as their own panels; heritage gets a dedicated one below.
+  // Collections shown as panels; heritage gets a dedicated one below.
   const collectionPanels = liveCollections.filter(
     (c) => c.slug !== "heritage-capsule",
   );
+  // First two collections become a side-by-side "two tiles" moment; the
+  // rest are full-bleed single panels.
+  const split = collectionPanels.slice(0, 2);
+  const restPanels = collectionPanels.slice(2);
   const heritageImage =
     heritage?.heroImage.src ?? heritageProducts[0]?.images[0]?.src;
 
   return (
     <>
-      <HomeScrollSnap />
       {/* ---------------- Hero: full-screen film ----------------
           Pulled up under the sticky header so the transparent bar overlays
           the media. Drop a campaign film at /public/hero.mp4 and add
           videoSrc="/hero.mp4" below to run motion; until then the poster
           carries a slow cinematic drift. */}
-      <section className="snap-panel relative -mt-16 h-[100svh] overflow-hidden bg-ink text-paper md:-mt-[4.75rem]">
+      <section className="relative -mt-16 h-[100svh] overflow-hidden bg-ink text-paper md:-mt-[4.75rem]">
         <HeroMedia poster={heroImage} /* videoSrc="/hero.mp4" */ />
         <div
           aria-hidden="true"
@@ -84,10 +87,29 @@ export default async function HomePage({
         </div>
       </section>
 
-      {/* ---------------- Full-bleed scroll panels ----------------
-          One full-viewport image per screen; scroll moves through them one
-          at a time, each label fading up as it enters view, then the footer.*/}
-      {collectionPanels.map((c, i) => (
+      {/* ---------------- Full-screen sections ----------------
+          Smooth momentum scroll moves through each full-viewport section,
+          labels fading up on entry, ending on the full-screen footer. */}
+      {split.length === 2 && (
+        <SplitPanel
+          left={{
+            image: split[0].heroImage.src,
+            alt: pick(split[0].heroImage.alt, locale),
+            label: pick(split[0].title, locale),
+            cta: tHome("viewAll"),
+            href: `/collections/${split[0].slug}`,
+          }}
+          right={{
+            image: split[1].heroImage.src,
+            alt: pick(split[1].heroImage.alt, locale),
+            label: pick(split[1].title, locale),
+            cta: tHome("viewAll"),
+            href: `/collections/${split[1].slug}`,
+          }}
+        />
+      )}
+
+      {restPanels.map((c, i) => (
         <FullBleedPanel
           key={c.slug}
           image={c.heroImage.src}

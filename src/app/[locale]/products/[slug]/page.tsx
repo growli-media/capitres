@@ -101,17 +101,17 @@ export default async function ProductPage({
       <section className="container-x grid gap-10 pb-20 lg:grid-cols-2 lg:gap-16">
         <ProductGallery images={product.images} badge={badge} />
 
-        <div className="lg:sticky lg:top-24 lg:self-start">
-          <p className="text-eyebrow text-ink/60">
+        <div className="lg:sticky lg:top-0 lg:flex lg:min-h-[100svh] lg:flex-col lg:justify-center lg:py-16">
+          <p className="text-eyebrow text-ink/55">
             {primaryCollection
               ? pick(primaryCollection.title, locale)
               : tNav("shopAll")}
           </p>
-          <h1 className="text-display mt-2 text-xl md:text-2xl">
+          <h1 className="text-display mt-2 text-lg md:text-xl">
             {pick(product.title, locale)}
           </h1>
 
-          <p className="mt-4 max-w-md text-sm leading-relaxed text-ink/65">
+          <p className="mt-4 max-w-sm text-sm leading-relaxed text-ink/60">
             {pick(product.description, locale)}
           </p>
 

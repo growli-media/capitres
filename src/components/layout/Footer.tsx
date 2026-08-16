@@ -46,8 +46,8 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="snap-panel bg-ink text-paper">
-      <div className="container-x grid gap-12 py-16 lg:grid-cols-12 lg:gap-8">
+    <footer className="flex min-h-[100svh] flex-col bg-ink text-paper">
+      <div className="container-x grid flex-1 content-center gap-12 py-20 lg:grid-cols-12 lg:gap-8">
         {/* Brand + newsletter */}
         <div className="lg:col-span-5">
           <div className="flex items-center gap-2.5">

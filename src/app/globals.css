@@ -90,26 +90,6 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Homepage full-page snap: lock to one full-screen panel at a time.
-   scroll-behavior is forced to auto here — the global `smooth` makes the
-   browser crawl to each snap point (the "laggy/slow" feel); auto snaps
-   crisply and stays responsive to every scroll. Toggled by <HomeScrollSnap>
-   only while the homepage is mounted. */
-html.snap-y {
-  scroll-snap-type: y mandatory;
-  scroll-behavior: auto;
-}
-
-.snap-panel {
-  scroll-snap-align: start;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html.snap-y {
-    scroll-snap-type: none;
-  }
-}
-
 body {
   background: var(--color-paper);
   color: var(--color-ink);
