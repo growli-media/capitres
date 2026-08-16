@@ -2,10 +2,14 @@
 
 import { useEffect } from "react";
 import Lenis from "lenis";
+import { usePathname } from "@/i18n/navigation";
 
-/** Site-wide smooth scrolling. Disabled for prefers-reduced-motion. */
+/** Site-wide smooth scrolling. Disabled for prefers-reduced-motion and on
+ *  the homepage, which uses native CSS scroll-snap (Lenis would override it). */
 export default function SmoothScroll() {
+  const pathname = usePathname();
   useEffect(() => {
+    if (pathname === "/") return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       return;
     }

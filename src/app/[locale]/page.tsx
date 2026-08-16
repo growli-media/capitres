@@ -5,6 +5,7 @@ import { pick } from "@/lib/content";
 import { routing } from "@/i18n/routing";
 import HeroMedia from "@/components/layout/HeroMedia";
 import FullBleedPanel from "@/components/layout/FullBleedPanel";
+import HomeScrollSnap from "@/components/layout/HomeScrollSnap";
 import heroImage from "@/images/brand/hero-editorial.jpg";
 
 export function generateStaticParams() {
@@ -39,12 +40,13 @@ export default async function HomePage({
 
   return (
     <>
+      <HomeScrollSnap />
       {/* ---------------- Hero: full-screen film ----------------
           Pulled up under the sticky header so the transparent bar overlays
           the media. Drop a campaign film at /public/hero.mp4 and add
           videoSrc="/hero.mp4" below to run motion; until then the poster
           carries a slow cinematic drift. */}
-      <section className="sticky top-0 -mt-16 h-[100svh] overflow-hidden bg-ink text-paper md:-mt-[4.75rem]">
+      <section className="snap-panel relative -mt-16 h-[100svh] overflow-hidden bg-ink text-paper md:-mt-[4.75rem]">
         <HeroMedia poster={heroImage} /* videoSrc="/hero.mp4" */ />
         <div
           aria-hidden="true"

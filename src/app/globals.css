@@ -90,6 +90,24 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Homepage full-page snap: lock to one full-screen panel at a time so a
+   small scroll advances to the next photo instead of free-scrolling.
+   Toggled by <HomeScrollSnap> only while the homepage is mounted. */
+html.snap-y {
+  scroll-snap-type: y mandatory;
+}
+
+.snap-panel {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.snap-y {
+    scroll-snap-type: none;
+  }
+}
+
 body {
   background: var(--color-paper);
   color: var(--color-ink);

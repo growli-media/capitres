@@ -46,7 +46,7 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="bg-ink text-paper">
+    <footer className="snap-panel bg-ink text-paper">
       <div className="container-x grid gap-12 py-16 lg:grid-cols-12 lg:gap-8">
         {/* Brand + newsletter */}
         <div className="lg:col-span-5">
