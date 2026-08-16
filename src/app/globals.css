@@ -299,6 +299,27 @@ body {
   animation: rise-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* Slow cinematic drift for a still hero poster (stands in for campaign
+   video until /public/hero.mp4 is supplied). */
+@keyframes ken-burns {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.09);
+  }
+}
+
+.hero-kenburns {
+  animation: ken-burns 22s ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-kenburns {
+    animation: none;
+  }
+}
+
 .hero-enter-2 {
   animation-delay: 90ms;
 }
