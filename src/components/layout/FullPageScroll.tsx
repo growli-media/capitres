@@ -61,8 +61,12 @@ export default function FullPageScroll() {
       t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
     const go = (dir: number) => {
+      if (animating) return;
       const to = Math.max(0, Math.min(stops.length - 1, index + dir));
-      if (animating || to === index) return;
+      if (to === index) {
+        accum = 0; // at an end — nothing to advance to
+        return;
+      }
       index = to;
       animating = true;
       const startY = window.scrollY;
@@ -74,9 +78,17 @@ export default function FullPageScroll() {
         if (p < 1) {
           requestAnimationFrame(frame);
         } else {
-          // brief settle so the wheel's momentum tail can't double-advance
+          // brief settle, then act on scroll that arrived mid-glide so
+          // continuous scrolling flows photo-to-photo instead of being eaten.
           window.setTimeout(() => {
             animating = false;
+            if (Math.abs(accum) >= THRESHOLD) {
+              const next = accum > 0 ? 1 : -1;
+              accum = 0;
+              go(next);
+            } else {
+              accum = 0;
+            }
           }, 40);
         }
       };
@@ -85,16 +97,13 @@ export default function FullPageScroll() {
 
     const locked = () => document.body.style.overflow === "hidden";
     let accum = 0;
-    const THRESHOLD = 30; // needs a deliberate "bit" of scroll, not a nudge
+    const THRESHOLD = 18; // easy to trigger with a small scroll, ignores jitter
 
     const onWheel = (e: WheelEvent) => {
       if (locked()) return;
       e.preventDefault();
-      if (animating) {
-        accum = 0;
-        return;
-      }
-      accum += e.deltaY;
+      accum += e.deltaY; // keep accumulating, even mid-glide
+      if (animating) return;
       if (Math.abs(accum) >= THRESHOLD) {
         const dir = accum > 0 ? 1 : -1;
         accum = 0;
