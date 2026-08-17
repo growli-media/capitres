@@ -6,6 +6,7 @@ import { routing } from "@/i18n/routing";
 import HeroMedia from "@/components/layout/HeroMedia";
 import FullBleedPanel from "@/components/layout/FullBleedPanel";
 import SplitPanel from "@/components/layout/SplitPanel";
+import FullPageScroll from "@/components/layout/FullPageScroll";
 import heroImage from "@/images/brand/hero-editorial.jpg";
 
 export function generateStaticParams() {
@@ -44,6 +45,7 @@ export default async function HomePage({
 
   return (
     <>
+      <FullPageScroll />
       {/* ---------------- Hero: full-screen film ----------------
           Pulled up under the sticky header so the transparent bar overlays
           the media. Sticky like the panels below, so the next photo covers it
