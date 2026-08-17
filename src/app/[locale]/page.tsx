@@ -6,7 +6,6 @@ import { routing } from "@/i18n/routing";
 import HeroMedia from "@/components/layout/HeroMedia";
 import FullBleedPanel from "@/components/layout/FullBleedPanel";
 import SplitPanel from "@/components/layout/SplitPanel";
-import FullPageScroll from "@/components/layout/FullPageScroll";
 import heroImage from "@/images/brand/hero-editorial.jpg";
 
 export function generateStaticParams() {
@@ -45,13 +44,12 @@ export default async function HomePage({
 
   return (
     <>
-      <FullPageScroll />
       {/* ---------------- Hero: full-screen film ----------------
           Pulled up under the sticky header so the transparent bar overlays
-          the media. Sticky, like the panels below, so the next photo covers
-          it from the bottom. Drop a campaign film at /public/hero.mp4 and add
+          the media. Full-screen; smooth scroll + Lenis snap settle onto it and
+          each section below. Drop a campaign film at /public/hero.mp4 and add
           videoSrc="/hero.mp4" to run motion; until then the poster drifts. */}
-      <section className="sticky top-0 -mt-16 h-[100svh] overflow-hidden bg-ink text-paper md:-mt-[4.75rem]">
+      <section className="relative -mt-16 h-[100svh] overflow-hidden bg-ink text-paper md:-mt-[4.75rem]">
         <HeroMedia poster={heroImage} /* videoSrc="/hero.mp4" */ />
         <div
           aria-hidden="true"
