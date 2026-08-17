@@ -56,7 +56,7 @@ export default function FullPageScroll() {
 
     let index = nearest(window.scrollY);
     let animating = false;
-    const DURATION = 750; // complete, smooth glide
+    const DURATION = 450; // complete glide — quick but smooth
     const easeInOutCubic = (t: number) =>
       t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
@@ -77,7 +77,7 @@ export default function FullPageScroll() {
           // brief settle so the wheel's momentum tail can't double-advance
           window.setTimeout(() => {
             animating = false;
-          }, 60);
+          }, 40);
         }
       };
       requestAnimationFrame(frame);
@@ -85,7 +85,7 @@ export default function FullPageScroll() {
 
     const locked = () => document.body.style.overflow === "hidden";
     let accum = 0;
-    const THRESHOLD = 14; // reacts as soon as you scroll, ignores jitter
+    const THRESHOLD = 30; // needs a deliberate "bit" of scroll, not a nudge
 
     const onWheel = (e: WheelEvent) => {
       if (locked()) return;
