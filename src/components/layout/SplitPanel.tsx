@@ -23,7 +23,7 @@ export default function SplitPanel({
   right: Half;
 }) {
   return (
-    <section className="relative grid h-[100svh] w-full grid-cols-1 md:grid-cols-2">
+    <section className="sticky top-0 grid h-[100svh] w-full grid-cols-1 md:grid-cols-2">
       {[left, right].map((h, i) => (
         <Link
           key={i}

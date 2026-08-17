@@ -32,12 +32,16 @@ export default function SmoothScroll() {
     }
     frame = requestAnimationFrame(raf);
 
-    // Homepage: settle gently onto each full-screen section.
+    // Homepage: photo-album scroll — one scroll advances exactly one
+    // full-screen section (lock), which covers the previous from the bottom
+    // (the sections are CSS-sticky). Low debounce so it reacts as soon as you
+    // scroll; smooth, deliberate glide so it isn't jumpy.
     let snap: Snap | undefined;
     if (pathname === "/") {
       snap = new Snap(lenis, {
-        type: "mandatory",
-        duration: 1.1,
+        type: "lock",
+        duration: 0.9,
+        debounce: 50,
         easing: (t) => 1 - Math.pow(1 - t, 3),
       });
       const main = document.getElementById("main");

@@ -46,10 +46,10 @@ export default async function HomePage({
     <>
       {/* ---------------- Hero: full-screen film ----------------
           Pulled up under the sticky header so the transparent bar overlays
-          the media. Full-screen; smooth scroll + Lenis snap settle onto it and
-          each section below. Drop a campaign film at /public/hero.mp4 and add
-          videoSrc="/hero.mp4" to run motion; until then the poster drifts. */}
-      <section className="relative -mt-16 h-[100svh] overflow-hidden bg-ink text-paper md:-mt-[4.75rem]">
+          the media. Sticky like the panels below, so the next photo covers it
+          from the bottom (Lenis lock-snap advances one at a time). Drop a
+          campaign film at /public/hero.mp4 and add videoSrc="/hero.mp4". */}
+      <section className="sticky top-0 -mt-16 h-[100svh] overflow-hidden bg-ink text-paper md:-mt-[4.75rem]">
         <HeroMedia poster={heroImage} /* videoSrc="/hero.mp4" */ />
         <div
           aria-hidden="true"
