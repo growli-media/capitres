@@ -4,7 +4,7 @@ import { useEffect, useRef, type ReactNode } from "react";
 
 const DURATION_MS = 550;
 const EASE = "cubic-bezier(0.65, 0, 0.35, 1)";
-const THRESHOLD = 30; // accumulated wheel delta needed to trigger an advance
+const THRESHOLD = 36; // accumulated wheel delta needed to trigger an advance
 const FOOTER_KICK = 40; // px — real scroll nudge that hands off to the footer
 const EPSILON = 4; // px — "are we still at the top of the album" tolerance
 
