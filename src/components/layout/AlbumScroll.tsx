@@ -4,7 +4,7 @@ import { useEffect, useRef, type ReactNode } from "react";
 
 const DURATION_MS = 550;
 const EASE = "cubic-bezier(0.65, 0, 0.35, 1)";
-const THRESHOLD = 36; // accumulated wheel delta needed to trigger an advance
+const THRESHOLD = 42; // accumulated wheel delta needed to trigger an advance
 const FOOTER_KICK = 40; // px — real scroll nudge that hands off to the footer
 const EPSILON = 4; // px — "are we still at the top of the album" tolerance
 
@@ -81,13 +81,7 @@ export default function AlbumScroll({
       window.clearTimeout(settleTimer);
       settleTimer = window.setTimeout(() => {
         animating = false;
-        if (Math.abs(accum) >= THRESHOLD) {
-          const dir = accum > 0 ? 1 : -1;
-          accum = 0;
-          advance(dir);
-        } else {
-          accum = 0;
-        }
+        accum = 0; // don't auto-chain onto a fast/long scroll — one gesture, one photo
       }, 40);
     };
 
@@ -126,8 +120,8 @@ export default function AlbumScroll({
     const onWheel = (e: WheelEvent) => {
       if (locked() || !clipped || !atTop()) return;
       e.preventDefault();
+      if (animating) return; // ignore the tail of a fast scroll — no chaining
       accum += e.deltaY;
-      if (animating) return;
       if (Math.abs(accum) >= THRESHOLD) {
         const dir = accum > 0 ? 1 : -1;
         accum = 0;
