@@ -2,28 +2,28 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 
-const DURATION = 500; // ms — compositor-only, so this can stay snappy and still read smooth
+const DURATION_MS = 550;
+const EASE = "cubic-bezier(0.65, 0, 0.35, 1)";
 const THRESHOLD = 24; // accumulated wheel delta needed to trigger an advance
-const SETTLE = 40; // ms pause after landing before accepting the next advance
 const FOOTER_KICK = 40; // px — real scroll nudge that hands off to the footer
 const EPSILON = 4; // px — "are we still at the top of the album" tolerance
 
-function easeInOutCubic(t: number) {
-  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-}
-
 /**
- * Homepage "photo album": the hero + full-bleed panels are stacked in a
- * viewport clipped to 100svh and moved with a CSS transform on their own
- * layer — compositor-only, no scroll/layout thrash — so each photo glides in
- * completely and locks, like a photo-album page turn. This is the technique
- * behind buttery full-screen-section sites: never animate window.scrollTo in
- * a loop, translate a layer instead.
+ * Homepage "photo album": each full-screen photo sits absolutely positioned
+ * in a 100svh-clipped viewport, at rest either fully visible (translateY 0%)
+ * or parked just below (translateY 100%). Advancing forward animates ONLY the
+ * incoming photo from 100%->0% — it slides up and lands completely on top of
+ * whichever photo is resting beneath it (later DOM order paints over earlier,
+ * so the photos already at 0% stay put, simply occluded). Advancing backward
+ * animates the current photo back down (0%->100%), revealing the one beneath,
+ * which never moved. Animation is a native CSS transition on `transform`
+ * (compositor-only), not a JS scroll/loop, so it's as smooth as the browser
+ * can make it.
  *
  * The document's real scroll position never moves while inside the album
- * (wheel is captured whenever scrollY is ~0); scrolling past the last photo
- * hands off to normal page scroll to reveal the footer, and scrolling back
- * up from the footer re-enters the album on its last photo.
+ * (wheel is captured while scrollY ~= 0); advancing past the last photo hands
+ * off to normal page scroll to reveal the footer, and scrolling back up from
+ * the footer re-enters the album on its last photo.
  *
  * Desktop + motion only — touch/mobile and reduced-motion get the plain
  * fallback: children stack in normal flow, unclipped, natively scrollable.
@@ -36,56 +36,59 @@ export default function AlbumScroll({
   className?: string;
 }) {
   const viewportRef = useRef<HTMLDivElement>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduce) return;
 
     const viewport = viewportRef.current;
-    const track = trackRef.current;
-    if (!viewport || !track) return;
+    if (!viewport) return;
 
     const desktopMq = window.matchMedia("(min-width: 1024px)");
     let clipped = false;
-    let count = 0;
+    let panels: HTMLElement[] = [];
     let index = 0;
     let animating = false;
     let accum = 0;
-    let raf = 0;
+    let settleTimer = 0;
+    let safetyTimer = 0;
 
-    const applyTransform = (i: number) => {
-      track.style.transform = `translate3d(0, ${-i * viewport.clientHeight}px, 0)`;
+    const setResting = (el: HTMLElement, visible: boolean) => {
+      // Zero only the duration (not the whole `transition` shorthand — that
+      // would reset transitionProperty/timingFunction set in layout() too)
+      // so the instant snap doesn't clobber the real animation duration.
+      const restoreDuration = el.style.transitionDuration;
+      el.style.transitionDuration = "0s";
+      el.style.transform = visible ? "translateY(0%)" : "translateY(100%)";
+      void el.offsetHeight; // force reflow so the instant snap actually applies
+      el.style.transitionDuration = restoreDuration;
     };
 
-    const animateTo = (i: number) => {
-      const from = index;
-      index = i;
-      animating = true;
-      const startY = -from * viewport.clientHeight;
-      const endY = -i * viewport.clientHeight;
-      const dist = endY - startY;
-      const t0 = performance.now();
-      const frame = (now: number) => {
-        const p = Math.min(1, (now - t0) / DURATION);
-        track.style.transform = `translate3d(0, ${startY + dist * easeInOutCubic(p)}px, 0)`;
-        if (p < 1) {
-          raf = requestAnimationFrame(frame);
+    const layout = () => {
+      panels = Array.from(viewport.children) as HTMLElement[];
+      panels.forEach((el, i) => {
+        el.style.position = "absolute";
+        el.style.inset = "0";
+        el.style.transitionProperty = "transform";
+        el.style.transitionDuration = `${DURATION_MS}ms`;
+        el.style.transitionTimingFunction = EASE;
+        el.style.willChange = "transform";
+        setResting(el, i <= index);
+      });
+    };
+
+    const settle = () => {
+      window.clearTimeout(settleTimer);
+      settleTimer = window.setTimeout(() => {
+        animating = false;
+        if (Math.abs(accum) >= THRESHOLD) {
+          const dir = accum > 0 ? 1 : -1;
+          accum = 0;
+          advance(dir);
         } else {
-          window.setTimeout(() => {
-            animating = false;
-            // carry over scroll that arrived mid-glide instead of eating it
-            if (Math.abs(accum) >= THRESHOLD) {
-              const dir = accum > 0 ? 1 : -1;
-              accum = 0;
-              advance(dir);
-            } else {
-              accum = 0;
-            }
-          }, SETTLE);
+          accum = 0;
         }
-      };
-      raf = requestAnimationFrame(frame);
+      }, 40);
     };
 
     const advance = (dir: number) => {
@@ -95,13 +98,26 @@ export default function AlbumScroll({
         accum = 0;
         return; // already on the first photo
       }
-      if (next >= count) {
-        // release the album, hand off to real page scroll for the footer
+      if (next >= panels.length) {
         accum = 0;
-        window.scrollTo({ top: FOOTER_KICK, behavior: "auto" });
+        window.scrollTo({ top: FOOTER_KICK, behavior: "auto" }); // hand off to the footer
         return;
       }
-      animateTo(next);
+      animating = true;
+      const el = dir > 0 ? panels[next] : panels[index];
+      index = next;
+      el.style.transform = dir > 0 ? "translateY(0%)" : "translateY(100%)";
+      const onEnd = (e: TransitionEvent) => {
+        if (e.propertyName !== "transform") return;
+        el.removeEventListener("transitionend", onEnd);
+        settle();
+      };
+      el.addEventListener("transitionend", onEnd);
+      window.clearTimeout(safetyTimer);
+      safetyTimer = window.setTimeout(() => {
+        el.removeEventListener("transitionend", onEnd);
+        if (animating) settle();
+      }, DURATION_MS + 150);
     };
 
     const locked = () => document.body.style.overflow === "hidden";
@@ -132,22 +148,23 @@ export default function AlbumScroll({
       }
     };
 
-    const measure = () => {
-      count = track.children.length;
-    };
-
     const applyClipping = () => {
       viewport.style.height = "100svh";
       viewport.style.overflow = "hidden";
       clipped = true;
-      measure();
-      applyTransform(index);
+      layout();
     };
     const removeClipping = () => {
       viewport.style.height = "";
       viewport.style.overflow = "";
-      track.style.transform = "";
       clipped = false;
+      panels.forEach((el) => {
+        el.style.position = "";
+        el.style.inset = "";
+        el.style.transform = "";
+        el.style.transition = "";
+        el.style.willChange = "";
+      });
     };
 
     const checkBreakpoint = () => {
@@ -156,9 +173,7 @@ export default function AlbumScroll({
     };
 
     const onResize = () => {
-      if (!clipped) return;
-      measure();
-      applyTransform(index);
+      if (clipped) layout();
     };
 
     checkBreakpoint();
@@ -168,7 +183,8 @@ export default function AlbumScroll({
     desktopMq.addEventListener("change", checkBreakpoint);
 
     return () => {
-      cancelAnimationFrame(raf);
+      window.clearTimeout(settleTimer);
+      window.clearTimeout(safetyTimer);
       window.removeEventListener("wheel", onWheel);
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("resize", onResize);
@@ -178,9 +194,7 @@ export default function AlbumScroll({
 
   return (
     <div ref={viewportRef} className={`relative ${className}`}>
-      <div ref={trackRef} className="will-change-transform">
-        {children}
-      </div>
+      {children}
     </div>
   );
 }

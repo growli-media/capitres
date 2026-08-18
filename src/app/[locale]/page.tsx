@@ -3,6 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { catalog } from "@/lib/catalog";
 import { pick } from "@/lib/content";
 import { routing } from "@/i18n/routing";
+import type { ImageProps } from "next/image";
 import HeroMedia from "@/components/layout/HeroMedia";
 import FullBleedPanel from "@/components/layout/FullBleedPanel";
 import SplitPanel from "@/components/layout/SplitPanel";
@@ -12,6 +13,21 @@ import heroImage from "@/images/brand/hero-editorial.jpg";
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
+
+type PanelSpec = {
+  image: ImageProps["src"];
+  alt: string;
+  eyebrow?: string;
+  title: string;
+  ctaLabel: string;
+  href: string;
+};
+
+type Slot =
+  | { kind: "split"; left: PanelSpec; right: PanelSpec }
+  | { kind: "panel"; spec: PanelSpec };
+
+const PANEL_COUNT = 5; // + hero = 6 full-screen sections = six scrolls to the footer
 
 export default async function HomePage({
   params,
@@ -32,24 +48,123 @@ export default async function HomePage({
 
   const liveCollections = collections.filter((c) => !c.archived);
   const heritage = collections.find((c) => c.slug === "heritage-capsule");
-  // Collections shown as panels; heritage gets a dedicated one below.
   const collectionPanels = liveCollections.filter(
     (c) => c.slug !== "heritage-capsule",
   );
-  // First two collections become a side-by-side "two tiles" moment; the
-  // rest are full-bleed single panels.
-  const split = collectionPanels.slice(0, 2);
-  const restPanels = collectionPanels.slice(2);
   const heritageImage =
     heritage?.heroImage.src ?? heritageProducts[0]?.images[0]?.src;
+
+  // Build a fixed-length sequence of panel slots so the album is always the
+  // same length regardless of how much real catalog content exists yet: the
+  // first two collections become a side-by-side "two tiles" moment (one
+  // slot), then remaining collections, new arrivals, heritage, and the brand
+  // story fill the rest — padded with heritage products if the catalog is
+  // still sparse.
+  const pool = [...collectionPanels];
+  const slots: Slot[] = [];
+
+  if (pool.length >= 2) {
+    const [a, b] = pool.splice(0, 2);
+    slots.push({
+      kind: "split",
+      left: {
+        image: a.heroImage.src,
+        alt: pick(a.heroImage.alt, locale),
+        title: pick(a.title, locale),
+        ctaLabel: tHome("viewAll"),
+        href: `/collections/${a.slug}`,
+      },
+      right: {
+        image: b.heroImage.src,
+        alt: pick(b.heroImage.alt, locale),
+        title: pick(b.title, locale),
+        ctaLabel: tHome("viewAll"),
+        href: `/collections/${b.slug}`,
+      },
+    });
+  }
+
+  for (const c of pool) {
+    slots.push({
+      kind: "panel",
+      spec: {
+        image: c.heroImage.src,
+        alt: pick(c.heroImage.alt, locale),
+        eyebrow: pick(c.tagline, locale),
+        title: pick(c.title, locale),
+        ctaLabel: tHome("viewAll"),
+        href: `/collections/${c.slug}`,
+      },
+    });
+  }
+
+  if (newArrivals[0]?.images[0]) {
+    slots.push({
+      kind: "panel",
+      spec: {
+        image: newArrivals[0].images[0].src,
+        alt: pick(newArrivals[0].images[0].alt, locale),
+        eyebrow: tHome("newEyebrow"),
+        title: tHome("newTitle"),
+        ctaLabel: tHome("viewAll"),
+        href: "/shop?new=1",
+      },
+    });
+  }
+
+  if (heritage && heritageImage) {
+    slots.push({
+      kind: "panel",
+      spec: {
+        image: heritageImage,
+        alt: pick(heritage.heroImage.alt, locale),
+        eyebrow: tHome("heritageEyebrow"),
+        title: tHome("heritageTitle"),
+        ctaLabel: tHome("heritageCta"),
+        href: "/collections/heritage-capsule",
+      },
+    });
+  }
+
+  slots.push({
+    kind: "panel",
+    spec: {
+      image: heroImage.src,
+      alt: "",
+      eyebrow: tHome("storyEyebrow"),
+      title: tHome("storyTitle"),
+      ctaLabel: tHome("storyCta"),
+      href: "/about",
+    },
+  });
+
+  // Still short of the target? Draw more looks from heritage products.
+  for (const p of heritageProducts) {
+    if (slots.length >= PANEL_COUNT) break;
+    const img = p.images[0];
+    if (!img) continue;
+    slots.push({
+      kind: "panel",
+      spec: {
+        image: img.src,
+        alt: pick(img.alt, locale),
+        eyebrow: heritage ? pick(heritage.title, locale) : tHome("heritageEyebrow"),
+        title: pick(p.title, locale),
+        ctaLabel: tHome("viewAll"),
+        href: `/products/${p.slug}`,
+      },
+    });
+  }
+
+  const finalSlots = slots.slice(0, PANEL_COUNT);
 
   return (
     <AlbumScroll className="-mt-16 md:-mt-[4.75rem]">
       {/* ---------------- Hero: full-screen film ----------------
           Pulled up under the sticky header so the transparent bar overlays
           the media (negative margin lives on AlbumScroll's viewport now).
-          AlbumScroll clips + transforms this and the panels below as one
-          layered stack, so each photo glides in and covers the previous.
+          AlbumScroll clips this and the panels below into one stack: each
+          photo slides up and lands completely on top of the one before it.
           Drop a campaign film at /public/hero.mp4 and add videoSrc="/hero.mp4". */}
       <section className="relative h-[100svh] overflow-hidden bg-ink text-paper">
         <HeroMedia poster={heroImage} /* videoSrc="/hero.mp4" */ />
@@ -89,71 +204,39 @@ export default async function HomePage({
         </div>
       </section>
 
-      {/* ---------------- Full-screen sections ----------------
-          Smooth momentum scroll moves through each full-viewport section,
-          labels fading up on entry, ending on the full-screen footer. */}
-      {split.length === 2 && (
-        <SplitPanel
-          left={{
-            image: split[0].heroImage.src,
-            alt: pick(split[0].heroImage.alt, locale),
-            label: pick(split[0].title, locale),
-            cta: tHome("viewAll"),
-            href: `/collections/${split[0].slug}`,
-          }}
-          right={{
-            image: split[1].heroImage.src,
-            alt: pick(split[1].heroImage.alt, locale),
-            label: pick(split[1].title, locale),
-            cta: tHome("viewAll"),
-            href: `/collections/${split[1].slug}`,
-          }}
-        />
+      {/* ---------------- Five album panels ---------------- */}
+      {finalSlots.map((slot, i) =>
+        slot.kind === "split" ? (
+          <SplitPanel
+            key={`split-${i}`}
+            left={{
+              image: slot.left.image,
+              alt: slot.left.alt,
+              label: slot.left.title,
+              cta: slot.left.ctaLabel,
+              href: slot.left.href,
+            }}
+            right={{
+              image: slot.right.image,
+              alt: slot.right.alt,
+              label: slot.right.title,
+              cta: slot.right.ctaLabel,
+              href: slot.right.href,
+            }}
+          />
+        ) : (
+          <FullBleedPanel
+            key={`panel-${i}`}
+            image={slot.spec.image}
+            alt={slot.spec.alt}
+            eyebrow={slot.spec.eyebrow}
+            title={slot.spec.title}
+            ctaLabel={slot.spec.ctaLabel}
+            href={slot.spec.href}
+            priority={i === 0}
+          />
+        ),
       )}
-
-      {restPanels.map((c, i) => (
-        <FullBleedPanel
-          key={c.slug}
-          image={c.heroImage.src}
-          alt={pick(c.heroImage.alt, locale)}
-          eyebrow={pick(c.tagline, locale)}
-          title={pick(c.title, locale)}
-          ctaLabel={tHome("viewAll")}
-          href={`/collections/${c.slug}`}
-          priority={i === 0}
-        />
-      ))}
-
-      {newArrivals[0]?.images[0] && (
-        <FullBleedPanel
-          image={newArrivals[0].images[0].src}
-          alt={pick(newArrivals[0].images[0].alt, locale)}
-          eyebrow={tHome("newEyebrow")}
-          title={tHome("newTitle")}
-          ctaLabel={tHome("viewAll")}
-          href="/shop?new=1"
-        />
-      )}
-
-      {heritage && heritageImage && (
-        <FullBleedPanel
-          image={heritageImage}
-          alt={pick(heritage.heroImage.alt, locale)}
-          eyebrow={tHome("heritageEyebrow")}
-          title={tHome("heritageTitle")}
-          ctaLabel={tHome("heritageCta")}
-          href="/collections/heritage-capsule"
-        />
-      )}
-
-      <FullBleedPanel
-        image={heroImage.src}
-        alt=""
-        eyebrow={tHome("storyEyebrow")}
-        title={tHome("storyTitle")}
-        ctaLabel={tHome("storyCta")}
-        href="/about"
-      />
     </AlbumScroll>
   );
 }
