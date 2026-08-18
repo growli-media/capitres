@@ -97,7 +97,7 @@ export default function FullPageScroll() {
 
     const locked = () => document.body.style.overflow === "hidden";
     let accum = 0;
-    const THRESHOLD = 18; // easy to trigger with a small scroll, ignores jitter
+    const THRESHOLD = 24; // a small deliberate scroll advances; ignores nudges
 
     const onWheel = (e: WheelEvent) => {
       if (locked()) return;
