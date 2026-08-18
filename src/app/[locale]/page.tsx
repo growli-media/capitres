@@ -6,7 +6,7 @@ import { routing } from "@/i18n/routing";
 import HeroMedia from "@/components/layout/HeroMedia";
 import FullBleedPanel from "@/components/layout/FullBleedPanel";
 import SplitPanel from "@/components/layout/SplitPanel";
-import FullPageScroll from "@/components/layout/FullPageScroll";
+import AlbumScroll from "@/components/layout/AlbumScroll";
 import heroImage from "@/images/brand/hero-editorial.jpg";
 
 export function generateStaticParams() {
@@ -44,14 +44,14 @@ export default async function HomePage({
     heritage?.heroImage.src ?? heritageProducts[0]?.images[0]?.src;
 
   return (
-    <>
-      <FullPageScroll />
+    <AlbumScroll className="-mt-16 md:-mt-[4.75rem]">
       {/* ---------------- Hero: full-screen film ----------------
           Pulled up under the sticky header so the transparent bar overlays
-          the media. Sticky like the panels below, so the next photo covers it
-          from the bottom (Lenis lock-snap advances one at a time). Drop a
-          campaign film at /public/hero.mp4 and add videoSrc="/hero.mp4". */}
-      <section className="sticky top-0 -mt-16 h-[100svh] overflow-hidden bg-ink text-paper md:-mt-[4.75rem]">
+          the media (negative margin lives on AlbumScroll's viewport now).
+          AlbumScroll clips + transforms this and the panels below as one
+          layered stack, so each photo glides in and covers the previous.
+          Drop a campaign film at /public/hero.mp4 and add videoSrc="/hero.mp4". */}
+      <section className="relative h-[100svh] overflow-hidden bg-ink text-paper">
         <HeroMedia poster={heroImage} /* videoSrc="/hero.mp4" */ />
         <div
           aria-hidden="true"
@@ -154,6 +154,6 @@ export default async function HomePage({
         ctaLabel={tHome("storyCta")}
         href="/about"
       />
-    </>
+    </AlbumScroll>
   );
 }
