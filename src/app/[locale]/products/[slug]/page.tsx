@@ -108,13 +108,14 @@ export default async function ProductPage({
           <ProductGallery images={product.images} badge={badge} />
         </div>
 
-        {/* Left: the story — what it is and why it's worth having. Sticky +
-            full viewport height + centred content: it stays fixed in the
-            middle of the screen for as long as the gallery scrolls, then
-            releases naturally once you pass it (into "You may also like"
-            and the footer) — no JS, just how sticky behaves inside a grid
-            row whose height is set by its tallest sibling (the gallery). */}
-        <div className="order-2 lg:sticky lg:top-0 lg:order-1 lg:flex lg:h-[100svh] lg:flex-col lg:justify-center">
+        {/* Left: the story — sticky, offset half a viewport down then pulled
+            back up by half its own (content-sized, thanks to self-start —
+            without it grid stretches this to the row height, which cancels
+            the centring) height. Stays centred on screen for as long as the
+            gallery scrolls, releasing into "You may also like" at the end —
+            no JS. max-h + overflow-y guard against content taller than the
+            screen spilling off it instead of centring. */}
+        <div className="order-2 lg:sticky lg:top-[50vh] lg:order-1 lg:max-h-[100svh] lg:-translate-y-1/2 lg:self-start lg:overflow-y-auto">
           <p className="text-eyebrow text-ink/55">
             {primaryCollection
               ? pick(primaryCollection.title, locale)
@@ -139,8 +140,9 @@ export default async function ProductPage({
         </div>
 
         {/* Right: price, buy, size/care, reviews — same centred-sticky
-            treatment as the left column. */}
-        <div className="order-3 lg:sticky lg:top-0 lg:flex lg:h-[100svh] lg:flex-col lg:justify-center">
+            treatment as the left column (see the comment there for why
+            self-start is load-bearing, not optional). */}
+        <div className="order-3 lg:sticky lg:top-[50vh] lg:max-h-[100svh] lg:-translate-y-1/2 lg:self-start lg:overflow-y-auto">
           <AddToCart product={product} />
 
           {/* Accordions — size chart lives inside AddToCart; details/care and
