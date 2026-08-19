@@ -1,9 +1,7 @@
-import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { InstagramLogo } from "@phosphor-icons/react/dist/ssr";
 import { Link } from "@/i18n/navigation";
 import NewsletterForm from "./NewsletterForm";
-import logoMark from "@/images/brand/logo.png";
 
 export default function Footer() {
   const t = useTranslations("footer");
@@ -50,21 +48,12 @@ export default function Footer() {
       <div className="container-x grid flex-1 content-center gap-12 py-20 lg:grid-cols-12 lg:gap-8">
         {/* Brand + newsletter */}
         <div className="lg:col-span-5">
-          <div className="flex items-center gap-2.5">
-            <Image
-              src={logoMark}
-              alt=""
-              width={28}
-              height={28}
-              className="invert"
-            />
-            <span
-              className="text-lg font-black uppercase tracking-tight"
-              style={{ fontFamily: "var(--font-schrifted)" }}
-            >
-              Capitres
-            </span>
-          </div>
+          <span
+            className="text-lg font-black uppercase tracking-tight"
+            style={{ fontFamily: "var(--font-schrifted)" }}
+          >
+            Capitres
+          </span>
           <p className="mt-3 max-w-sm text-sm text-paper/60">{t("tagline")}</p>
 
           <div className="mt-8 max-w-sm">
