@@ -27,7 +27,7 @@ type Slot =
   | { kind: "split"; left: PanelSpec; right: PanelSpec }
   | { kind: "panel"; spec: PanelSpec };
 
-const PANEL_COUNT = 5; // + hero = 6 full-screen sections = six scrolls to the footer
+const PANEL_COUNT = 8; // + hero = 9 full-screen sections = nine scrolls to the footer
 
 export default async function HomePage({
   params,
@@ -37,13 +37,14 @@ export default async function HomePage({
   const { locale } = await params;
   setRequestLocale(locale);
 
-  const [t, tHome, collections, newArrivals, heritageProducts] =
+  const [t, tHome, collections, newArrivals, heritageProducts, allProducts] =
     await Promise.all([
       getTranslations({ locale, namespace: "hero" }),
       getTranslations({ locale, namespace: "home" }),
       catalog.getCollections(),
       catalog.getProducts({ isNew: true }, "newest"),
       catalog.getProducts({ collection: "heritage-capsule" }, "featured"),
+      catalog.getProducts({}, "featured"),
     ]);
 
   const liveCollections = collections.filter((c) => !c.archived);
@@ -138,17 +139,28 @@ export default async function HomePage({
     },
   });
 
-  // Still short of the target? Draw more looks from heritage products.
-  for (const p of heritageProducts) {
+  // Still short of the target? Draw more individual product looks — heritage
+  // pieces first, then anything else in the catalog — each its own panel
+  // with a link straight to that product.
+  const usedProductSlugs = new Set<string>(
+    newArrivals[0] ? [newArrivals[0].slug] : [],
+  );
+  for (const p of [...heritageProducts, ...allProducts]) {
     if (slots.length >= PANEL_COUNT) break;
+    if (usedProductSlugs.has(p.slug) || p.giftCard) continue;
     const img = p.images[0];
     if (!img) continue;
+    usedProductSlugs.add(p.slug);
+    const inHeritage = p.collectionSlugs.includes("heritage-capsule");
     slots.push({
       kind: "panel",
       spec: {
         image: img.src,
         alt: pick(img.alt, locale),
-        eyebrow: heritage ? pick(heritage.title, locale) : tHome("heritageEyebrow"),
+        eyebrow:
+          inHeritage && heritage
+            ? pick(heritage.title, locale)
+            : tHome("newEyebrow"),
         title: pick(p.title, locale),
         ctaLabel: tHome("viewAll"),
         href: `/products/${p.slug}`,
