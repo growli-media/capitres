@@ -52,10 +52,7 @@ export default async function GiftCardsPage({
                 <p className="text-eyebrow text-paper/70">{t("eyebrow")}</p>
                 <p
                   className="text-paper/90 text-lg font-black uppercase"
-                  style={{
-                    fontFamily: "var(--font-archivo)",
-                    fontStretch: "125%",
-                  }}
+                  style={{ fontFamily: "var(--font-schrifted)" }}
                 >
                   Gift Card
                 </p>

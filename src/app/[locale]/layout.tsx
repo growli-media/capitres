@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Archivo, Noto_Sans_Arabic } from "next/font/google";
+import { Noto_Sans_Arabic } from "next/font/google";
+import localFont from "next/font/local";
 import { routing, isRtl } from "@/i18n/routing";
 import { catalog } from "@/lib/catalog";
 import Header, {
@@ -18,21 +19,27 @@ import PageviewTracker from "@/components/analytics/PageviewTracker";
 import "../globals.css";
 
 /**
- * Latin display+body: Archivo variable (wght + wdth — the expanded cut
- * echoes the CAPITRES wordmark). Arabic-script (ar + ku/Sorani):
- * ONE family — Noto Sans Arabic variable — serves body (400–600) and
- * display (800) from the same files, covering the full Arabic block
- * including Kurdish letters (ە ۆ ێ ڕ ڵ). A separate kufi display face
- * was dropped deliberately: it added 162KB at VeryHigh priority and a
- * second late swap that destabilised LCP on throttled connections.
- *
- * Not preloaded: /en never uses it (zero bytes); ar/ku fetch on use.
+ * Latin display+body: SFT Schrifted Sans (self-hosted static family,
+ * client-supplied — provided by the brand owner; confirm the commercial
+ * license with Schrifteria Foundry before scaling distribution). Static
+ * files per weight, not a variable font, so there's no "wdth" axis to
+ * stretch headings wide the way Archivo's did — display weight now comes
+ * from the ExtraBold/Black cuts themselves (see --display-stretch: 100%
+ * in globals.css) rather than synthetic width. Arabic-script (ar + ku/
+ * Sorani) keeps Noto Sans Arabic — this family has zero Arabic glyphs.
  */
-const archivo = Archivo({
-  subsets: ["latin"],
-  variable: "--font-archivo",
+const schrifted = localFont({
+  src: [
+    { path: "../../fonts/schrifted/Light.ttf", weight: "300", style: "normal" },
+    { path: "../../fonts/schrifted/Regular.otf", weight: "400", style: "normal" },
+    { path: "../../fonts/schrifted/Medium.ttf", weight: "500", style: "normal" },
+    { path: "../../fonts/schrifted/DemiBold.ttf", weight: "600", style: "normal" },
+    { path: "../../fonts/schrifted/Bold.ttf", weight: "700", style: "normal" },
+    { path: "../../fonts/schrifted/ExtraBold.ttf", weight: "800", style: "normal" },
+    { path: "../../fonts/schrifted/Black.ttf", weight: "900", style: "normal" },
+  ],
+  variable: "--font-schrifted",
   display: "swap",
-  axes: ["wdth"],
 });
 
 const notoArabic = Noto_Sans_Arabic({
@@ -108,7 +115,7 @@ export default async function LocaleLayout({
     <html
       lang={locale}
       dir={isRtl(locale) ? "rtl" : "ltr"}
-      className={`${archivo.variable} ${notoArabic.variable}`}
+      className={`${schrifted.variable} ${notoArabic.variable}`}
     >
       <body>
         <AnalyticsScripts />

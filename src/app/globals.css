@@ -8,13 +8,16 @@
 
 :root {
   /* Locale-aware font + typesetting variables. Latin default.         */
-  --font-display-active: var(--font-archivo), system-ui, sans-serif;
-  --font-body-active: var(--font-archivo), system-ui, sans-serif;
+  --font-display-active: var(--font-schrifted), system-ui, sans-serif;
+  --font-body-active: var(--font-schrifted), system-ui, sans-serif;
   --ls-eyebrow: 0.22em;
   --ls-cta: 0.14em;
   --ls-display: -0.03em;
   --leading-display-v: 0.92;
-  --display-stretch: 125%;
+  /* SFT Schrifted Sans is static per-weight, not a variable font — no
+     "wdth" axis to stretch wide like Archivo's did. Display boldness now
+     comes from the ExtraBold/Black cuts (--display-weight) instead. */
+  --display-stretch: 100%;
   --display-transform: uppercase;
   --display-weight: 800;
 }
@@ -268,8 +271,7 @@ body {
     content: "Capitres";
     display: block;
     text-align: center;
-    font-family: var(--font-archivo), system-ui, sans-serif;
-    font-stretch: 125%;
+    font-family: var(--font-schrifted), system-ui, sans-serif;
     font-weight: 900;
     text-transform: uppercase;
     font-size: 13.5vw;
