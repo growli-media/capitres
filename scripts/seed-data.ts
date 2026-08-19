@@ -124,11 +124,11 @@ export const seedProducts: SeedProduct[] = [
     variants: variants(sizesTee, { S: 4, M: 8, L: 10, XL: 6, "2XL": 3 }),
     images: [
       {
-        key: "products/iraq-84.jpg",
+        key: "products/banner-2.png",
         alt: {
-          en: "Iraq 84 heritage tee — off-white with maroon chest print",
-          ar: "تيشيرت العراق ٨٤ التراثي — أوف وايت بطبعة صدر مارونية",
-          ku: "تیشێرتی میراتی عێراق ٨٤ — ئۆف وایت بە چاپی سنگی مارۆنی",
+          en: "Iraq 84 heritage tee — cream with sky-blue trim",
+          ar: "تيشيرت العراق ٨٤ التراثي — كريمي بحواف سماوية",
+          ku: "تیشێرتی میراتی عێراق ٨٤ — کرێمی بە کەنارەی ئاسمانی",
         },
       },
     ],
@@ -145,9 +145,9 @@ export const seedProducts: SeedProduct[] = [
     slug: "iraq-40-jersey",
     title: { en: "Iraq 40 Jersey", ar: "قميص العراق ٤٠", ku: "کراسی عێراق ٤٠" },
     description: {
-      en: "A matchday jersey for the fortieth chapter — desert taupe body, tonal collar, breathable knit. Built for the terraces in July and the street in October.",
-      ar: "قميص يوم المباراة للفصل الأربعين — لون ترابي صحراوي، وياقة متناغمة، ونسيج يتنفس. صُنع للمدرجات في تموز وللشارع في تشرين.",
-      ku: "کراسی ڕۆژی یاری بۆ بەشی چلەم — ڕەنگی خۆڵەمێشی بیابانی، یەخەی هاوڕەنگ، و چنینێک کە هەناسە دەدات. بۆ تریبوونەکان لە تەمموز و بۆ شەقام لە تشرین دروستکراوە.",
+      en: "A matchday jersey for the fortieth chapter — forest green body, white collar, breathable knit. Built for the terraces in July and the street in October.",
+      ar: "قميص يوم المباراة للفصل الأربعين — لون أخضر غابي، وياقة بيضاء، ونسيج يتنفس. صُنع للمدرجات في تموز وللشارع في تشرين.",
+      ku: "کراسی ڕۆژی یاری بۆ بەشی چلەم — ڕەنگی سەوزی دارستان، یەخەی سپی، و چنینێک کە هەناسە دەدات. بۆ تریبوونەکان لە تەمموز و بۆ شەقام لە تشرین دروستکراوە.",
     },
     story: {
       en: "Forty years separate the boys of '84 from today's faithful. The Iraq 40 Jersey bridges them — a modern cut carrying four decades of chants, heartbreak and impossible comebacks.",
@@ -162,15 +162,15 @@ export const seedProducts: SeedProduct[] = [
     category: "jerseys",
     gender: "unisex",
     priceAmount: 75_000,
-    colors: [{ key: "desert-taupe", hex: "#736158", name: { en: "Desert Taupe", ar: "ترابي صحراوي", ku: "خۆڵەمێشی بیابانی" } }],
+    colors: [{ key: "forest-green", hex: "#1F3B2C", name: { en: "Forest Green", ar: "أخضر غابي", ku: "سەوزی دارستان" } }],
     variants: variants(sizesJersey, { M: 7, L: 9, XL: 5, "2XL": 2 }),
     images: [
       {
-        key: "products/iraq-40-jersey.jpg",
+        key: "products/banner-3.png",
         alt: {
-          en: "Iraq 40 jersey in desert taupe with tonal collar",
-          ar: "قميص العراق ٤٠ باللون الترابي الصحراوي وياقة متناغمة",
-          ku: "کراسی عێراق ٤٠ بە ڕەنگی خۆڵەمێشی بیابانی و یەخەی هاوڕەنگ",
+          en: "Iraq 40 jersey in forest green with white collar",
+          ar: "قميص العراق ٤٠ باللون الأخضر الغابي وياقة بيضاء",
+          ku: "کراسی عێراق ٤٠ بە سەوزی دارستان و یەخەی سپی",
         },
       },
     ],
@@ -198,12 +198,12 @@ export const seedProducts: SeedProduct[] = [
     category: "tees",
     gender: "unisex",
     priceAmount: 65_000,
-    colors: [{ key: "ink", hex: "#2B2A27", name: { en: "Ink", ar: "أسود حبري", ku: "ڕەشی مەرەکەبی" } }],
+    colors: [{ key: "cream", hex: "#EDE7DD", name: { en: "Cream", ar: "كريمي", ku: "کرێمی" } }],
     variants: variants(sizesTee, 0),
     images: [
       {
-        key: "products/iraq-88.jpg",
-        alt: { en: "Iraq 88 tee in ink black", ar: "تيشيرت العراق ٨٨ بالأسود الحبري", ku: "تیشێرتی عێراق ٨٨ بە ڕەشی مەرەکەبی" },
+        key: "products/banner-1.png",
+        alt: { en: "Iraq 88 tee in cream", ar: "تيشيرت العراق ٨٨ بالكريمي", ku: "تیشێرتی عێراق ٨٨ بە کرێمی" },
       },
     ],
     collectionSlugs: ["heritage-capsule"],
@@ -262,12 +262,12 @@ export const seedProducts: SeedProduct[] = [
     category: "tees",
     gender: "unisex",
     priceAmount: 50_000,
-    colors: [{ key: "stone", hex: "#9B9191", name: { en: "Stone", ar: "رمادي حجري", ku: "خۆڵەمێشی بەردین" } }],
+    colors: [{ key: "forest-green", hex: "#1F3B2C", name: { en: "Forest Green", ar: "أخضر غابي", ku: "سەوزی دارستان" } }],
     variants: variants(sizesTee, { S: 6, M: 9, L: 8, XL: 5, "2XL": 4 }),
     images: [
       {
-        key: "products/amo-baba.jpg",
-        alt: { en: "Amo Baba tribute tee in stone grey", ar: "تيشيرت عمو بابا بالرمادي الحجري", ku: "تیشێرتی عەمۆ بابا بە خۆڵەمێشی بەردین" },
+        key: "products/banner-4.png",
+        alt: { en: "Amo Baba tribute tee in forest green", ar: "تيشيرت عمو بابا بالأخضر الغابي", ku: "تیشێرتی عەمۆ بابا بە سەوزی دارستان" },
       },
     ],
     collectionSlugs: ["essentials"],
@@ -294,12 +294,12 @@ export const seedProducts: SeedProduct[] = [
     category: "tees",
     gender: "unisex",
     priceAmount: 55_000,
-    colors: [{ key: "terracotta", hex: "#926149", name: { en: "Terracotta", ar: "تيراكوتا", ku: "تیراکۆتا" } }],
+    colors: [{ key: "cream-sky", hex: "#EDE7DD", name: { en: "Cream / Sky Blue", ar: "كريمي / سماوي", ku: "کرێمی / ئاسمانی" } }],
     variants: variants(sizesTee, 0),
     images: [
       {
-        key: "products/iraq-70.jpg",
-        alt: { en: "IRAQ 70 tee in sun-faded terracotta", ar: "تيشيرت العراق ٧٠ بلون التيراكوتا الباهت", ku: "تیشێرتی عێراق ٧٠ بە تیراکۆتای کاڵبووەوە" },
+        key: "products/banner-6.png",
+        alt: { en: "IRAQ 70 tee in cream with sky-blue detailing", ar: "تيشيرت العراق ٧٠ بالكريمي وتفاصيل سماوية", ku: "تیشێرتی عێراق ٧٠ بە کرێمی و وردەکاری ئاسمانی" },
       },
     ],
     collectionSlugs: ["heritage-capsule"],
@@ -322,12 +322,12 @@ export const seedProducts: SeedProduct[] = [
     gender: "unisex",
     priceAmount: 39_000,
     compareAtAmount: 55_000,
-    colors: [{ key: "pitch-green", hex: "#065E37", name: { en: "Pitch Green", ar: "أخضر الملعب", ku: "سەوزی یاریگا" } }],
+    colors: [{ key: "cream", hex: "#EDE7DD", name: { en: "Cream", ar: "كريمي", ku: "کرێمی" } }],
     variants: variants(sizesTee, { S: 2, M: 5, L: 7, XL: 3, "2XL": 1 }),
     images: [
       {
-        key: "products/iraq-80s-heritage.jpg",
-        alt: { en: "Iraq 80's heritage tee — white with pitch-green print", ar: "تيشيرت تراث الثمانينات — أبيض بطبعة خضراء", ku: "تیشێرتی میراتی هەشتاکان — سپی بە چاپی سەوز" },
+        key: "products/banner-2.png",
+        alt: { en: "Iraq 80's heritage tee in cream", ar: "تيشيرت تراث الثمانينات بالكريمي", ku: "تیشێرتی میراتی هەشتاکان بە کرێمی" },
       },
     ],
     collectionSlugs: ["heritage-capsule", "essentials"],
@@ -377,8 +377,8 @@ export const seedCollections: SeedCollection[] = [
       ku: "ئەو جلانەی نەتەوەیەکیان هێنایە باوەڕ، لە ئەرشیفەوە دروستکراونەتەوە — زەیتوونی ئۆڵۆمپیاد، شەوانی پرۆژەکتەر، و ئەو دەیەیەی تۆپی پێ هەرگیز نەیگەڕاندەوە.",
     },
     heroImage: {
-      key: "products/iraq-84.jpg",
-      alt: { en: "Iraq 84 heritage tee on studio backdrop", ar: "تيشيرت العراق ٨٤ التراثي على خلفية استوديو", ku: "تیشێرتی میراتی عێراق ٨٤ لەسەر باکگراوندی ستۆدیۆ" },
+      key: "products/banner-1.png",
+      alt: { en: "Heritage jersey held up against a floodlit goal net", ar: "قميص تراثي مرفوع أمام شباك مرمى مضاء", ku: "کراسی میراتی بەرزکراوەتەوە لەبەردەم تۆڕی مەرمایەکی ڕووناککراوە" },
     },
     theme: "dark",
     order: 1,
@@ -393,8 +393,8 @@ export const seedCollections: SeedCollection[] = [
       ku: "کراس و چاکەتی گەرمکردنەوە بۆ ڕێگای یاریگا — چنینی تەکنیکی، وردەکاری ئەرشیفی، هیچ شتێک نییە کە ڕۆژی دووشەممە دایبکەنیت.",
     },
     heroImage: {
-      key: "products/iraq-40-jersey.jpg",
-      alt: { en: "Iraq 40 jersey in desert taupe", ar: "قميص العراق ٤٠ بالترابي الصحراوي", ku: "کراسی عێراق ٤٠ بە خۆڵەمێشی بیابانی" },
+      key: "products/banner-5.png",
+      alt: { en: "Two players in cream and forest-green jerseys, back to back", ar: "لاعبان بقميصين كريمي وأخضر غابي، ظهراً لظهر", ku: "دوو یاریزان بە کراسی کرێمی و سەوزی دارستان، پشت بە پشت" },
     },
     theme: "light",
     order: 2,
@@ -409,8 +409,8 @@ export const seedCollections: SeedCollection[] = [
       ku: "پارچە بنەڕەتییە قورسەکان بە ڕەنگی ستۆدیۆ — ئەو پارچانەی بێ بیرکردنەوە بۆیان دەچیت، و لەگەڵ ئەوەشدا چیرۆکێکیان تێدا دوورماوە.",
     },
     heroImage: {
-      key: "products/amo-baba.jpg",
-      alt: { en: "Amo Baba tee in stone grey", ar: "تيشيرت عمو بابا بالرمادي الحجري", ku: "تیشێرتی عەمۆ بابا بە خۆڵەمێشی بەردین" },
+      key: "products/banner-4.png",
+      alt: { en: "Amo Baba tee in forest green", ar: "تيشيرت عمو بابا بالأخضر الغابي", ku: "تیشێرتی عەمۆ بابا بە سەوزی دارستان" },
     },
     theme: "light",
     order: 3,
