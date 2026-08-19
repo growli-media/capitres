@@ -15,7 +15,6 @@ import { pick, type LocalizedString } from "@/lib/content";
 import { useCart, useCartCount } from "@/lib/cart/store";
 import type { ImageSource } from "@/lib/catalog/types";
 import LanguageSwitcher from "./LanguageSwitcher";
-import logoMark from "@/images/brand/logo.png";
 
 export interface NavCollection {
   slug: string;
@@ -199,16 +198,8 @@ export default function Header({
         <Link
           href="/"
           onMouseEnter={() => setPanel(null)}
-          className="flex cursor-pointer items-center justify-center gap-2.5"
+          className="flex cursor-pointer items-center justify-center"
         >
-          <Image
-            src={logoMark}
-            alt=""
-            width={30}
-            height={30}
-            priority
-            className={`h-[23px] w-[23px] md:h-[27px] md:w-[27px] ${overHero ? "invert" : ""}`}
-          />
           <span
             className="pt-0.5 text-lg font-black uppercase tracking-tight md:text-xl"
             style={{ fontFamily: "var(--font-archivo)", fontStretch: "125%" }}
@@ -241,7 +232,7 @@ export default function Header({
             </ul>
           </nav>
           <div className="hidden ps-3 sm:block">
-            <LanguageSwitcher />
+            <LanguageSwitcher tone={overHero ? "paper" : "ink"} />
           </div>
           <button
             type="button"

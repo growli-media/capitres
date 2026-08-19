@@ -169,37 +169,16 @@ export default async function HomePage({
         <HeroMedia poster={heroImage} videoSrc="/hero.mp4" />
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-gradient-to-t from-ink/70 via-ink/10 to-ink/40"
+          className="absolute inset-0 bg-gradient-to-t from-ink/55 via-ink/5 to-transparent"
         />
-        <div className="container-x relative flex h-full flex-col justify-end pb-24 pt-32">
-          <p className="hero-enter text-eyebrow mb-5 text-paper/75">
-            {t("eyebrow")}
-          </p>
-          <h1 className="hero-enter hero-enter-2 text-display max-w-5xl text-[clamp(2.9rem,9vw,8rem)]">
-            {t("titleA")}
-            <br />
-            <span className="text-paper/80">{t("titleB")}</span>
-          </h1>
-          <p className="hero-enter hero-enter-3 mt-6 max-w-md text-base text-paper/75 md:text-lg">
-            {t("sub")}
-          </p>
-          <div className="hero-enter hero-enter-4 mt-9 flex flex-wrap gap-3">
-            <Link href="/collections/heritage-capsule" className="btn btn-paper">
-              {t("ctaShop")}
-            </Link>
-            <Link
-              href="/about"
-              className="btn btn-outline border-paper/60 text-paper hover:border-paper"
-            >
-              {t("ctaStory")}
-            </Link>
-          </div>
-        </div>
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 bottom-7 flex justify-center"
-        >
-          <span className="scroll-cue" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-9 flex flex-col items-center gap-4">
+          <Link
+            href="/collections"
+            className="hero-enter text-eyebrow link-underline pointer-events-auto text-paper/85 hover:text-paper"
+          >
+            {t("discover")}
+          </Link>
+          <span aria-hidden="true" className="scroll-cue" />
         </div>
       </section>
 
