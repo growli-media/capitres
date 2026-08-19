@@ -302,23 +302,24 @@ body {
   animation: rise-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* Site-wide page-to-page transition. Longer and with a touch of rise (not
-   just opacity) so it reads clearly as "something happened" rather than a
-   blip — still just two compositor-only properties, no layout, no repaint,
-   so it never feels laggy regardless of duration. */
+/* Site-wide page-to-page transition — a clear rise-and-settle so it reads
+   as "something happened" rather than a blip. Opacity + transform only, so
+   it's compositor-only and never laggy regardless of duration; the
+   containing-block side effect of that transform is handled in
+   PageTransition.tsx (the class is dropped once the animation ends). */
 @keyframes page-fade-in {
   from {
     opacity: 0;
-    transform: translateY(14px);
+    transform: translateY(32px) scale(0.98);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
 .page-fade {
-  animation: page-fade-in 750ms var(--ease-editorial) both;
+  animation: page-fade-in 850ms var(--ease-editorial) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
