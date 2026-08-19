@@ -164,10 +164,9 @@ export default async function HomePage({
           Pulled up under the sticky header so the transparent bar overlays
           the media (negative margin lives on AlbumScroll's viewport now).
           AlbumScroll clips this and the panels below into one stack: each
-          photo slides up and lands completely on top of the one before it.
-          Drop a campaign film at /public/hero.mp4 and add videoSrc="/hero.mp4". */}
+          photo slides up and lands completely on top of the one before it. */}
       <section className="relative h-[100svh] overflow-hidden bg-ink text-paper">
-        <HeroMedia poster={heroImage} /* videoSrc="/hero.mp4" */ />
+        <HeroMedia poster={heroImage} videoSrc="/hero.mp4" />
         <div
           aria-hidden="true"
           className="absolute inset-0 bg-gradient-to-t from-ink/70 via-ink/10 to-ink/40"
