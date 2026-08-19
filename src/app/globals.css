@@ -302,21 +302,23 @@ body {
   animation: rise-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* Site-wide page-to-page transition — opacity only (see PageTransition.tsx
-   for why: never risks becoming a containing block for fixed-position
-   content like the lightbox or cart drawer). Cheap enough to never feel
-   laggy — one compositor-only property, no layout, no repaint. */
+/* Site-wide page-to-page transition. Longer and with a touch of rise (not
+   just opacity) so it reads clearly as "something happened" rather than a
+   blip — still just two compositor-only properties, no layout, no repaint,
+   so it never feels laggy regardless of duration. */
 @keyframes page-fade-in {
   from {
     opacity: 0;
+    transform: translateY(14px);
   }
   to {
     opacity: 1;
+    transform: translateY(0);
   }
 }
 
 .page-fade {
-  animation: page-fade-in 420ms var(--ease-editorial) both;
+  animation: page-fade-in 750ms var(--ease-editorial) both;
 }
 
 @media (prefers-reduced-motion: reduce) {

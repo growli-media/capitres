@@ -131,6 +131,22 @@ export const seedProducts: SeedProduct[] = [
           ku: "تیشێرتی میراتی عێراق ٨٤ — کرێمی بە کەنارەی ئاسمانی",
         },
       },
+      {
+        key: "products/banner-1.png",
+        alt: {
+          en: "Iraq 84 heritage tee, campaign shot against a floodlit net",
+          ar: "تيشيرت العراق ٨٤ في لقطة حملة أمام شباك مضاءة",
+          ku: "تیشێرتی عێراق ٨٤ لە وێنەیەکی کەمپەین لەبەردەم تۆڕی ڕووناک",
+        },
+      },
+      {
+        key: "products/banner-6.png",
+        alt: {
+          en: "Iraq 84 heritage tee, detail shot",
+          ar: "تيشيرت العراق ٨٤، لقطة تفصيلية",
+          ku: "تیشێرتی عێراق ٨٤، وێنەی وردەکاری",
+        },
+      },
     ],
     collectionSlugs: ["heritage-capsule"],
     featured: true,
@@ -173,6 +189,22 @@ export const seedProducts: SeedProduct[] = [
           ku: "کراسی عێراق ٤٠ بە سەوزی دارستان و یەخەی سپی",
         },
       },
+      {
+        key: "products/banner-4.png",
+        alt: {
+          en: "Iraq 40 jersey, worn portrait shot",
+          ar: "قميص العراق ٤٠، لقطة بورتريه أثناء الارتداء",
+          ku: "کراسی عێراق ٤٠، وێنەی پۆرترەیت لەکاتی لەبەرکردن",
+        },
+      },
+      {
+        key: "products/banner-5.png",
+        alt: {
+          en: "Iraq 40 jersey styled alongside the heritage capsule",
+          ar: "قميص العراق ٤٠ إلى جانب كبسولة التراث",
+          ku: "کراسی عێراق ٤٠ لەگەڵ کۆلێکشنی میرات",
+        },
+      },
     ],
     collectionSlugs: ["matchday"],
     isNew: true,
@@ -204,6 +236,14 @@ export const seedProducts: SeedProduct[] = [
       {
         key: "products/banner-1.png",
         alt: { en: "Iraq 88 tee in cream", ar: "تيشيرت العراق ٨٨ بالكريمي", ku: "تیشێرتی عێراق ٨٨ بە کرێمی" },
+      },
+      {
+        key: "products/banner-2.png",
+        alt: { en: "Iraq 88 tee, clean product shot", ar: "تيشيرت العراق ٨٨، لقطة منتج نظيفة", ku: "تیشێرتی عێراق ٨٨، وێنەی بەرهەمی پاک" },
+      },
+      {
+        key: "products/banner-6.png",
+        alt: { en: "Iraq 88 tee, detail shot", ar: "تيشيرت العراق ٨٨، لقطة تفصيلية", ku: "تیشێرتی عێراق ٨٨، وێنەی وردەکاری" },
       },
     ],
     collectionSlugs: ["heritage-capsule"],
@@ -269,6 +309,10 @@ export const seedProducts: SeedProduct[] = [
         key: "products/banner-4.png",
         alt: { en: "Amo Baba tribute tee in forest green", ar: "تيشيرت عمو بابا بالأخضر الغابي", ku: "تیشێرتی عەمۆ بابا بە سەوزی دارستان" },
       },
+      {
+        key: "products/banner-3.png",
+        alt: { en: "Amo Baba tribute tee, worn portrait shot", ar: "تيشيرت عمو بابا، لقطة بورتريه أثناء الارتداء", ku: "تیشێرتی عەمۆ بابا، وێنەی پۆرترەیت لەکاتی لەبەرکردن" },
+      },
     ],
     collectionSlugs: ["essentials"],
     isNew: true,
@@ -301,6 +345,14 @@ export const seedProducts: SeedProduct[] = [
         key: "products/banner-6.png",
         alt: { en: "IRAQ 70 tee in cream with sky-blue detailing", ar: "تيشيرت العراق ٧٠ بالكريمي وتفاصيل سماوية", ku: "تیشێرتی عێراق ٧٠ بە کرێمی و وردەکاری ئاسمانی" },
       },
+      {
+        key: "products/banner-1.png",
+        alt: { en: "IRAQ 70 tee, campaign shot", ar: "تيشيرت العراق ٧٠، لقطة حملة", ku: "تیشێرتی عێراق ٧٠، وێنەی کەمپەین" },
+      },
+      {
+        key: "products/banner-2.png",
+        alt: { en: "IRAQ 70 tee, clean product shot", ar: "تيشيرت العراق ٧٠، لقطة منتج نظيفة", ku: "تیشێرتی عێراق ٧٠، وێنەی بەرهەمی پاک" },
+      },
     ],
     collectionSlugs: ["heritage-capsule"],
     releaseDate: "2026-03-10",
@@ -328,6 +380,14 @@ export const seedProducts: SeedProduct[] = [
       {
         key: "products/banner-2.png",
         alt: { en: "Iraq 80's heritage tee in cream", ar: "تيشيرت تراث الثمانينات بالكريمي", ku: "تیشێرتی میراتی هەشتاکان بە کرێمی" },
+      },
+      {
+        key: "products/banner-6.png",
+        alt: { en: "Iraq 80's heritage tee, detail shot", ar: "تيشيرت تراث الثمانينات، لقطة تفصيلية", ku: "تیشێرتی میراتی هەشتاکان، وێنەی وردەکاری" },
+      },
+      {
+        key: "products/banner-1.png",
+        alt: { en: "Iraq 80's heritage tee, campaign shot", ar: "تيشيرت تراث الثمانينات، لقطة حملة", ku: "تیشێرتی میراتی هەشتاکان، وێنەی کەمپەین" },
       },
     ],
     collectionSlugs: ["heritage-capsule", "essentials"],
