@@ -7,7 +7,7 @@ import { routing } from "@/i18n/routing";
 import { catalog } from "@/lib/catalog";
 import { pick } from "@/lib/content";
 import { formatIQD } from "@/lib/money";
-import { FREE_SHIPPING_THRESHOLD } from "@/lib/commerce/config";
+import { FREE_SHIPPING_THRESHOLD, GIFT_CARDS_ENABLED } from "@/lib/commerce/config";
 import ProductCard from "@/components/product/ProductCard";
 import ProductGallery from "@/components/product/ProductGallery";
 import AddToCart from "@/components/product/AddToCart";
@@ -16,8 +16,11 @@ import { Reveal } from "@/components/motion/Reveal";
 
 export async function generateStaticParams() {
   const products = await catalog.getProducts();
+  const buildable = GIFT_CARDS_ENABLED
+    ? products
+    : products.filter((p) => !p.giftCard);
   return routing.locales.flatMap((locale) =>
-    products.map((p) => ({ locale, slug: p.slug })),
+    buildable.map((p) => ({ locale, slug: p.slug })),
   );
 }
 
@@ -45,6 +48,7 @@ export default async function ProductPage({
 
   const product = await catalog.getProduct(slug);
   if (!product) notFound();
+  if (product.giftCard && !GIFT_CARDS_ENABLED) notFound();
 
   const [t, tNav, tBadges, tA11y, related, primaryCollection] =
     await Promise.all([

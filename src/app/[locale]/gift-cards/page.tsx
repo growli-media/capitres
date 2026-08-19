@@ -6,6 +6,7 @@ import GiftCardConfigurator from "@/components/gift/GiftCardConfigurator";
 import { Reveal } from "@/components/motion/Reveal";
 import { catalog } from "@/lib/catalog";
 import { localizeDigits } from "@/lib/money";
+import { GIFT_CARDS_ENABLED } from "@/lib/commerce/config";
 import wordmark from "@/images/brand/wordmark.png";
 
 export async function generateMetadata({
@@ -23,6 +24,7 @@ export default async function GiftCardsPage({
 }: {
   params: Promise<{ locale: string }>;
 }) {
+  if (!GIFT_CARDS_ENABLED) notFound();
   const { locale } = await params;
   setRequestLocale(locale);
   const [t, giftCardProduct] = await Promise.all([

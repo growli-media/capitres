@@ -1,5 +1,19 @@
 /** Commerce rules shared by the cart, checkout and policy pages. */
 
+/**
+ * Gift cards are off for now — the feature stays fully built (catalog
+ * plumbing, checkout redemption, admin management) so it's a one-line flip
+ * back on later. Flipping this to true re-exposes /gift-cards, its nav
+ * links, its product listing, and its sitemap entries — nothing else needs
+ * to change.
+ */
+export const GIFT_CARDS_ENABLED = false;
+
+/** "gift-cards" is special everywhere (denominations instead of sizes,
+ * links to /gift-cards) — kept here (not in the server-only catalog/
+ * categories module) so client components can reference it safely. */
+export const GIFT_CARD_CATEGORY = "gift-cards";
+
 export const FREE_SHIPPING_THRESHOLD = 100_000; // IQD
 export const FLAT_SHIPPING_RATE = 5_000; // IQD
 

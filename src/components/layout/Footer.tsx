@@ -1,6 +1,7 @@
 import { useTranslations } from "next-intl";
 import { InstagramLogo } from "@phosphor-icons/react/dist/ssr";
 import { Link } from "@/i18n/navigation";
+import { GIFT_CARDS_ENABLED } from "@/lib/commerce/config";
 import NewsletterForm from "./NewsletterForm";
 
 export default function Footer() {
@@ -21,7 +22,9 @@ export default function Footer() {
         { href: "/shop?new=1", label: tNav("newArrivals") },
         { href: "/collections", label: tNav("collections") },
         { href: "/shop?sale=1", label: tNav("sale") },
-        { href: "/gift-cards", label: tNav("giftCards") },
+        ...(GIFT_CARDS_ENABLED
+          ? [{ href: "/gift-cards", label: tNav("giftCards") }]
+          : []),
       ],
     },
     {

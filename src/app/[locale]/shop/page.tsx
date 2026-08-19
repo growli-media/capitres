@@ -12,6 +12,7 @@ import ProductCard from "@/components/product/ProductCard";
 import ProductGrid from "@/components/shop/ProductGrid";
 import ShopFilters, { type ColorOption } from "@/components/shop/ShopFilters";
 import { PRICE_RANGES } from "@/lib/commerce/filters";
+import { GIFT_CARDS_ENABLED } from "@/lib/commerce/config";
 import { Link } from "@/i18n/navigation";
 
 export async function generateMetadata({
@@ -61,10 +62,15 @@ export default async function ShopPage({
   };
   const sort = (first(sp.sort) as ProductSort | undefined) ?? "featured";
 
-  const [products, allProducts] = await Promise.all([
+  const [rawProducts, allProducts] = await Promise.all([
     catalog.getProducts(filter, sort),
     catalog.getProducts(),
   ]);
+  // Gift cards are a purchase-only product, not a "look" — keep them out of
+  // the browsable grid while the feature is off (see GIFT_CARDS_ENABLED).
+  const products = GIFT_CARDS_ENABLED
+    ? rawProducts
+    : rawProducts.filter((p) => !p.giftCard);
 
   // Swatch options are derived from the live catalog, deduped by key.
   const colorMap = new Map<string, ColorOption>();

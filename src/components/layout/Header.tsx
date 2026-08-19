@@ -14,6 +14,7 @@ import { Link, usePathname } from "@/i18n/navigation";
 import { pick, type LocalizedString } from "@/lib/content";
 import { useCart, useCartCount } from "@/lib/cart/store";
 import type { ImageSource } from "@/lib/catalog/types";
+import { GIFT_CARDS_ENABLED, GIFT_CARD_CATEGORY } from "@/lib/commerce/config";
 import LanguageSwitcher from "./LanguageSwitcher";
 
 export interface NavCollection {
@@ -103,14 +104,21 @@ export default function Header({
     { href: "/shop?gender=women", label: t("women") },
     { href: "/shop?gender=unisex", label: t("unisex") },
     { href: "/shop?sale=1", label: t("sale") },
-    { href: "/gift-cards", label: t("giftCards") },
+    ...(GIFT_CARDS_ENABLED
+      ? [{ href: "/gift-cards", label: t("giftCards") }]
+      : []),
   ];
 
-  const categoryLinks = categories.map((c) => ({
-    href: c.slug === "gift-cards" ? "/gift-cards" : `/shop?category=${c.slug}`,
-    slug: c.slug,
-    title: c.title,
-  }));
+  const categoryLinks = categories
+    .filter((c) => GIFT_CARDS_ENABLED || c.slug !== GIFT_CARD_CATEGORY)
+    .map((c) => ({
+      href:
+        c.slug === GIFT_CARD_CATEGORY
+          ? "/gift-cards"
+          : `/shop?category=${c.slug}`,
+      slug: c.slug,
+      title: c.title,
+    }));
 
   const featured = collections[0];
 

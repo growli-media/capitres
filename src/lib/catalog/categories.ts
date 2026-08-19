@@ -2,6 +2,9 @@ import "server-only";
 import { sql } from "@/lib/db/client";
 import type { LocalizedString } from "@/lib/content";
 import type { CategoryOption } from "./types";
+import { GIFT_CARD_CATEGORY } from "@/lib/commerce/config";
+
+export { GIFT_CARD_CATEGORY };
 
 /**
  * The original five categories. Also the seed for the DB-backed
@@ -15,10 +18,6 @@ export const DEFAULT_CATEGORIES: CategoryOption[] = [
   { slug: "accessories", title: { en: "Accessories", ar: "إكسسوارات", ku: "ئێکسسوارات" }, sortOrder: 4 },
   { slug: "gift-cards", title: { en: "Gift Cards", ar: "بطاقات هدايا", ku: "کارتی دیاری" }, sortOrder: 5 },
 ];
-
-/** "gift-cards" is special everywhere (denominations instead of sizes,
- * links to /gift-cards) — surfaced here so nothing hardcodes the string. */
-export const GIFT_CARD_CATEGORY = "gift-cards";
 
 let ensured: Promise<void> | null = null;
 
