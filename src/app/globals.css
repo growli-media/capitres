@@ -302,6 +302,29 @@ body {
   animation: rise-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* Site-wide page-to-page transition — opacity only (see PageTransition.tsx
+   for why: never risks becoming a containing block for fixed-position
+   content like the lightbox or cart drawer). Cheap enough to never feel
+   laggy — one compositor-only property, no layout, no repaint. */
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.page-fade {
+  animation: page-fade-in 420ms var(--ease-editorial) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-fade {
+    animation: none;
+  }
+}
+
 /* Slow cinematic drift for a still hero poster (stands in for campaign
    video until /public/hero.mp4 is supplied). */
 @keyframes ken-burns {

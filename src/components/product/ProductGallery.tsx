@@ -8,10 +8,11 @@ import type { ProductImage } from "@/lib/catalog/types";
 import { imageSrcKey, pick } from "@/lib/content";
 
 /**
- * PDP gallery, Saint-Laurent style. Desktop: every shot stacked vertically —
- * you simply scroll the images while the product info stays put (that column
- * is sticky in the parent). A live "1 / 4" counter tracks the shot in view.
- * Mobile: a swipeable snap carousel. Any image opens a full-screen zoom.
+ * PDP gallery — the centre column between the fixed info and buy panels.
+ * Desktop: every shot stacked vertically, scrolled normally while the
+ * side columns stay sticky. A live "1 / 4" counter tracks the shot in
+ * view. Mobile: a swipeable snap carousel. Any image opens a full-screen
+ * viewer with a thumbnail strip so every shot stays one tap away.
  */
 export default function ProductGallery({
   images,
@@ -23,7 +24,7 @@ export default function ProductGallery({
   const locale = useLocale();
   const t = useTranslations("a11y");
   const [active, setActive] = useState(0);
-  const [zoomSrc, setZoomSrc] = useState<ProductImage["src"] | null>(null);
+  const [zoomIndex, setZoomIndex] = useState<number | null>(null);
   const many = images.length > 1;
   const stackRef = useRef<HTMLDivElement>(null);
 
@@ -46,11 +47,18 @@ export default function ProductGallery({
     return () => io.disconnect();
   }, [images.length]);
 
-  // Zoom lightbox: escape to close, lock body scroll.
+  // Zoom viewer: arrows + escape to navigate/close, lock body scroll.
   useEffect(() => {
-    if (!zoomSrc) return;
+    if (zoomIndex === null) return;
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setZoomSrc(null);
+      if (e.key === "Escape") setZoomIndex(null);
+      else if (e.key === "ArrowRight") {
+        setZoomIndex((i) => (i === null ? i : (i + 1) % images.length));
+      } else if (e.key === "ArrowLeft") {
+        setZoomIndex((i) =>
+          i === null ? i : (i - 1 + images.length) % images.length,
+        );
+      }
     }
     document.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
@@ -58,16 +66,14 @@ export default function ProductGallery({
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
     };
-  }, [zoomSrc]);
+  }, [zoomIndex, images.length]);
 
   function onMobileScroll(e: React.UIEvent<HTMLDivElement>) {
     const el = e.currentTarget;
     setActive(Math.round(el.scrollLeft / el.clientWidth));
   }
 
-  const zoomImg = zoomSrc
-    ? images.find((i) => i.src === zoomSrc)
-    : undefined;
+  const zoomImg = zoomIndex !== null ? images[zoomIndex] : undefined;
   const zoomAlt = zoomImg ? pick(zoomImg.alt, locale) : "";
 
   return (
@@ -79,9 +85,12 @@ export default function ProductGallery({
           className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto"
         >
           {images.map((img, i) => (
-            <div
+            <button
               key={imageSrcKey(img.src)}
-              className="relative aspect-[4/5] w-full shrink-0 snap-center bg-studio"
+              type="button"
+              onClick={() => setZoomIndex(i)}
+              aria-label={t("zoomImage")}
+              className="relative aspect-[4/5] w-full shrink-0 cursor-zoom-in snap-center bg-studio"
             >
               <Image
                 src={img.src}
@@ -96,7 +105,7 @@ export default function ProductGallery({
                   {badge}
                 </span>
               )}
-            </div>
+            </button>
           ))}
         </div>
         {many && (
@@ -113,22 +122,22 @@ export default function ProductGallery({
             {active + 1} / {images.length}
           </p>
         )}
-        <div className={many ? "-mt-9" : ""}>
+        <div className={many ? "-mt-9 space-y-3" : ""}>
           {images.map((img, i) => (
             <button
               key={imageSrcKey(img.src)}
               type="button"
               data-idx={i}
-              onClick={() => setZoomSrc(img.src)}
+              onClick={() => setZoomIndex(i)}
               aria-label={t("zoomImage")}
-              className="group relative block h-[100svh] w-full cursor-zoom-in overflow-hidden bg-studio"
+              className="group relative block aspect-[4/5] w-full cursor-zoom-in overflow-hidden bg-studio"
             >
               <Image
                 src={img.src}
                 alt={pick(img.alt, locale)}
                 fill
                 priority={i === 0}
-                sizes="50vw"
+                sizes="(min-width: 1280px) 34vw, 40vw"
                 className="object-cover transition-transform duration-700 group-hover:scale-[1.02]"
               />
               {badge && i === 0 && (
@@ -141,32 +150,61 @@ export default function ProductGallery({
         </div>
       </div>
 
-      {/* Zoom lightbox */}
-      {zoomSrc && (
+      {/* Zoom viewer — full-screen with a mini thumbnail gallery */}
+      {zoomImg && (
         <div
           role="dialog"
           aria-modal="true"
           aria-label={zoomAlt}
-          className="fixed inset-0 z-[60] flex cursor-zoom-out items-center justify-center bg-ink/95 p-4"
-          onClick={() => setZoomSrc(null)}
+          className="fixed inset-0 z-[60] flex cursor-zoom-out flex-col items-center justify-center bg-ink/95 p-4"
+          onClick={() => setZoomIndex(null)}
         >
           <button
             type="button"
             aria-label={t("closeZoom")}
-            onClick={() => setZoomSrc(null)}
+            onClick={() => setZoomIndex(null)}
             className="absolute end-4 top-4 z-10 flex h-12 w-12 cursor-pointer items-center justify-center bg-paper text-ink transition-colors hover:bg-ink hover:text-paper"
           >
             <X size={20} />
           </button>
-          <div className="relative h-full max-h-[92dvh] w-full max-w-5xl">
+          <div className="relative h-full max-h-[75dvh] w-full max-w-4xl">
             <Image
-              src={zoomSrc}
+              src={zoomImg.src}
               alt={zoomAlt}
               fill
               sizes="100vw"
               className="object-contain"
             />
           </div>
+          {many && (
+            <div
+              className="mt-6 flex max-w-full cursor-default gap-2.5 overflow-x-auto px-2"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {images.map((img, i) => (
+                <button
+                  key={imageSrcKey(img.src)}
+                  type="button"
+                  onClick={() => setZoomIndex(i)}
+                  aria-label={t("imageOf", { index: i + 1, total: images.length })}
+                  aria-current={i === zoomIndex}
+                  className={`relative h-16 w-13 shrink-0 cursor-pointer overflow-hidden border transition-opacity ${
+                    i === zoomIndex
+                      ? "border-paper opacity-100"
+                      : "border-transparent opacity-45 hover:opacity-75"
+                  }`}
+                >
+                  <Image
+                    src={img.src}
+                    alt=""
+                    fill
+                    sizes="52px"
+                    className="object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

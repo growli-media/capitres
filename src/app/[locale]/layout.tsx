@@ -14,6 +14,7 @@ import Footer from "@/components/layout/Footer";
 import CartDrawer from "@/components/layout/CartDrawer";
 import CookieNotice from "@/components/layout/CookieNotice";
 import SmoothScroll from "@/components/motion/SmoothScroll";
+import PageTransition from "@/components/motion/PageTransition";
 import AnalyticsScripts from "@/components/analytics/AnalyticsScripts";
 import PageviewTracker from "@/components/analytics/PageviewTracker";
 import "../globals.css";
@@ -144,7 +145,9 @@ export default async function LocaleLayout({
             {t("skipToContent")}
           </a>
           <Header collections={navCollections} categories={navCategories} />
-          <main id="main">{children}</main>
+          <main id="main">
+            <PageTransition>{children}</PageTransition>
+          </main>
           <Footer />
           <CartDrawer />
           <CookieNotice />

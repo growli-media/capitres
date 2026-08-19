@@ -101,11 +101,15 @@ export default async function ProductPage({
         </span>
       </nav>
 
-      {/* Product */}
-      <section className="container-x grid gap-10 pb-20 lg:grid-cols-2 lg:gap-16">
-        <ProductGallery images={product.images} badge={badge} />
+      {/* Product — three columns: info (fixed) | gallery (scrolls) | buy (fixed) */}
+      <section className="container-x grid gap-10 pb-20 lg:grid-cols-[0.85fr_1.3fr_0.85fr] lg:gap-12 xl:gap-16">
+        {/* Gallery — centre column, the only thing that scrolls */}
+        <div className="order-1 lg:order-2">
+          <ProductGallery images={product.images} badge={badge} />
+        </div>
 
-        <div className="lg:sticky lg:top-0 lg:flex lg:h-[100svh] lg:flex-col lg:justify-center lg:py-10">
+        {/* Left: the story — what it is and why it's worth having */}
+        <div className="order-2 lg:sticky lg:top-24 lg:order-1 lg:self-start">
           <p className="text-eyebrow text-ink/55">
             {primaryCollection
               ? pick(primaryCollection.title, locale)
@@ -115,15 +119,26 @@ export default async function ProductPage({
             {pick(product.title, locale)}
           </h1>
 
-          <p className="mt-4 max-w-sm text-sm leading-relaxed text-ink/60">
+          <p className="mt-4 max-w-sm text-sm leading-relaxed text-ink/65">
             {pick(product.description, locale)}
           </p>
 
-          <div className="mt-6">
-            <AddToCart product={product} />
-          </div>
+          {product.story && (
+            <blockquote className="mt-8 max-w-sm border-s-2 border-ink bg-studio p-6">
+              <p className="text-eyebrow mb-3 text-ink/60">{t("heritage")}</p>
+              <p className="leading-relaxed text-ink/80">
+                {pick(product.story, locale)}
+              </p>
+            </blockquote>
+          )}
+        </div>
 
-          {/* Accordions */}
+        {/* Right: price, buy, size/care, reviews */}
+        <div className="order-3 lg:sticky lg:top-24 lg:self-start">
+          <AddToCart product={product} />
+
+          {/* Accordions — size chart lives inside AddToCart; details/care and
+              shipping/returns cover the rest */}
           <div className="mt-9 divide-y divide-line border-y border-line">
             <details className="group">
               <summary className="flex min-h-13 cursor-pointer list-none items-center justify-between text-sm font-bold uppercase tracking-cta">
@@ -163,16 +178,6 @@ export default async function ProductPage({
               </p>
             </details>
           </div>
-
-          {/* Heritage story */}
-          {product.story && (
-            <blockquote className="mt-9 border-s-2 border-ink bg-studio p-6">
-              <p className="text-eyebrow mb-3 text-ink/60">{t("heritage")}</p>
-              <p className="leading-relaxed text-ink/80">
-                {pick(product.story, locale)}
-              </p>
-            </blockquote>
-          )}
 
           {/* Reviews — five stars only; opens a popup to read / write */}
           <div className="mt-8 border-t border-line pt-6">
