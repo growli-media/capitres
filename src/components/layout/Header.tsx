@@ -475,7 +475,7 @@ export default function Header({
           </ul>
 
           <div className="mt-10 border-t border-line pt-6 sm:hidden">
-            <LanguageSwitcher />
+            <LanguageSwitcher layout="inline" />
           </div>
         </nav>
       </div>
