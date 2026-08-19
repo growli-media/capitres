@@ -50,7 +50,7 @@ export default function Footer() {
         <div className="lg:col-span-5">
           <span
             className="text-lg font-black uppercase tracking-tight"
-            style={{ fontFamily: "var(--font-schrifted)" }}
+            style={{ fontFamily: "var(--font-archivo-logo)", fontStretch: "125%" }}
           >
             Capitres
           </span>

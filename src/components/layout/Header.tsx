@@ -202,7 +202,7 @@ export default function Header({
         >
           <span
             className="pt-0.5 text-lg font-black uppercase tracking-tight md:text-xl"
-            style={{ fontFamily: "var(--font-schrifted)" }}
+            style={{ fontFamily: "var(--font-archivo-logo)", fontStretch: "125%" }}
           >
             Capitres
           </span>

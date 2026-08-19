@@ -271,7 +271,8 @@ body {
     content: "Capitres";
     display: block;
     text-align: center;
-    font-family: var(--font-schrifted), system-ui, sans-serif;
+    font-family: var(--font-archivo-logo), system-ui, sans-serif;
+    font-stretch: 125%;
     font-weight: 900;
     text-transform: uppercase;
     font-size: 13.5vw;

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Noto_Sans_Arabic } from "next/font/google";
+import { Archivo, Noto_Sans_Arabic } from "next/font/google";
 import localFont from "next/font/local";
 import { routing, isRtl } from "@/i18n/routing";
 import { catalog } from "@/lib/catalog";
@@ -47,6 +47,21 @@ const notoArabic = Noto_Sans_Arabic({
   variable: "--font-noto-ar",
   display: "swap",
   preload: false,
+});
+
+/**
+ * Logo-only: the "Capitres" wordmark (Header, Footer, footer watermark) is
+ * the brand's actual logo now that the icon mark is gone, so it keeps its
+ * original typeface rather than following the sitewide body/display font —
+ * swapping it changed the recognisable logo shape. Archivo's "wdth" axis at
+ * 125% is what produces that wordmark's expanded look. Not used anywhere
+ * else on the site.
+ */
+const archivoLogo = Archivo({
+  subsets: ["latin"],
+  variable: "--font-archivo-logo",
+  display: "swap",
+  axes: ["wdth"],
 });
 
 export function generateStaticParams() {
@@ -115,7 +130,7 @@ export default async function LocaleLayout({
     <html
       lang={locale}
       dir={isRtl(locale) ? "rtl" : "ltr"}
-      className={`${schrifted.variable} ${notoArabic.variable}`}
+      className={`${schrifted.variable} ${notoArabic.variable} ${archivoLogo.variable}`}
     >
       <body>
         <AnalyticsScripts />
