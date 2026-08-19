@@ -4,29 +4,33 @@ import { useEffect, useRef, type ReactNode } from "react";
 
 const DURATION_MS = 550;
 const EASE = "cubic-bezier(0.65, 0, 0.35, 1)";
-const THRESHOLD = 42; // accumulated wheel delta needed to trigger an advance
-const FOOTER_KICK = 40; // px — real scroll nudge that hands off to the footer
-const EPSILON = 4; // px — "are we still at the top of the album" tolerance
+const WHEEL_THRESHOLD = 42; // accumulated wheel delta needed to trigger an advance
+const TOUCH_THRESHOLD = 60; // px of drag needed to trigger an advance
 
 /**
- * Homepage "photo album": each full-screen photo sits absolutely positioned
- * in a 100svh-clipped viewport, at rest either fully visible (translateY 0%)
- * or parked just below (translateY 100%). Advancing forward animates ONLY the
- * incoming photo from 100%->0% — it slides up and lands completely on top of
- * whichever photo is resting beneath it (later DOM order paints over earlier,
- * so the photos already at 0% stay put, simply occluded). Advancing backward
- * animates the current photo back down (0%->100%), revealing the one beneath,
- * which never moved. Animation is a native CSS transition on `transform`
- * (compositor-only), not a JS scroll/loop, so it's as smooth as the browser
- * can make it.
+ * Homepage "photo album": each full-screen section — the hero, every panel,
+ * and finally the footer — sits at rest either fully visible (translateY 0%)
+ * or parked one viewport-height below (translateY 100%). Advancing forward
+ * animates ONLY the incoming section from 100%->0% — it slides up and lands
+ * completely on top of whichever one is resting beneath it (later DOM order
+ * paints over earlier, so sections already at rest just get occluded, never
+ * moving again). Advancing backward animates the current section back down,
+ * revealing the one beneath, unchanged. The footer is the last stop in this
+ * same stack — not a hand-off to real scrolling, it slides up and locks
+ * exactly like a photo. Animation is a native CSS transition on `transform`
+ * (compositor-only), not a JS scroll/loop.
  *
- * The document's real scroll position never moves while inside the album
- * (wheel is captured while scrollY ~= 0); advancing past the last photo hands
- * off to normal page scroll to reveal the footer, and scrolling back up from
- * the footer re-enters the album on its last photo.
+ * The footer is rendered by the shared layout, outside this component's own
+ * DOM subtree, so it's grabbed via a query and given `position: fixed`
+ * (matching the clipped viewport's on-screen position at scrollY 0) instead
+ * of `position: absolute`. Because the footer's DOM node persists across
+ * client-side navigation (the layout doesn't remount it), every style this
+ * effect applies to it is explicitly reverted on cleanup.
  *
- * Desktop + motion only — touch/mobile and reduced-motion get the plain
- * fallback: children stack in normal flow, unclipped, natively scrollable.
+ * Works identically on touch: a swipe advances or retreats exactly one
+ * section, same threshold-and-lock behaviour as the wheel/keyboard path.
+ * Only reduced-motion opts out entirely, falling back to plain, normal,
+ * unclipped scrolling.
  */
 export default function AlbumScroll({
   children,
@@ -43,20 +47,22 @@ export default function AlbumScroll({
 
     const viewport = viewportRef.current;
     if (!viewport) return;
+    const footer = document.querySelector<HTMLElement>("footer");
 
-    const desktopMq = window.matchMedia("(min-width: 1024px)");
-    let clipped = false;
     let panels: HTMLElement[] = [];
     let index = 0;
     let animating = false;
-    let accum = 0;
+    let wheelAccum = 0;
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchActive = false;
     let settleTimer = 0;
     let safetyTimer = 0;
 
     const setResting = (el: HTMLElement, visible: boolean) => {
       // Zero only the duration (not the whole `transition` shorthand — that
-      // would reset transitionProperty/timingFunction set in layout() too)
-      // so the instant snap doesn't clobber the real animation duration.
+      // would reset transitionProperty/timingFunction too) so the instant
+      // snap doesn't clobber the real animation duration.
       const restoreDuration = el.style.transitionDuration;
       el.style.transitionDuration = "0s";
       el.style.transform = visible ? "translateY(0%)" : "translateY(100%)";
@@ -65,10 +71,13 @@ export default function AlbumScroll({
     };
 
     const layout = () => {
-      panels = Array.from(viewport.children) as HTMLElement[];
+      const inFlow = Array.from(viewport.children) as HTMLElement[];
+      panels = footer ? [...inFlow, footer] : inFlow;
       panels.forEach((el, i) => {
-        el.style.position = "absolute";
+        const isFooter = el === footer;
+        el.style.position = isFooter ? "fixed" : "absolute";
         el.style.inset = "0";
+        el.style.zIndex = isFooter ? "20" : "";
         el.style.transitionProperty = "transform";
         el.style.transitionDuration = `${DURATION_MS}ms`;
         el.style.transitionTimingFunction = EASE;
@@ -81,22 +90,14 @@ export default function AlbumScroll({
       window.clearTimeout(settleTimer);
       settleTimer = window.setTimeout(() => {
         animating = false;
-        accum = 0; // don't auto-chain onto a fast/long scroll — one gesture, one photo
+        wheelAccum = 0; // don't auto-chain onto a fast/long scroll — one gesture, one section
       }, 40);
     };
 
     const advance = (dir: number) => {
       if (animating) return;
       const next = index + dir;
-      if (next < 0) {
-        accum = 0;
-        return; // already on the first photo
-      }
-      if (next >= panels.length) {
-        accum = 0;
-        window.scrollTo({ top: FOOTER_KICK, behavior: "auto" }); // hand off to the footer
-        return;
-      }
+      if (next < 0 || next >= panels.length) return; // already at an end
       animating = true;
       const el = dir > 0 ? panels[next] : panels[index];
       index = next;
@@ -114,23 +115,22 @@ export default function AlbumScroll({
       }, DURATION_MS + 150);
     };
 
-    const locked = () => document.body.style.overflow === "hidden";
-    const atTop = () => window.scrollY <= EPSILON;
+    const locked = () => document.body.style.overflow === "hidden"; // cart/menu open
 
     const onWheel = (e: WheelEvent) => {
-      if (locked() || !clipped || !atTop()) return;
+      if (locked()) return;
       e.preventDefault();
       if (animating) return; // ignore the tail of a fast scroll — no chaining
-      accum += e.deltaY;
-      if (Math.abs(accum) >= THRESHOLD) {
-        const dir = accum > 0 ? 1 : -1;
-        accum = 0;
+      wheelAccum += e.deltaY;
+      if (Math.abs(wheelAccum) >= WHEEL_THRESHOLD) {
+        const dir = wheelAccum > 0 ? 1 : -1;
+        wheelAccum = 0;
         advance(dir);
       }
     };
 
     const onKey = (e: KeyboardEvent) => {
-      if (locked() || !clipped || !atTop() || animating) return;
+      if (locked() || animating) return;
       const el = e.target as HTMLElement | null;
       if (el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) return;
       if (e.key === "ArrowDown" || e.key === "PageDown" || e.key === " ") {
@@ -142,47 +142,70 @@ export default function AlbumScroll({
       }
     };
 
+    const onTouchStart = (e: TouchEvent) => {
+      if (locked() || e.touches.length !== 1) return;
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      touchActive = true;
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!touchActive || locked() || animating) return;
+      const t = e.touches[0];
+      const dy = touchStartY - t.clientY; // positive = swiped up = advance
+      const dx = touchStartX - t.clientX;
+      if (Math.abs(dy) <= Math.abs(dx)) return; // mostly horizontal — leave it alone
+      e.preventDefault();
+      if (Math.abs(dy) >= TOUCH_THRESHOLD) {
+        touchActive = false; // one gesture, one section — ignore the rest of this drag
+        advance(dy > 0 ? 1 : -1);
+      }
+    };
+
+    const onTouchEnd = () => {
+      touchActive = false;
+    };
+
     const applyClipping = () => {
       viewport.style.height = "100svh";
       viewport.style.overflow = "hidden";
-      clipped = true;
+      viewport.style.touchAction = "none";
       layout();
     };
-    const removeClipping = () => {
-      viewport.style.height = "";
-      viewport.style.overflow = "";
-      clipped = false;
-      panels.forEach((el) => {
-        el.style.position = "";
-        el.style.inset = "";
-        el.style.transform = "";
-        el.style.transition = "";
-        el.style.willChange = "";
-      });
-    };
 
-    const checkBreakpoint = () => {
-      if (desktopMq.matches) applyClipping();
-      else removeClipping();
-    };
+    const onResize = () => layout();
 
-    const onResize = () => {
-      if (clipped) layout();
-    };
-
-    checkBreakpoint();
+    applyClipping();
     window.addEventListener("wheel", onWheel, { passive: false });
     window.addEventListener("keydown", onKey);
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("touchend", onTouchEnd);
     window.addEventListener("resize", onResize);
-    desktopMq.addEventListener("change", checkBreakpoint);
 
     return () => {
       window.clearTimeout(settleTimer);
       window.clearTimeout(safetyTimer);
       window.removeEventListener("wheel", onWheel);
       window.removeEventListener("keydown", onKey);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
       window.removeEventListener("resize", onResize);
-      desktopMq.removeEventListener("change", checkBreakpoint);
+      // The footer's DOM node persists across client-side navigation (the
+      // shared layout doesn't remount it) — every style applied above must
+      // be explicitly reverted here, or it stays position:fixed forever.
+      panels.forEach((el) => {
+        el.style.position = "";
+        el.style.inset = "";
+        el.style.zIndex = "";
+        el.style.transform = "";
+        el.style.transition = "";
+        el.style.willChange = "";
+      });
+      viewport.style.height = "";
+      viewport.style.overflow = "";
+      viewport.style.touchAction = "";
     };
   }, []);
 
