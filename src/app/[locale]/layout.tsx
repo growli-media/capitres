@@ -15,7 +15,7 @@ import CartDrawer from "@/components/layout/CartDrawer";
 import CookieNotice from "@/components/layout/CookieNotice";
 import SmoothScroll from "@/components/motion/SmoothScroll";
 import PageTransition from "@/components/motion/PageTransition";
-import TransitionNoise from "@/components/motion/TransitionNoise";
+import RouteWipe from "@/components/motion/RouteWipe";
 import AnalyticsScripts from "@/components/analytics/AnalyticsScripts";
 import PageviewTracker from "@/components/analytics/PageviewTracker";
 import "../globals.css";
@@ -152,7 +152,7 @@ export default async function LocaleLayout({
           <Footer />
           <CartDrawer />
           <CookieNotice />
-          <TransitionNoise />
+          <RouteWipe />
         </NextIntlClientProvider>
       </body>
     </html>

@@ -322,36 +322,47 @@ body {
   animation: page-fade-in 850ms var(--ease-editorial) both;
 }
 
-/* Grain flash — a brief burst of film-like static that snaps in and
-   dissolves within under half a second, so a transition reads as
-   unmistakable even at a glance. feTurbulence + saturate(0) keeps it
-   monochrome, in step with the rest of the palette; multiply lets it read
-   as texture on the paper ground rather than a colour wash. */
-@keyframes noise-flash {
-  0% {
-    opacity: 0.65;
-  }
-  55% {
-    opacity: 0.32;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-
-.noise-flash {
+/* Route wipe — the actual page-transition effect. A grid of tiles covers
+   the screen on mount and each one collapses away on its own delay, the
+   delays stepped by (row + col) so the whole grid clears in a diagonal
+   wave, top-left to bottom-right. Grain (feTurbulence + saturate(0), same
+   texture as elsewhere on the site) on each tile keeps it textured rather
+   than a flat colour block. */
+.route-wipe {
   position: fixed;
   inset: 0;
   z-index: 200;
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  grid-template-rows: repeat(6, 1fr);
   pointer-events: none;
+}
+
+.route-wipe-tile {
+  background-color: var(--color-ink);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size: 180px 180px;
-  mix-blend-mode: multiply;
-  animation: noise-flash 420ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  background-size: 220px 220px;
+  background-blend-mode: overlay;
+  /* 1px ink bleed on every edge: repeat(10, 1fr) doesn't always divide the
+     viewport into whole pixels, and the sub-pixel remainder shows as hairline
+     paper-coloured seams between tiles without this. */
+  box-shadow: 0 0 0 1px var(--color-ink);
+  animation: route-wipe-tile-vanish 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes route-wipe-tile-vanish {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .noise-flash {
+  .route-wipe {
     display: none;
   }
 }
