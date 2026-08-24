@@ -259,26 +259,21 @@ body {
     display: none;
   }
 
-  /* Decorative ghost wordmark (footer sign-off). Rendered via a
-     pseudo-element so it stays purely presentational. */
+  /* Decorative ghost wordmark (footer sign-off) — the real logo mark, huge
+     and near-invisible against the ink ground. */
   .footer-watermark {
+    display: flex;
+    justify-content: center;
     overflow: hidden;
     padding-bottom: 0.5rem;
     user-select: none;
   }
 
-  .footer-watermark::after {
-    content: "Capitres";
-    display: block;
-    text-align: center;
-    font-family: var(--font-archivo-logo), system-ui, sans-serif;
-    font-stretch: 125%;
-    font-weight: 900;
-    text-transform: uppercase;
-    font-size: 13.5vw;
-    line-height: 0.85;
-    white-space: nowrap;
-    color: color-mix(in srgb, var(--color-paper) 6%, transparent);
+  .footer-watermark img {
+    width: 92vw;
+    max-width: 1600px;
+    height: auto;
+    opacity: 0.06;
   }
 }
 

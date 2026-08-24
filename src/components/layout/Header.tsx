@@ -202,18 +202,22 @@ export default function Header({
           </nav>
         </div>
 
-        {/* Center: wordmark — stays Latin in every locale, like the prints */}
+        {/* Center: wordmark — stays Latin in every locale, like the prints.
+            Swaps for contrast: white over the transparent hero, black once
+            the bar goes solid (or a menu is open). */}
         <Link
           href="/"
           onMouseEnter={() => setPanel(null)}
           className="flex cursor-pointer items-center justify-center"
         >
-          <span
-            className="pt-0.5 text-lg font-black uppercase tracking-tight md:text-xl"
-            style={{ fontFamily: "var(--font-archivo-logo)", fontStretch: "125%" }}
-          >
-            Capitres
-          </span>
+          <Image
+            src={overHero ? "/brand/logo-white.svg" : "/brand/logo-black.svg"}
+            alt="Capitres"
+            width={867}
+            height={99}
+            priority
+            className="h-4 w-auto md:h-[18px]"
+          />
         </Link>
 
         {/* Right: desktop right-nav (Journal / Our Story / Contact) + actions */}

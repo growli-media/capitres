@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { InstagramLogo } from "@phosphor-icons/react/dist/ssr";
 import { Link } from "@/i18n/navigation";
@@ -51,12 +52,13 @@ export default function Footer() {
       <div className="container-x grid flex-1 content-center gap-12 py-20 lg:grid-cols-12 lg:gap-8">
         {/* Brand + newsletter */}
         <div className="lg:col-span-5">
-          <span
-            className="text-lg font-black uppercase tracking-tight"
-            style={{ fontFamily: "var(--font-archivo-logo)", fontStretch: "125%" }}
-          >
-            Capitres
-          </span>
+          <Image
+            src="/brand/logo-white.svg"
+            alt="Capitres"
+            width={867}
+            height={99}
+            className="h-4 w-auto"
+          />
           <p className="mt-3 max-w-sm text-sm text-paper/60">{t("tagline")}</p>
 
           <div className="mt-8 max-w-sm">
@@ -111,7 +113,9 @@ export default function Footer() {
       </div>
 
       {/* Oversized brand sign-off (decorative, CSS-only) */}
-      <div aria-hidden="true" className="footer-watermark" />
+      <div aria-hidden="true" className="footer-watermark">
+        <img src="/brand/logo-white.svg" alt="" />
+      </div>
     </footer>
   );
 }
