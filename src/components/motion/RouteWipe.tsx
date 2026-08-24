@@ -4,7 +4,7 @@ import { usePathname } from "@/i18n/navigation";
 
 const COLS = 10;
 const ROWS = 6;
-const STEP_MS = 22;
+const STEP_MS = 26;
 
 /**
  * The actual page-transition effect: a grid of tiles covers the screen on
