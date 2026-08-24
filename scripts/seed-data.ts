@@ -271,19 +271,19 @@ export const seedProducts: SeedProduct[] = [
     variants: variants(sizesJersey, { M: 5, L: 6, XL: 4, "2XL": 2 }),
     images: [
       {
-        key: "products/90s-jacket-1.jpg",
+        key: "products/90s-jacket-1.png",
         alt: { en: "90's warm-up jacket in black with red and white raglan panels, IRAQ across the chest", ar: "جاكيت إحماء التسعينات بالأسود مع قطع راجلان حمراء وبيضاء وكلمة IRAQ على الصدر", ku: "چاکەتی گەرمکردنەوەی نەوەدەکان بە ڕەش لەگەڵ پارچەی ڕاگلانی سوور و سپی و وشەی IRAQ لەسەر سنگ" },
       },
       {
-        key: "products/90s-jacket-2.jpg",
+        key: "products/90s-jacket-2.png",
         alt: { en: "90's warm-up jacket, three-quarter view", ar: "جاكيت إحماء التسعينات، منظر جانبي", ku: "چاکەتی گەرمکردنەوەی نەوەدەکان، ڕوانگەی لاتەنیشت" },
       },
       {
-        key: "products/90s-jacket-3.jpg",
+        key: "products/90s-jacket-3.png",
         alt: { en: "90's warm-up jacket, side profile", ar: "جاكيت إحماء التسعينات، منظر جانبي كامل", ku: "چاکەتی گەرمکردنەوەی نەوەدەکان، ڕوانگەی تەواوی لاتەنیشت" },
       },
       {
-        key: "products/90s-jacket-4.jpg",
+        key: "products/90s-jacket-4.png",
         alt: { en: "90's warm-up jacket, back view", ar: "جاكيت إحماء التسعينات، منظر خلفي", ku: "چاکەتی گەرمکردنەوەی نەوەدەکان، ڕوانگەی پشتەوە" },
       },
     ],
