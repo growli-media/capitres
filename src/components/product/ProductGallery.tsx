@@ -90,7 +90,7 @@ export default function ProductGallery({
               type="button"
               onClick={() => setZoomIndex(i)}
               aria-label={t("zoomImage")}
-              className="relative aspect-[4/5] w-full shrink-0 cursor-zoom-in snap-center bg-studio"
+              className="relative aspect-[4/5] w-full shrink-0 cursor-zoom-in snap-center bg-paper"
             >
               <Image
                 src={img.src}
@@ -130,7 +130,7 @@ export default function ProductGallery({
               data-idx={i}
               onClick={() => setZoomIndex(i)}
               aria-label={t("zoomImage")}
-              className="group relative block aspect-[4/5] w-full cursor-zoom-in overflow-hidden bg-studio"
+              className="group relative block aspect-[4/5] w-full cursor-zoom-in overflow-hidden bg-paper"
             >
               <Image
                 src={img.src}
