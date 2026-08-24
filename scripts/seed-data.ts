@@ -256,9 +256,9 @@ export const seedProducts: SeedProduct[] = [
     slug: "90s-jacket",
     title: { en: "90's Jacket", ar: "جاكيت التسعينات", ku: "چاکەتی نەوەدەکان" },
     description: {
-      en: "A warm-up jacket cut from the VHS era — black shell, cream panelling, snap front. The kind of jacket the kit man never got back.",
-      ar: "جاكيت إحماء بقصّة من زمن أشرطة الفيديو — جسم أسود، وقطع كريمية، وأزرار كبس أمامية. من النوع الذي لا يعود إلى مسؤول العهدة أبداً.",
-      ku: "چاکەتی گەرمکردنەوە بە بڕینی سەردەمی VHS — لاشەی ڕەش، پارچەی کرێمی، و دوگمەی تەقە. لەو چاکەتانەی کە هەرگیز ناگەڕێنەوە لای بەرپرسی جلەکان.",
+      en: "A warm-up jacket cut from the VHS era — black shell, red and white raglan panels, IRAQ across the chest, snap front. The kind of jacket the kit man never got back.",
+      ar: "جاكيت إحماء بقصّة من زمن أشرطة الفيديو — جسم أسود، وقطع راجلان حمراء وبيضاء، وكلمة IRAQ على الصدر، وأزرار كبس أمامية. من النوع الذي لا يعود إلى مسؤول العهدة أبداً.",
+      ku: "چاکەتی گەرمکردنەوە بە بڕینی سەردەمی VHS — لاشەی ڕەش، پارچەی ڕاگلانی سوور و سپی، وشەی IRAQ لەسەر سنگ، و دوگمەی تەقە. لەو چاکەتانەی کە هەرگیز ناگەڕێنەوە لای بەرپرسی جلەکان.",
     },
     details: [
       { en: "Water-resistant nylon shell, brushed lining", ar: "نايلون مقاوم للماء وبطانة ناعمة", ku: "نایلۆنی دژە ئاو و ناوپۆشی نەرم" },
@@ -267,12 +267,24 @@ export const seedProducts: SeedProduct[] = [
     category: "outerwear",
     gender: "unisex",
     priceAmount: 65_000,
-    colors: [{ key: "black-cream", hex: "#1A1315", name: { en: "Black / Cream", ar: "أسود / كريمي", ku: "ڕەش / کرێمی" } }],
+    colors: [{ key: "black-red", hex: "#0f0f0f", name: { en: "Black / Red", ar: "أسود / أحمر", ku: "ڕەش / سوور" } }],
     variants: variants(sizesJersey, { M: 5, L: 6, XL: 4, "2XL": 2 }),
     images: [
       {
-        key: "products/90s-jacket.jpg",
-        alt: { en: "90's warm-up jacket in black with cream panels", ar: "جاكيت إحماء التسعينات بالأسود مع قطع كريمية", ku: "چاکەتی گەرمکردنەوەی نەوەدەکان بە ڕەش و پارچەی کرێمی" },
+        key: "products/90s-jacket-1.jpg",
+        alt: { en: "90's warm-up jacket in black with red and white raglan panels, IRAQ across the chest", ar: "جاكيت إحماء التسعينات بالأسود مع قطع راجلان حمراء وبيضاء وكلمة IRAQ على الصدر", ku: "چاکەتی گەرمکردنەوەی نەوەدەکان بە ڕەش لەگەڵ پارچەی ڕاگلانی سوور و سپی و وشەی IRAQ لەسەر سنگ" },
+      },
+      {
+        key: "products/90s-jacket-2.jpg",
+        alt: { en: "90's warm-up jacket, three-quarter view", ar: "جاكيت إحماء التسعينات، منظر جانبي", ku: "چاکەتی گەرمکردنەوەی نەوەدەکان، ڕوانگەی لاتەنیشت" },
+      },
+      {
+        key: "products/90s-jacket-3.jpg",
+        alt: { en: "90's warm-up jacket, side profile", ar: "جاكيت إحماء التسعينات، منظر جانبي كامل", ku: "چاکەتی گەرمکردنەوەی نەوەدەکان، ڕوانگەی تەواوی لاتەنیشت" },
+      },
+      {
+        key: "products/90s-jacket-4.jpg",
+        alt: { en: "90's warm-up jacket, back view", ar: "جاكيت إحماء التسعينات، منظر خلفي", ku: "چاکەتی گەرمکردنەوەی نەوەدەکان، ڕوانگەی پشتەوە" },
       },
     ],
     collectionSlugs: ["matchday"],

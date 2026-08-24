@@ -1,14 +1,15 @@
 /**
- * Updates ONLY the photos (the `images` column) on products that already
- * exist in the database named by DATABASE_URL, using the photo list
- * currently in scripts/seed-data.ts as the source of truth. Nothing else on
- * the product — price, description, story, colours, stock — is touched.
+ * Updates the photos, description and colours on products that already
+ * exist in the database named by DATABASE_URL, using scripts/seed-data.ts
+ * as the source of truth — these three fields tend to change together
+ * (new photography usually means the copy and colour name need to match
+ * it). Price, story, stock, and everything else is left untouched.
  *
  * This is the companion to import-catalog.mts: that script only ever
  * INSERTs (safe, but skips anything that already exists — so it can't push
- * a photo update to a product you already imported). This one only ever
- * UPDATEs the `images` column, matched by slug, and only for slugs it finds
- * in seed-data.ts — it does nothing to products that aren't listed there.
+ * an update to a product you already imported). This one only ever UPDATEs,
+ * matched by slug, and only for slugs it finds in seed-data.ts — it does
+ * nothing to products that aren't listed there.
  *
  * Run it against your PRODUCTION database (URL from Vercel → Storage →
  * your Postgres → the ".env.local" tab):
@@ -48,19 +49,24 @@ async function main() {
     const images = p.images.map(toImage);
     const result = await sql`
       update products
-      set images = ${jsonb(images)}
+      set
+        images = ${jsonb(images)},
+        description_en = ${p.description.en},
+        description_ar = ${p.description.ar},
+        description_ku = ${p.description.ku},
+        colors = ${jsonb(p.colors)}
       where slug = ${p.slug}
       returning slug
     `;
     if (result.length > 0) {
       updated++;
-      console.log(`+  ${p.slug} — now ${images.length} photo(s)`);
+      console.log(`+  ${p.slug} — now ${images.length} photo(s), description + colours synced`);
     } else {
       console.log(`.  ${p.slug} — not in your store yet, skipped`);
     }
   }
 
-  console.log(`\n✅ Done. Updated photos on ${updated} product(s).`);
+  console.log(`\n✅ Done. Updated ${updated} product(s).`);
   await sql.end();
 }
 
