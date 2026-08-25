@@ -6,6 +6,7 @@ import { Noto_Sans_Arabic } from "next/font/google";
 import localFont from "next/font/local";
 import { routing, isRtl } from "@/i18n/routing";
 import { catalog } from "@/lib/catalog";
+import { CurrencyProvider } from "@/components/currency/CurrencyProvider";
 import Header, {
   type NavCategory,
   type NavCollection,
@@ -122,22 +123,24 @@ export default async function LocaleLayout({
       <body>
         <AnalyticsScripts />
         <NextIntlClientProvider>
-          <PageviewTracker />
-          <SmoothScroll />
-          <a
-            href="#main"
-            className="sr-only z-50 bg-ink px-4 py-3 text-paper focus:not-sr-only focus:fixed focus:start-2 focus:top-2"
-          >
-            {t("skipToContent")}
-          </a>
-          <Header collections={navCollections} categories={navCategories} />
-          <main id="main">
-            <PageTransition>{children}</PageTransition>
-          </main>
-          <Footer />
-          <CartDrawer />
-          <CookieNotice />
-          <RouteWipe />
+          <CurrencyProvider>
+            <PageviewTracker />
+            <SmoothScroll />
+            <a
+              href="#main"
+              className="sr-only z-50 bg-ink px-4 py-3 text-paper focus:not-sr-only focus:fixed focus:start-2 focus:top-2"
+            >
+              {t("skipToContent")}
+            </a>
+            <Header collections={navCollections} categories={navCategories} />
+            <main id="main">
+              <PageTransition>{children}</PageTransition>
+            </main>
+            <Footer />
+            <CartDrawer />
+            <CookieNotice />
+            <RouteWipe />
+          </CurrencyProvider>
         </NextIntlClientProvider>
       </body>
     </html>

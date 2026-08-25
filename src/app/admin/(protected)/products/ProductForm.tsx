@@ -542,29 +542,108 @@ export default function ProductForm({
 
       {/* Pricing */}
       <section>
-        <h2 className="mb-3 text-sm font-semibold text-slate-900">Pricing (IQD)</h2>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Price">
-            <input
-              type="number"
-              name="priceAmount"
-              required
-              min={1}
-              step={1}
-              defaultValue={product?.priceAmount}
-              className={inputClass}
-            />
-          </Field>
-          <Field label="Discount — was price" hint="Leave blank for no discount badge.">
-            <input
-              type="number"
-              name="compareAtAmount"
-              min={1}
-              step={1}
-              defaultValue={product?.compareAtAmount ?? ""}
-              className={inputClass}
-            />
-          </Field>
+        <h2 className="mb-1 text-sm font-semibold text-slate-900">Pricing</h2>
+        <p className="mb-3 text-xs text-slate-400">
+          IQD is required and is what actually gets charged at checkout. USD
+          and EUR are optional, exact prices for customers browsing in those
+          currencies (e.g. set 49.99, not whatever the IQD price happens to
+          convert to) — leave blank to fall back to a computed conversion.
+        </p>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              IQD
+            </p>
+            <Field label="Price">
+              <input
+                type="number"
+                name="priceAmount"
+                required
+                min={1}
+                step={1}
+                defaultValue={product?.priceAmount}
+                className={inputClass}
+              />
+            </Field>
+            <Field label="Discount — was price" hint="Leave blank for no discount badge.">
+              <input
+                type="number"
+                name="compareAtAmount"
+                min={1}
+                step={1}
+                defaultValue={product?.compareAtAmount ?? ""}
+                className={inputClass}
+              />
+            </Field>
+          </div>
+          <div className="space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              USD (optional)
+            </p>
+            <Field label="Price">
+              <input
+                type="number"
+                name="priceAmountUsd"
+                min={0.01}
+                step={0.01}
+                defaultValue={
+                  product?.priceAmountUsdCents != null
+                    ? (product.priceAmountUsdCents / 100).toFixed(2)
+                    : ""
+                }
+                placeholder="e.g. 49.99"
+                className={inputClass}
+              />
+            </Field>
+            <Field label="Discount — was price">
+              <input
+                type="number"
+                name="compareAtAmountUsd"
+                min={0.01}
+                step={0.01}
+                defaultValue={
+                  product?.compareAtAmountUsdCents != null
+                    ? (product.compareAtAmountUsdCents / 100).toFixed(2)
+                    : ""
+                }
+                className={inputClass}
+              />
+            </Field>
+          </div>
+          <div className="space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              EUR (optional)
+            </p>
+            <Field label="Price">
+              <input
+                type="number"
+                name="priceAmountEur"
+                min={0.01}
+                step={0.01}
+                defaultValue={
+                  product?.priceAmountEurCents != null
+                    ? (product.priceAmountEurCents / 100).toFixed(2)
+                    : ""
+                }
+                placeholder="e.g. 45.99"
+                className={inputClass}
+              />
+            </Field>
+            <Field label="Discount — was price">
+              <input
+                type="number"
+                name="compareAtAmountEur"
+                min={0.01}
+                step={0.01}
+                defaultValue={
+                  product?.compareAtAmountEurCents != null
+                    ? (product.compareAtAmountEurCents / 100).toFixed(2)
+                    : ""
+                }
+                className={inputClass}
+              />
+            </Field>
+          </div>
         </div>
       </section>
 

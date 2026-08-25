@@ -1,4 +1,5 @@
 import type { Product } from "@/lib/catalog/types";
+import { convertFromIqd } from "@/lib/money";
 
 import imgIraq84 from "@/images/products/iraq-84.jpg";
 import imgIraq40 from "@/images/products/iraq-40-jersey.jpg";
@@ -33,7 +34,7 @@ function variants(
   }));
 }
 
-export const products: Product[] = [
+const rawProducts: Omit<Product, "priceByCurrency" | "compareAtPriceByCurrency">[] = [
   {
     id: "p-iraq-84",
     slug: "iraq-84",
@@ -525,3 +526,19 @@ export const products: Product[] = [
     },
   },
 ];
+
+/** This fixture predates per-currency admin pricing (see the Postgres
+ * provider) — every product here just gets the computed-conversion
+ * fallback, since it's a DB-less reference/fallback, not what real
+ * customers browse against. */
+export const products: Product[] = rawProducts.map((p) => ({
+  ...p,
+  priceByCurrency: {
+    IQD: p.price.amount,
+    USD: convertFromIqd(p.price.amount, "USD"),
+    EUR: convertFromIqd(p.price.amount, "EUR"),
+  },
+  compareAtPriceByCurrency: p.compareAtPrice
+    ? { IQD: p.compareAtPrice.amount }
+    : undefined,
+}));

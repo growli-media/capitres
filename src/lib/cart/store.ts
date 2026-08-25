@@ -3,9 +3,9 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { PromoCode } from "@/lib/commerce/config";
-import { computeTotals, findPromo } from "@/lib/commerce/config";
+import { computeDisplayTotals, computeTotals, findPromo } from "@/lib/commerce/config";
 import type { LocalizedString } from "@/lib/content";
-import type { ProductImage } from "@/lib/catalog/types";
+import type { Currency, ProductImage } from "@/lib/catalog/types";
 
 export interface GiftCardDetails {
   denomination: number;
@@ -26,6 +26,10 @@ export interface CartLine {
   qty: number;
   /** Unit price snapshot in IQD (server re-validates at checkout). */
   unitAmount: number;
+  /** Same snapshot idea, per display currency — so the cart shows the
+   * exact price the customer saw on the product page, not a freshly
+   * re-computed one. Display only; checkout always uses unitAmount (IQD). */
+  unitAmountByCurrency: Record<Currency, number>;
   giftCard?: GiftCardDetails;
   /**
    * Product title + image captured at add-to-cart time. The cart and
@@ -133,4 +137,16 @@ export function useCartTotals() {
   const subtotal = lines.reduce((sum, l) => sum + l.unitAmount * l.qty, 0);
   const physicalItems = lines.some((l) => !l.giftCard);
   return computeTotals(subtotal, promo, { physicalItems });
+}
+
+/** Display-only totals in the given currency — see computeDisplayTotals. */
+export function useCartTotalsByCurrency(currency: Currency) {
+  const lines = useCart((s) => s.lines);
+  const promo = useCartPromo();
+  const totals = useCartTotals();
+  const displaySubtotal = lines.reduce(
+    (sum, l) => sum + l.unitAmountByCurrency[currency] * l.qty,
+    0,
+  );
+  return computeDisplayTotals(totals, displaySubtotal, promo, currency);
 }

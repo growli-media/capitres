@@ -15,11 +15,17 @@ export interface CategoryOption {
 
 export type Gender = "men" | "women" | "unisex";
 
-/** Integer amount in Iraqi Dinar — Wayl's only settlement currency. */
+/** Integer amount in Iraqi Dinar — Wayl's only settlement currency. Cart
+ * and checkout always work in this; the currency switcher never changes
+ * what's actually charged, only what's displayed while browsing. */
 export interface Money {
   amount: number;
   currency: "IQD";
 }
+
+/** Currencies a customer can browse in. Settlement is always IQD (Money
+ * above) regardless of which of these is selected for display. */
+export type Currency = "IQD" | "USD" | "EUR";
 
 /**
  * Local catalog data uses Next's static `import img from "*.jpg"` (gets
@@ -67,6 +73,15 @@ export interface Product {
   gender: Gender;
   price: Money;
   compareAtPrice?: Money;
+  /** Display prices per currency — IQD/USD/EUR always populated (an
+   * admin-set explicit price if there is one, otherwise a computed
+   * fallback conversion; see src/lib/catalog/providers/postgres.ts). Only
+   * for display — cart/checkout always use `price`/`compareAtPrice` (IQD)
+   * above, never this. */
+  priceByCurrency: Record<Currency, number>;
+  /** Only present for a currency the admin explicitly gave a "was" price —
+   * never auto-computed, since showing a sale badge is a deliberate call. */
+  compareAtPriceByCurrency?: Partial<Record<Currency, number>>;
   colors: ProductColor[];
   variants: ProductVariant[];
   images: ProductImage[];

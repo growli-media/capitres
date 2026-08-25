@@ -17,6 +17,12 @@ export interface AdminProductRow {
   gender: Gender;
   priceAmount: number;
   compareAtAmount: number | null;
+  /** Admin-set explicit prices, in cents — optional, fall back to a
+   * computed IQD conversion for display when null. */
+  priceAmountUsdCents: number | null;
+  compareAtAmountUsdCents: number | null;
+  priceAmountEurCents: number | null;
+  compareAtAmountEurCents: number | null;
   images: { url: string; alt: { en: string; ar: string; ku: string } }[];
   colors: { key: string; hex: string; name: { en: string; ar: string; ku: string } }[];
   collectionSlugs: string[];
@@ -48,6 +54,10 @@ interface ProductListRow {
   gender: Gender;
   price_amount: number;
   compare_at_amount: number | null;
+  price_amount_usd_cents: number | null;
+  compare_at_amount_usd_cents: number | null;
+  price_amount_eur_cents: number | null;
+  compare_at_amount_eur_cents: number | null;
   images: AdminProductRow["images"];
   colors: AdminProductRow["colors"];
   collection_slugs: string[];
@@ -82,6 +92,10 @@ export async function listAdminProducts(): Promise<AdminProductRow[]> {
     gender: r.gender,
     priceAmount: r.price_amount,
     compareAtAmount: r.compare_at_amount,
+    priceAmountUsdCents: r.price_amount_usd_cents,
+    compareAtAmountUsdCents: r.compare_at_amount_usd_cents,
+    priceAmountEurCents: r.price_amount_eur_cents,
+    compareAtAmountEurCents: r.compare_at_amount_eur_cents,
     images: r.images ?? [],
     colors: r.colors ?? [],
     collectionSlugs: r.collection_slugs ?? [],
@@ -117,6 +131,10 @@ export async function getAdminProduct(
         gender: Gender;
         price_amount: number;
         compare_at_amount: number | null;
+        price_amount_usd_cents: number | null;
+        compare_at_amount_usd_cents: number | null;
+        price_amount_eur_cents: number | null;
+        compare_at_amount_eur_cents: number | null;
         images: AdminProductRow["images"];
         colors: AdminProductRow["colors"];
         collection_slugs: string[];
@@ -148,6 +166,10 @@ export async function getAdminProduct(
       gender: row.gender,
       priceAmount: row.price_amount,
       compareAtAmount: row.compare_at_amount,
+      priceAmountUsdCents: row.price_amount_usd_cents,
+      compareAtAmountUsdCents: row.compare_at_amount_usd_cents,
+      priceAmountEurCents: row.price_amount_eur_cents,
+      compareAtAmountEurCents: row.compare_at_amount_eur_cents,
       images: row.images ?? [],
       colors: row.colors ?? [],
       collectionSlugs: row.collection_slugs ?? [],
@@ -201,6 +223,10 @@ export interface ProductInput {
   gender: Gender;
   priceAmount: number;
   compareAtAmount: number | null;
+  priceAmountUsdCents: number | null;
+  compareAtAmountUsdCents: number | null;
+  priceAmountEurCents: number | null;
+  compareAtAmountEurCents: number | null;
   colors: ColorInput[];
   images: ImageInput[];
   collectionSlugs: string[];
@@ -256,12 +282,16 @@ export async function createProduct(input: ProductInput): Promise<string> {
       id, slug, title_en, title_ar, title_ku,
       description_en, description_ar, description_ku,
       details, category, gender, price_amount, compare_at_amount,
+      price_amount_usd_cents, compare_at_amount_usd_cents,
+      price_amount_eur_cents, compare_at_amount_eur_cents,
       colors, images, collection_slugs, is_new, featured, giftcard_denominations
     ) values (
       ${id}, ${input.slug}, ${input.titleEn}, ${input.titleAr}, ${input.titleKu},
       ${input.descriptionEn}, ${input.descriptionAr}, ${input.descriptionKu},
       ${jsonb(buildDetails(input))}, ${input.category}, ${input.gender},
       ${input.priceAmount}, ${input.compareAtAmount},
+      ${input.priceAmountUsdCents}, ${input.compareAtAmountUsdCents},
+      ${input.priceAmountEurCents}, ${input.compareAtAmountEurCents},
       ${jsonb(buildColors(input))}, ${jsonb(buildImages(input))},
       ${jsonb(input.collectionSlugs)}, ${input.isNew}, ${input.featured},
       ${input.giftcardDenominations ? jsonb(input.giftcardDenominations) : null}
@@ -285,6 +315,10 @@ export async function updateProduct(id: string, input: ProductInput): Promise<vo
       details = ${jsonb(buildDetails(input))},
       category = ${input.category}, gender = ${input.gender},
       price_amount = ${input.priceAmount}, compare_at_amount = ${input.compareAtAmount},
+      price_amount_usd_cents = ${input.priceAmountUsdCents},
+      compare_at_amount_usd_cents = ${input.compareAtAmountUsdCents},
+      price_amount_eur_cents = ${input.priceAmountEurCents},
+      compare_at_amount_eur_cents = ${input.compareAtAmountEurCents},
       colors = ${jsonb(buildColors(input))}, images = ${jsonb(buildImages(input))},
       collection_slugs = ${jsonb(input.collectionSlugs)},
       is_new = ${input.isNew}, featured = ${input.featured},

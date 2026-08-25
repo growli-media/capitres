@@ -109,6 +109,15 @@ CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at DESC);
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS ad_tracking jsonb;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS meta_capi_sent boolean NOT NULL DEFAULT false;
 
+-- Admin-set, explicit per-currency prices — optional, in cents (USD/EUR
+-- have a minor unit, unlike IQD's whole-unit price_amount above). When
+-- absent, display falls back to a computed conversion (see src/lib/money.ts)
+-- rather than requiring every product to be re-priced by hand.
+ALTER TABLE products ADD COLUMN IF NOT EXISTS price_amount_usd_cents integer;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS compare_at_amount_usd_cents integer;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS price_amount_eur_cents integer;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS compare_at_amount_eur_cents integer;
+
 -- Generic append log for newsletter signups, contact messages and
 -- back-in-stock notify requests — low-stakes records that don't need
 -- their own table each.

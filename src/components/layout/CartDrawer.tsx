@@ -9,16 +9,19 @@ import {
   useCart,
   useCartPromo,
   useCartTotals,
+  useCartTotalsByCurrency,
   type CartLine,
 } from "@/lib/cart/store";
 import { pick } from "@/lib/content";
-import { formatIQD } from "@/lib/money";
+import { convertFromIqd, formatCurrency, formatIQD } from "@/lib/money";
 import { FREE_SHIPPING_THRESHOLD } from "@/lib/commerce/config";
+import { useCurrency } from "@/components/currency/CurrencyProvider";
 
 function LineRow({ line }: { line: CartLine }) {
   const locale = useLocale();
   const t = useTranslations("cart");
   const tA11y = useTranslations("a11y");
+  const { currency } = useCurrency();
   const { setQty, removeLine } = useCart();
   const title = pick(line.title, locale);
 
@@ -54,7 +57,7 @@ function LineRow({ line }: { line: CartLine }) {
             )}
           </div>
           <p className="price shrink-0 text-sm font-semibold">
-            {formatIQD(line.unitAmount * line.qty, locale)}
+            {formatCurrency(line.unitAmountByCurrency[currency] * line.qty, currency, locale)}
           </p>
         </div>
 
@@ -104,11 +107,14 @@ function LineRow({ line }: { line: CartLine }) {
 export default function CartDrawer() {
   const locale = useLocale();
   const t = useTranslations("cart");
+  const tCurrency = useTranslations("currency");
   const tA11y = useTranslations("a11y");
+  const { currency } = useCurrency();
   const { lines, isOpen, close, applyPromo, removePromo, promoCode } =
     useCart();
   const promo = useCartPromo();
   const totals = useCartTotals();
+  const displayTotals = useCartTotalsByCurrency(currency);
   const closeRef = useRef<HTMLButtonElement>(null);
   const [promoInput, setPromoInput] = useState("");
   const [promoError, setPromoError] = useState(false);
@@ -200,7 +206,11 @@ export default function CartDrawer() {
                 {totals.freeShipping
                   ? t("freeShipUnlocked")
                   : t("freeShipProgress", {
-                      amount: formatIQD(freeShipRemaining, locale),
+                      amount: formatCurrency(
+                        convertFromIqd(freeShipRemaining, currency),
+                        currency,
+                        locale,
+                      ),
                     })}
               </p>
               <div
@@ -275,20 +285,31 @@ export default function CartDrawer() {
                 </div>
               )}
 
-              {totals.discount > 0 && (
+              {displayTotals.discount > 0 && (
                 <div className="flex items-center justify-between py-1 text-sm">
                   <span className="text-ink/60">{t("discount")}</span>
                   <span className="price font-semibold text-green">
-                    −{formatIQD(totals.discount, locale)}
+                    −{formatCurrency(displayTotals.discount, currency, locale)}
                   </span>
                 </div>
               )}
               <div className="flex items-center justify-between py-1">
                 <span className="text-sm font-bold">{t("subtotal")}</span>
                 <span className="price text-base font-bold">
-                  {formatIQD(totals.subtotal - totals.discount, locale)}
+                  {formatCurrency(
+                    displayTotals.subtotal - displayTotals.discount,
+                    currency,
+                    locale,
+                  )}
                 </span>
               </div>
+              {currency !== "IQD" && (
+                <p className="mt-1 text-xs text-ink/60">
+                  {tCurrency("chargedAsIqd", {
+                    iqd: formatIQD(totals.subtotal - totals.discount, locale),
+                  })}
+                </p>
+              )}
               <p className="mt-1 text-xs text-ink/60">{t("shippingNote")}</p>
 
               <Link

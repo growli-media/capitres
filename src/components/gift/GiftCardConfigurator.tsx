@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Check } from "@phosphor-icons/react";
 import { useCart } from "@/lib/cart/store";
 import { GIFT_CARD_DENOMINATIONS } from "@/lib/commerce/config";
-import { formatIQD } from "@/lib/money";
+import { convertFromIqd, formatIQD } from "@/lib/money";
 import { isValidEmailClient } from "@/lib/validate";
 import { pick } from "@/lib/content";
 import { trackAddToCart } from "@/lib/analytics/track";
@@ -45,6 +45,11 @@ export default function GiftCardConfigurator({
       productSlug: product.slug,
       qty: 1,
       unitAmount: denomination,
+      unitAmountByCurrency: {
+        IQD: denomination,
+        USD: convertFromIqd(denomination, "USD"),
+        EUR: convertFromIqd(denomination, "EUR"),
+      },
       title: product.title,
       image: product.images[0],
       giftCard: {

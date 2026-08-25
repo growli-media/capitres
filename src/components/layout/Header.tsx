@@ -16,6 +16,7 @@ import { useCart, useCartCount } from "@/lib/cart/store";
 import type { ImageSource } from "@/lib/catalog/types";
 import { GIFT_CARDS_ENABLED, GIFT_CARD_CATEGORY } from "@/lib/commerce/config";
 import LanguageSwitcher from "./LanguageSwitcher";
+import CurrencySwitcher from "@/components/currency/CurrencySwitcher";
 
 export interface NavCollection {
   slug: string;
@@ -243,7 +244,8 @@ export default function Header({
               ))}
             </ul>
           </nav>
-          <div className="hidden ps-3 sm:block">
+          <div className="hidden items-center ps-3 sm:flex">
+            <CurrencySwitcher tone={overHero ? "paper" : "ink"} />
             <LanguageSwitcher tone={overHero ? "paper" : "ink"} />
           </div>
           <button
@@ -478,7 +480,8 @@ export default function Header({
             ))}
           </ul>
 
-          <div className="mt-10 border-t border-line pt-6 sm:hidden">
+          <div className="mt-10 space-y-4 border-t border-line pt-6 sm:hidden">
+            <CurrencySwitcher layout="inline" />
             <LanguageSwitcher layout="inline" />
           </div>
         </nav>

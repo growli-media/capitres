@@ -38,6 +38,10 @@
     "ar": "العربية",
     "ku": "کوردی"
   },
+  "currency": {
+    "label": "العملة",
+    "chargedAsIqd": "يُحسب المبلغ فعلياً بـ {iqd} عند الدفع"
+  },
   "hero": {
     "eyebrow": "بغداد — وُلدت في المدرجات",
     "titleA": "أزياء",
@@ -408,6 +412,7 @@
     "closeMenu": "أغلق القائمة",
     "mainNav": "التنقل الرئيسي",
     "selectLanguage": "اختر اللغة",
+    "selectCurrency": "اختر العملة",
     "prevImage": "الصورة السابقة",
     "nextImage": "الصورة التالية",
     "imageOf": "صورة {index} من {total}",

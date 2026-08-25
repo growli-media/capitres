@@ -7,15 +7,18 @@ import { Link } from "@/i18n/navigation";
 import type { Product } from "@/lib/catalog/types";
 import { useCart } from "@/lib/cart/store";
 import { pick } from "@/lib/content";
-import { approxUsd, formatIQD } from "@/lib/money";
+import { formatCurrency, formatIQD } from "@/lib/money";
 import { isValidEmailClient } from "@/lib/validate";
 import { trackAddToCart, trackViewContent } from "@/lib/analytics/track";
+import { useCurrency } from "@/components/currency/CurrencyProvider";
 
 /** Buy box: size selection with live stock, quantity, add-to-cart. */
 export default function AddToCart({ product }: { product: Product }) {
   const locale = useLocale();
   const t = useTranslations("product");
+  const tCurrency = useTranslations("currency");
   const tA11y = useTranslations("a11y");
+  const { currency } = useCurrency();
   const addLine = useCart((s) => s.addLine);
 
   const inStockVariants = product.variants.filter((v) => v.stock > 0);
@@ -55,6 +58,7 @@ export default function AddToCart({ product }: { product: Product }) {
       colorName: selectedColor?.name,
       qty,
       unitAmount: product.price.amount,
+      unitAmountByCurrency: product.priceByCurrency,
       title: product.title,
       image: product.images[0],
     });
@@ -71,23 +75,30 @@ export default function AddToCart({ product }: { product: Product }) {
   return (
     <div>
       {/* Price */}
-      <div className="flex flex-wrap items-baseline gap-3">
-        <p className="price text-base font-semibold">
-          {product.compareAtPrice ? (
-            <span>{formatIQD(product.price.amount, locale)}</span>
-          ) : (
-            formatIQD(product.price.amount, locale)
-          )}
-          {product.compareAtPrice && (
-            <s className="ms-3 text-base font-normal text-ink/60">
-              {formatIQD(product.compareAtPrice.amount, locale)}
-            </s>
-          )}
-        </p>
-        <p className="text-sm text-ink/60">
-          {t("approxUsd", { usd: approxUsd(product.price.amount) })}
-        </p>
-      </div>
+      {(() => {
+        const amount = product.priceByCurrency[currency];
+        const compareAt = product.compareAtPriceByCurrency?.[currency];
+        const onSale = compareAt !== undefined && compareAt > amount;
+        return (
+          <div className="flex flex-wrap items-baseline gap-3">
+            <p className="price text-base font-semibold">
+              {formatCurrency(amount, currency, locale)}
+              {onSale && (
+                <s className="ms-3 text-base font-normal text-ink/60">
+                  {formatCurrency(compareAt, currency, locale)}
+                </s>
+              )}
+            </p>
+            {currency !== "IQD" && (
+              <p className="text-sm text-ink/60">
+                {tCurrency("chargedAsIqd", {
+                  iqd: formatIQD(product.price.amount, locale),
+                })}
+              </p>
+            )}
+          </div>
+        );
+      })()}
       <p className="mt-1.5 text-xs text-ink/60">{t("taxNote")}</p>
 
       {/* Colour */}

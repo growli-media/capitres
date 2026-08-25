@@ -38,6 +38,10 @@
     "ar": "العربية",
     "ku": "کوردی"
   },
+  "currency": {
+    "label": "دراو",
+    "chargedAsIqd": "بە {iqd} لە کاتی پارەدان دەژمێردرێت"
+  },
   "hero": {
     "eyebrow": "بەغدا — لە تریبوونەکانەوە",
     "titleA": "مۆدە",
@@ -408,6 +412,7 @@
     "closeMenu": "لیستەکە دابخە",
     "mainNav": "ڕێدۆزی سەرەکی",
     "selectLanguage": "زمان هەڵبژێرە",
+    "selectCurrency": "دراو هەڵبژێرە",
     "prevImage": "وێنەی پێشوو",
     "nextImage": "وێنەی دواتر",
     "imageOf": "وێنەی {index} لە {total}",

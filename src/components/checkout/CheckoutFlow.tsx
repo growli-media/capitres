@@ -9,12 +9,14 @@ import {
   useCart,
   useCartPromo,
   useCartTotals,
+  useCartTotalsByCurrency,
   type CartLine,
 } from "@/lib/cart/store";
 import { pick } from "@/lib/content";
-import { formatIQD } from "@/lib/money";
+import { formatCurrency, formatIQD } from "@/lib/money";
 import { isValidEmailClient, isValidIraqiPhone } from "@/lib/validate";
 import { trackInitiateCheckout } from "@/lib/analytics/track";
+import { useCurrency } from "@/components/currency/CurrencyProvider";
 
 const GOVERNORATES = [
   "baghdad",
@@ -52,6 +54,7 @@ type FieldErrors = Partial<Record<keyof ShippingInfo, string>>;
 
 function SummaryLine({ line, locale }: { line: CartLine; locale: string }) {
   const t = useTranslations("cart");
+  const { currency } = useCurrency();
   return (
     <li className="flex items-center gap-3 py-3">
       <div className="relative h-16 w-13 shrink-0 overflow-hidden bg-studio">
@@ -79,7 +82,7 @@ function SummaryLine({ line, locale }: { line: CartLine; locale: string }) {
         </p>
       </div>
       <p className="price text-sm font-semibold">
-        {formatIQD(line.unitAmount * line.qty, locale)}
+        {formatCurrency(line.unitAmountByCurrency[currency] * line.qty, currency, locale)}
       </p>
     </li>
   );
@@ -93,6 +96,9 @@ export default function CheckoutFlow() {
   const { lines, promoCode, hasHydrated } = useCart();
   const promo = useCartPromo();
   const totals = useCartTotals();
+  const { currency } = useCurrency();
+  const tCurrency = useTranslations("currency");
+  const displayTotals = useCartTotalsByCurrency(currency);
 
   const [step, setStep] = useState<1 | 2>(1);
   const [info, setInfo] = useState<ShippingInfo>({
@@ -499,9 +505,16 @@ export default function CheckoutFlow() {
                     {paying
                       ? t("paying")
                       : t("payNow", {
-                          amount: formatIQD(totals.total, locale),
+                          amount: formatCurrency(displayTotals.total, currency, locale),
                         })}
                   </button>
+                  {currency !== "IQD" && (
+                    <p className="mt-3 text-center text-xs text-ink/60">
+                      {tCurrency("chargedAsIqd", {
+                        iqd: formatIQD(totals.total, locale),
+                      })}
+                    </p>
+                  )}
                   <p className="mt-3 text-center text-xs text-ink/60">
                     {t("secureNote")}
                   </p>
@@ -546,31 +559,38 @@ export default function CheckoutFlow() {
             <div className="flex justify-between">
               <dt className="text-ink/60">{tCart("subtotal")}</dt>
               <dd className="price font-semibold">
-                {formatIQD(totals.subtotal, locale)}
+                {formatCurrency(displayTotals.subtotal, currency, locale)}
               </dd>
             </div>
-            {totals.discount > 0 && promo && (
+            {displayTotals.discount > 0 && promo && (
               <div className="flex justify-between text-green">
                 <dt>
                   {t("discount")} ({promo.code})
                 </dt>
                 <dd className="price font-semibold">
-                  −{formatIQD(totals.discount, locale)}
+                  −{formatCurrency(displayTotals.discount, currency, locale)}
                 </dd>
               </div>
             )}
             <div className="flex justify-between">
               <dt className="text-ink/60">{t("shipping")}</dt>
               <dd className="price font-semibold">
-                {totals.shipping === 0
+                {displayTotals.shipping === 0
                   ? t("shippingFree")
-                  : formatIQD(totals.shipping, locale)}
+                  : formatCurrency(displayTotals.shipping, currency, locale)}
               </dd>
             </div>
             <div className="flex justify-between border-t border-line pt-3 text-base font-bold">
               <dt>{t("total")}</dt>
-              <dd className="price">{formatIQD(totals.total, locale)}</dd>
+              <dd className="price">
+                {formatCurrency(displayTotals.total, currency, locale)}
+              </dd>
             </div>
+            {currency !== "IQD" && (
+              <p className="pt-1 text-xs text-ink/60">
+                {tCurrency("chargedAsIqd", { iqd: formatIQD(totals.total, locale) })}
+              </p>
+            )}
           </dl>
         </aside>
       </div>

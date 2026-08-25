@@ -38,6 +38,10 @@
     "ar": "العربية",
     "ku": "کوردی"
   },
+  "currency": {
+    "label": "Currency",
+    "chargedAsIqd": "Charged as {iqd} at checkout"
+  },
   "hero": {
     "eyebrow": "Baghdad — Est. on the terraces",
     "titleA": "Fashion",
@@ -408,6 +412,7 @@
     "closeMenu": "Close menu",
     "mainNav": "Main navigation",
     "selectLanguage": "Select language",
+    "selectCurrency": "Select currency",
     "prevImage": "Previous image",
     "nextImage": "Next image",
     "imageOf": "Image {index} of {total}",

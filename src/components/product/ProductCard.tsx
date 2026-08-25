@@ -74,8 +74,8 @@ export default function ProductCard({
           <span className="link-underline">{pick(product.title, locale)}</span>
         </h3>
         <Price
-          amount={product.price.amount}
-          compareAt={product.compareAtPrice?.amount}
+          priceByCurrency={product.priceByCurrency}
+          compareAtPriceByCurrency={product.compareAtPriceByCurrency}
           locale={locale}
           className="shrink-0 text-sm"
         />

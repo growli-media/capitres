@@ -66,6 +66,22 @@ function colorsOf(formData: FormData): ColorInput[] {
   }));
 }
 
+/** Optional admin-set price field, entered as dollars/euros (e.g. "49.99"),
+ * stored in cents. Blank means "not set" (falls back to a computed
+ * conversion for display) — not an error. */
+function parseOptionalCents(
+  raw: string,
+  label: string,
+): { value: number | null } | { error: string } {
+  const trimmed = raw.trim();
+  if (!trimmed) return { value: null };
+  const num = Number(trimmed);
+  if (!Number.isFinite(num) || num <= 0) {
+    return { error: `${label} must be a positive number.` };
+  }
+  return { value: Math.round(num * 100) };
+}
+
 function slugify(value: string): string {
   return value
     .toLowerCase()
@@ -107,6 +123,36 @@ function parseInput(
   const compareAtAmount = compareRaw ? Number(compareRaw) : null;
   if (compareAtAmount !== null && (!Number.isInteger(compareAtAmount) || compareAtAmount <= priceAmount)) {
     return { error: "The discount's 'was' price must be a whole number greater than the current price." };
+  }
+
+  const priceUsd = parseOptionalCents(String(formData.get("priceAmountUsd") ?? ""), "USD price");
+  if ("error" in priceUsd) return priceUsd;
+  const compareUsd = parseOptionalCents(
+    String(formData.get("compareAtAmountUsd") ?? ""),
+    "USD discount price",
+  );
+  if ("error" in compareUsd) return compareUsd;
+  if (
+    compareUsd.value !== null &&
+    priceUsd.value !== null &&
+    compareUsd.value <= priceUsd.value
+  ) {
+    return { error: "The USD discount's 'was' price must be greater than the USD price." };
+  }
+
+  const priceEur = parseOptionalCents(String(formData.get("priceAmountEur") ?? ""), "EUR price");
+  if ("error" in priceEur) return priceEur;
+  const compareEur = parseOptionalCents(
+    String(formData.get("compareAtAmountEur") ?? ""),
+    "EUR discount price",
+  );
+  if ("error" in compareEur) return compareEur;
+  if (
+    compareEur.value !== null &&
+    priceEur.value !== null &&
+    compareEur.value <= priceEur.value
+  ) {
+    return { error: "The EUR discount's 'was' price must be greater than the EUR price." };
   }
 
   const detailsEn = linesOf(formData, "detailsEn");
@@ -165,6 +211,10 @@ function parseInput(
     gender,
     priceAmount,
     compareAtAmount,
+    priceAmountUsdCents: priceUsd.value,
+    compareAtAmountUsdCents: compareUsd.value,
+    priceAmountEurCents: priceEur.value,
+    compareAtAmountEurCents: compareEur.value,
     colors: colorsOf(formData),
     images: images.map((img) => ({
       url: img.url,

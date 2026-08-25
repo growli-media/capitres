@@ -4,6 +4,7 @@ import { dbReadCategories } from "../categories";
 import { applyFilter, applySort } from "../filter-sort";
 import type {
   Collection,
+  Currency,
   Post,
   PostBlock,
   Product,
@@ -16,6 +17,7 @@ import type {
 } from "../types";
 import type { CatalogProvider } from "../index";
 import type { LocalizedString } from "@/lib/content";
+import { convertFromIqd } from "@/lib/money";
 
 /* ---------------------------------------------------------------- */
 /* Row shapes (snake_case, jsonb columns typed loosely on the way in) */
@@ -38,6 +40,10 @@ interface ProductRow {
   gender: Product["gender"];
   price_amount: number;
   compare_at_amount: number | null;
+  price_amount_usd_cents: number | null;
+  compare_at_amount_usd_cents: number | null;
+  price_amount_eur_cents: number | null;
+  compare_at_amount_eur_cents: number | null;
   colors: ProductColor[];
   images: { url: string; alt: LocalizedString }[];
   collection_slugs: string[];
@@ -115,6 +121,35 @@ function dateOnly(value: string | Date): string {
   return value instanceof Date ? value.toISOString().slice(0, 10) : value;
 }
 
+/**
+ * Every product needs a price to show in every currency. Use the admin's
+ * explicit price when they've set one; otherwise fall back to a computed
+ * conversion from the IQD amount, so nothing ever shows blank while an
+ * admin hasn't gotten around to pricing it in USD/EUR yet.
+ */
+function priceByCurrencyOf(row: ProductRow): Record<Currency, number> {
+  return {
+    IQD: row.price_amount,
+    USD: row.price_amount_usd_cents ?? convertFromIqd(row.price_amount, "USD"),
+    EUR: row.price_amount_eur_cents ?? convertFromIqd(row.price_amount, "EUR"),
+  };
+}
+
+/**
+ * Unlike price, a "was" price is never auto-computed — showing a sale
+ * badge is a deliberate call, only made for a currency the admin actually
+ * set one for.
+ */
+function compareAtPriceByCurrencyOf(
+  row: ProductRow,
+): Partial<Record<Currency, number>> | undefined {
+  const out: Partial<Record<Currency, number>> = {};
+  if (row.compare_at_amount != null) out.IQD = row.compare_at_amount;
+  if (row.compare_at_amount_usd_cents != null) out.USD = row.compare_at_amount_usd_cents;
+  if (row.compare_at_amount_eur_cents != null) out.EUR = row.compare_at_amount_eur_cents;
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
 function toProduct(
   row: ProductRow,
   variants: VariantRow[],
@@ -137,6 +172,8 @@ function toProduct(
       row.compare_at_amount != null
         ? { amount: row.compare_at_amount, currency: "IQD" }
         : undefined,
+    priceByCurrency: priceByCurrencyOf(row),
+    compareAtPriceByCurrency: compareAtPriceByCurrencyOf(row),
     colors: row.colors ?? [],
     variants: variants
       .filter((v) => v.product_id === row.id)

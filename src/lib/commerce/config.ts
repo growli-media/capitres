@@ -1,5 +1,8 @@
 /** Commerce rules shared by the cart, checkout and policy pages. */
 
+import type { Currency } from "@/lib/catalog/types";
+import { convertFromIqd } from "@/lib/money";
+
 /**
  * Gift cards are off for now — the feature stays fully built (catalog
  * plumbing, checkout redemption, admin management) so it's a one-line flip
@@ -65,5 +68,36 @@ export function computeTotals(
     shipping,
     total: discounted + shipping,
     freeShipping,
+  };
+}
+
+/**
+ * Display-only equivalent of `totals` in another currency — never used for
+ * anything actually charged (checkout always re-derives real IQD totals
+ * via `computeTotals`). `displaySubtotal` should come from summing the
+ * cart lines' own snapshotted per-currency prices (so it matches what was
+ * shown on the product page), not a raw conversion of `totals.subtotal` —
+ * but discount/shipping/free-shipping are IQD-threshold business rules, so
+ * those reuse the *already-decided* outcome from `totals` (was a percent
+ * discount applied? was shipping free?) rather than re-evaluating
+ * thresholds against a foreign-currency number.
+ */
+export function computeDisplayTotals(
+  totals: Totals,
+  displaySubtotal: number,
+  promo: PromoCode | undefined,
+  currency: Currency,
+): Totals {
+  const discount =
+    promo?.type === "percent"
+      ? Math.round((displaySubtotal * (promo.value ?? 0)) / 100)
+      : 0;
+  const shipping = totals.freeShipping ? 0 : convertFromIqd(FLAT_SHIPPING_RATE, currency);
+  return {
+    subtotal: displaySubtotal,
+    discount,
+    shipping,
+    total: displaySubtotal - discount + shipping,
+    freeShipping: totals.freeShipping,
   };
 }
