@@ -446,7 +446,7 @@ export default function CheckoutFlow() {
                         setPhoneCountry(e.target.value as CountryCode)
                       }
                       className={`${inputClass(false)} shrink-0 cursor-pointer appearance-none px-2`}
-                      style={{ width: "6rem" }}
+                      style={{ width: "13.2rem" }}
                     >
                       {countries.map((c) => (
                         <option key={c.code} value={c.code}>
