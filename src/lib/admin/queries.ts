@@ -48,7 +48,9 @@ export async function listAbandonedOrders(): Promise<AbandonedOrder[]> {
       ref: string;
       created_at: string;
       minutes_ago: string;
-      name: string;
+      first_name: string | null;
+      last_name: string | null;
+      legacy_full_name: string | null;
       phone: string;
       email: string;
       total: string;
@@ -61,7 +63,9 @@ export async function listAbandonedOrders(): Promise<AbandonedOrder[]> {
       ref,
       created_at::text as created_at,
       (extract(epoch from (now() - created_at)) / 60)::int::text as minutes_ago,
-      customer->>'fullName' as name,
+      customer->>'firstName' as first_name,
+      customer->>'lastName' as last_name,
+      customer->>'fullName' as legacy_full_name,
       customer->>'phone' as phone,
       customer->>'email' as email,
       totals->>'total' as total,
@@ -79,7 +83,12 @@ export async function listAbandonedOrders(): Promise<AbandonedOrder[]> {
     ref: r.ref,
     createdAt: r.created_at,
     minutesAgo: Number(r.minutes_ago),
-    customerName: r.name,
+    // firstName/lastName for orders placed since international checkout
+    // shipped; legacy_full_name covers orders placed before that.
+    customerName:
+      [r.first_name, r.last_name].filter(Boolean).join(" ") ||
+      r.legacy_full_name ||
+      "",
     phone: r.phone,
     email: r.email,
     total: Number(r.total),

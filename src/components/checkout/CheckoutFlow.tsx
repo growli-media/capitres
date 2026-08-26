@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { CaretLeft, LockSimple, ShieldCheck } from "@phosphor-icons/react";
+import { parsePhoneNumber, type CountryCode } from "libphonenumber-js/min";
 import { Link } from "@/i18n/navigation";
 import {
   useCart,
@@ -14,7 +15,8 @@ import {
 } from "@/lib/cart/store";
 import { pick } from "@/lib/content";
 import { formatCurrency, formatIQD } from "@/lib/money";
-import { isValidEmailClient, isValidIraqiPhone } from "@/lib/validate";
+import { isValidEmailClient, isValidPhone } from "@/lib/validate";
+import { sortedCountries } from "@/lib/countries";
 import { trackInitiateCheckout } from "@/lib/analytics/track";
 import { useCurrency } from "@/components/currency/CurrencyProvider";
 
@@ -41,12 +43,24 @@ const GOVERNORATES = [
 ] as const;
 
 interface ShippingInfo {
-  fullName: string;
+  firstName: string;
+  middleName: string;
+  lastName: string;
   email: string;
-  phone: string;
-  governorate: string;
+  /** Dial-code country for the phone — independent of the shipping
+   * country (a customer can ship to one country, carry a phone from
+   * another). Defaults to match `country` and stays in sync until the
+   * customer touches it directly. */
+  phoneCountry: CountryCode;
+  phoneNumber: string;
+  country: CountryCode;
+  street: string;
+  streetNumber: string;
+  zip: string;
   city: string;
-  address: string;
+  state: string;
+  /** Only meaningful (shown + required) when country === "IQ". */
+  governorate: string;
   notes: string;
 }
 
@@ -99,17 +113,26 @@ export default function CheckoutFlow() {
   const { currency } = useCurrency();
   const tCurrency = useTranslations("currency");
   const displayTotals = useCartTotalsByCurrency(currency);
+  const countries = useMemo(() => sortedCountries(locale), [locale]);
 
   const [step, setStep] = useState<1 | 2>(1);
   const [info, setInfo] = useState<ShippingInfo>({
-    fullName: "",
+    firstName: "",
+    middleName: "",
+    lastName: "",
     email: "",
-    phone: "",
-    governorate: "",
+    phoneCountry: "IQ",
+    phoneNumber: "",
+    country: "IQ",
+    street: "",
+    streetNumber: "",
+    zip: "",
     city: "",
-    address: "",
+    state: "",
+    governorate: "",
     notes: "",
   });
+  const [phoneCountryTouched, setPhoneCountryTouched] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [paying, setPaying] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
@@ -151,20 +174,40 @@ export default function CheckoutFlow() {
     );
   }
 
-  function setField<K extends keyof ShippingInfo>(k: K, v: string) {
+  function setField<K extends keyof ShippingInfo>(k: K, v: ShippingInfo[K]) {
     setInfo((prev) => ({ ...prev, [k]: v }));
     setErrors((prev) => ({ ...prev, [k]: undefined }));
   }
 
+  function setCountry(country: CountryCode) {
+    setField("country", country);
+    // Phone dial-code follows the shipping country by default — most
+    // orders are for the customer's own phone — but stops following the
+    // moment the customer picks a dial code themselves.
+    if (!phoneCountryTouched) setField("phoneCountry", country);
+    if (country !== "IQ") setField("governorate", "");
+  }
+
+  function setPhoneCountry(country: CountryCode) {
+    setPhoneCountryTouched(true);
+    setField("phoneCountry", country);
+  }
+
   function validate(): boolean {
     const next: FieldErrors = {};
-    if (!info.fullName.trim()) next.fullName = t("errors.required");
+    if (!info.firstName.trim()) next.firstName = t("errors.required");
+    if (!info.lastName.trim()) next.lastName = t("errors.required");
     if (!isValidEmailClient(info.email)) next.email = t("errors.invalidEmail");
-    if (!isValidIraqiPhone(info.phone)) next.phone = t("errors.invalidPhone");
+    if (!isValidPhone(info.phoneNumber, info.phoneCountry)) {
+      next.phoneNumber = t("errors.invalidPhone");
+    }
     if (hasPhysical) {
-      if (!info.governorate) next.governorate = t("errors.required");
+      if (info.country === "IQ" && !info.governorate) {
+        next.governorate = t("errors.required");
+      }
+      if (!info.street.trim()) next.street = t("errors.required");
+      if (!info.streetNumber.trim()) next.streetNumber = t("errors.required");
       if (!info.city.trim()) next.city = t("errors.required");
-      if (!info.address.trim()) next.address = t("errors.required");
     }
     setErrors(next);
     const firstError = Object.entries(next).find(([, v]) => v);
@@ -187,6 +230,13 @@ export default function CheckoutFlow() {
     setPaying(true);
     setPayError(null);
     try {
+      let phoneE164 = info.phoneNumber;
+      try {
+        phoneE164 = parsePhoneNumber(info.phoneNumber, info.phoneCountry).format("E.164");
+      } catch {
+        // validate() already ran before step 2 was reachable, so this
+        // shouldn't happen — the server re-validates regardless.
+      }
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -194,12 +244,19 @@ export default function CheckoutFlow() {
           locale,
           promoCode,
           customer: {
-            fullName: info.fullName,
+            firstName: info.firstName,
+            middleName: info.middleName || undefined,
+            lastName: info.lastName,
             email: info.email,
-            phone: info.phone,
-            governorate: info.governorate || undefined,
+            phone: phoneE164,
+            country: info.country,
+            street: info.street || undefined,
+            streetNumber: info.streetNumber || undefined,
+            zip: info.zip || undefined,
             city: info.city || undefined,
-            address: info.address || undefined,
+            state: info.state || undefined,
+            governorate:
+              info.country === "IQ" ? info.governorate || undefined : undefined,
             notes: info.notes || undefined,
           },
           lines: lines.map((l) => ({
@@ -279,34 +336,78 @@ export default function CheckoutFlow() {
                 {t("contactTitle")}
               </h2>
               <div className="grid gap-5 sm:grid-cols-2">
-                <div className="sm:col-span-2">
+                <div>
                   <label
-                    htmlFor="co-fullName"
+                    htmlFor="co-firstName"
                     className="mb-2 block text-sm font-semibold"
                   >
-                    {t("fullName")} *
+                    {t("firstName")} *
                   </label>
                   <input
-                    id="co-fullName"
+                    id="co-firstName"
                     type="text"
-                    autoComplete="name"
-                    value={info.fullName}
-                    onChange={(e) => setField("fullName", e.target.value)}
-                    aria-invalid={Boolean(errors.fullName)}
-                    className={inputClass(Boolean(errors.fullName))}
+                    autoComplete="given-name"
+                    value={info.firstName}
+                    onChange={(e) => setField("firstName", e.target.value)}
+                    aria-invalid={Boolean(errors.firstName)}
+                    className={inputClass(Boolean(errors.firstName))}
                   />
-                  {errors.fullName && (
+                  {errors.firstName && (
                     <p role="alert" className="mt-1.5 text-xs text-danger">
-                      {errors.fullName}
+                      {errors.firstName}
                     </p>
                   )}
+                </div>
+                <div>
+                  <label
+                    htmlFor="co-lastName"
+                    className="mb-2 block text-sm font-semibold"
+                  >
+                    {t("lastName")} *
+                  </label>
+                  <input
+                    id="co-lastName"
+                    type="text"
+                    autoComplete="family-name"
+                    value={info.lastName}
+                    onChange={(e) => setField("lastName", e.target.value)}
+                    aria-invalid={Boolean(errors.lastName)}
+                    className={inputClass(Boolean(errors.lastName))}
+                  />
+                  {errors.lastName && (
+                    <p role="alert" className="mt-1.5 text-xs text-danger">
+                      {errors.lastName}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label
+                    htmlFor="co-middleName"
+                    className="mb-2 block text-sm font-semibold"
+                  >
+                    {t("middleName")}{" "}
+                    <span className="font-normal text-ink/60">
+                      ({t("optional")})
+                    </span>
+                  </label>
+                  <input
+                    id="co-middleName"
+                    type="text"
+                    autoComplete="additional-name"
+                    value={info.middleName}
+                    onChange={(e) => setField("middleName", e.target.value)}
+                    className={inputClass(false)}
+                  />
                 </div>
                 <div>
                   <label
                     htmlFor="co-email"
                     className="mb-2 block text-sm font-semibold"
                   >
-                    {t("email")} *
+                    {t("email")} *{" "}
+                    <span className="font-normal text-ink/60">
+                      ({t("emailRecommended")})
+                    </span>
                   </label>
                   <input
                     id="co-email"
@@ -323,30 +424,50 @@ export default function CheckoutFlow() {
                     </p>
                   )}
                 </div>
-                <div>
+                <div className="sm:col-span-2">
                   <label
-                    htmlFor="co-phone"
+                    htmlFor="co-phoneNumber"
                     className="mb-2 block text-sm font-semibold"
                   >
                     {t("phone")} *
                   </label>
-                  <input
-                    id="co-phone"
-                    type="tel"
-                    dir="ltr"
-                    autoComplete="tel"
-                    value={info.phone}
-                    onChange={(e) => setField("phone", e.target.value)}
-                    aria-invalid={Boolean(errors.phone)}
-                    aria-describedby="co-phone-hint"
-                    className={`${inputClass(Boolean(errors.phone))} text-start`}
-                  />
-                  <p id="co-phone-hint" className="mt-1.5 text-xs text-ink/60">
-                    {t("phoneHint")}
-                  </p>
-                  {errors.phone && (
+                  <div className="flex gap-2" dir="ltr">
+                    <select
+                      id="co-phoneCountry"
+                      aria-label={t("phoneCountry")}
+                      value={info.phoneCountry}
+                      onChange={(e) =>
+                        setPhoneCountry(e.target.value as CountryCode)
+                      }
+                      className={`${inputClass(false)} w-32 shrink-0 cursor-pointer appearance-none`}
+                    >
+                      {countries.map((c) => (
+                        <option key={c.code} value={c.code}>
+                          +{c.dialCode} {c.name}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      id="co-phoneNumber"
+                      type="tel"
+                      autoComplete="tel-national"
+                      value={info.phoneNumber}
+                      onChange={(e) => setField("phoneNumber", e.target.value)}
+                      aria-invalid={Boolean(errors.phoneNumber)}
+                      aria-describedby={
+                        info.phoneCountry === "IQ" ? "co-phone-hint" : undefined
+                      }
+                      className={`${inputClass(Boolean(errors.phoneNumber))} min-w-0 flex-1 text-start`}
+                    />
+                  </div>
+                  {info.phoneCountry === "IQ" && (
+                    <p id="co-phone-hint" className="mt-1.5 text-xs text-ink/60">
+                      {t("phoneHint")}
+                    </p>
+                  )}
+                  {errors.phoneNumber && (
                     <p role="alert" className="mt-1 text-xs text-danger">
-                      {errors.phone}
+                      {errors.phoneNumber}
                     </p>
                   )}
                 </div>
@@ -358,37 +479,79 @@ export default function CheckoutFlow() {
                     {t("shippingTitle")}
                   </h2>
                   <div className="grid gap-5 sm:grid-cols-2">
-                    <div>
+                    <div className="sm:col-span-2">
                       <label
-                        htmlFor="co-governorate"
+                        htmlFor="co-country"
                         className="mb-2 block text-sm font-semibold"
                       >
-                        {t("governorate")} *
+                        {t("country")} *
                       </label>
                       <select
-                        id="co-governorate"
-                        value={info.governorate}
-                        onChange={(e) =>
-                          setField("governorate", e.target.value)
-                        }
-                        aria-invalid={Boolean(errors.governorate)}
-                        className={`${inputClass(Boolean(errors.governorate))} cursor-pointer appearance-none`}
+                        id="co-country"
+                        value={info.country}
+                        onChange={(e) => setCountry(e.target.value as CountryCode)}
+                        className={`${inputClass(false)} cursor-pointer appearance-none`}
                       >
-                        <option value="" disabled>
-                          {t("selectGovernorate")}
-                        </option>
-                        {GOVERNORATES.map((g) => (
-                          <option key={g} value={g}>
-                            {tGov(g)}
+                        {countries.map((c) => (
+                          <option key={c.code} value={c.code}>
+                            {c.name}
                           </option>
                         ))}
                       </select>
-                      {errors.governorate && (
-                        <p role="alert" className="mt-1.5 text-xs text-danger">
-                          {errors.governorate}
-                        </p>
-                      )}
                     </div>
+                    {info.country === "IQ" ? (
+                      <div>
+                        <label
+                          htmlFor="co-governorate"
+                          className="mb-2 block text-sm font-semibold"
+                        >
+                          {t("governorate")} *
+                        </label>
+                        <select
+                          id="co-governorate"
+                          value={info.governorate}
+                          onChange={(e) =>
+                            setField("governorate", e.target.value)
+                          }
+                          aria-invalid={Boolean(errors.governorate)}
+                          className={`${inputClass(Boolean(errors.governorate))} cursor-pointer appearance-none`}
+                        >
+                          <option value="" disabled>
+                            {t("selectGovernorate")}
+                          </option>
+                          {GOVERNORATES.map((g) => (
+                            <option key={g} value={g}>
+                              {tGov(g)}
+                            </option>
+                          ))}
+                        </select>
+                        {errors.governorate && (
+                          <p role="alert" className="mt-1.5 text-xs text-danger">
+                            {errors.governorate}
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <div>
+                        <label
+                          htmlFor="co-state"
+                          className="mb-2 block text-sm font-semibold"
+                        >
+                          {t("state")}{" "}
+                          <span className="font-normal text-ink/60">
+                            ({t("optional")})
+                          </span>
+                        </label>
+                        <input
+                          id="co-state"
+                          type="text"
+                          autoComplete="address-level1"
+                          value={info.state}
+                          onChange={(e) => setField("state", e.target.value)}
+                          className={inputClass(false)}
+                        />
+                      </div>
+                    )}
                     <div>
                       <label
                         htmlFor="co-city"
@@ -411,34 +574,68 @@ export default function CheckoutFlow() {
                         </p>
                       )}
                     </div>
-                    <div className="sm:col-span-2">
+                    <div>
                       <label
-                        htmlFor="co-address"
+                        htmlFor="co-street"
                         className="mb-2 block text-sm font-semibold"
                       >
-                        {t("address")} *
+                        {t("street")} *
                       </label>
                       <input
-                        id="co-address"
+                        id="co-street"
                         type="text"
-                        autoComplete="street-address"
-                        value={info.address}
-                        onChange={(e) => setField("address", e.target.value)}
-                        aria-invalid={Boolean(errors.address)}
-                        aria-describedby="co-address-hint"
-                        className={inputClass(Boolean(errors.address))}
+                        autoComplete="address-line1"
+                        value={info.street}
+                        onChange={(e) => setField("street", e.target.value)}
+                        aria-invalid={Boolean(errors.street)}
+                        className={inputClass(Boolean(errors.street))}
                       />
-                      <p
-                        id="co-address-hint"
-                        className="mt-1.5 text-xs text-ink/60"
-                      >
-                        {t("addressHint")}
-                      </p>
-                      {errors.address && (
-                        <p role="alert" className="mt-1 text-xs text-danger">
-                          {errors.address}
+                      {errors.street && (
+                        <p role="alert" className="mt-1.5 text-xs text-danger">
+                          {errors.street}
                         </p>
                       )}
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="co-streetNumber"
+                        className="mb-2 block text-sm font-semibold"
+                      >
+                        {t("streetNumber")} *
+                      </label>
+                      <input
+                        id="co-streetNumber"
+                        type="text"
+                        autoComplete="address-line2"
+                        value={info.streetNumber}
+                        onChange={(e) => setField("streetNumber", e.target.value)}
+                        aria-invalid={Boolean(errors.streetNumber)}
+                        className={inputClass(Boolean(errors.streetNumber))}
+                      />
+                      {errors.streetNumber && (
+                        <p role="alert" className="mt-1.5 text-xs text-danger">
+                          {errors.streetNumber}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="co-zip"
+                        className="mb-2 block text-sm font-semibold"
+                      >
+                        {t("zip")}{" "}
+                        <span className="font-normal text-ink/60">
+                          ({t("optional")})
+                        </span>
+                      </label>
+                      <input
+                        id="co-zip"
+                        type="text"
+                        autoComplete="postal-code"
+                        value={info.zip}
+                        onChange={(e) => setField("zip", e.target.value)}
+                        className={inputClass(false)}
+                      />
                     </div>
                   </div>
                 </>

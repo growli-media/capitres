@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isValidPhoneNumber } from "libphonenumber-js/min";
 import { catalog } from "@/lib/catalog";
 import { computeTotals, findPromo } from "@/lib/commerce/config";
 import {
@@ -27,12 +28,21 @@ interface CheckoutInput {
   locale: string;
   promoCode?: string;
   customer: {
-    fullName: string;
+    firstName: string;
+    middleName?: string;
+    lastName: string;
     email: string;
+    /** Already E.164 — CheckoutFlow combines the dial-code + local number
+     * client-side before submitting. Re-validated here regardless, since
+     * the client is never trusted for a payment-adjacent field. */
     phone: string;
-    governorate?: string;
+    country: string;
+    street?: string;
+    streetNumber?: string;
+    zip?: string;
     city?: string;
-    address?: string;
+    state?: string;
+    governorate?: string;
     notes?: string;
   };
   lines: CheckoutLineInput[];
@@ -58,9 +68,26 @@ export async function POST(request: NextRequest) {
   if (!input.lines?.length) {
     return NextResponse.json({ error: "empty-cart" }, { status: 400 });
   }
-  const { fullName, email, phone } = input.customer ?? {};
-  if (!fullName?.trim() || !isValidEmail(email ?? "") || !phone?.trim()) {
+  const { firstName, lastName, email, phone, country } = input.customer ?? {};
+  if (
+    !firstName?.trim() ||
+    !lastName?.trim() ||
+    !isValidEmail(email ?? "") ||
+    !phone?.trim() ||
+    !isValidPhoneNumber(phone ?? "") ||
+    !country?.trim()
+  ) {
     return NextResponse.json({ error: "invalid-customer" }, { status: 400 });
+  }
+  const hasPhysical = input.lines.some((l) => !l.giftCard);
+  if (
+    hasPhysical &&
+    (!input.customer.street?.trim() ||
+      !input.customer.streetNumber?.trim() ||
+      !input.customer.city?.trim() ||
+      (country === "IQ" && !input.customer.governorate?.trim()))
+  ) {
+    return NextResponse.json({ error: "invalid-address" }, { status: 400 });
   }
 
   const orderLines: OrderLine[] = [];
@@ -205,12 +232,18 @@ export async function POST(request: NextRequest) {
     paymentMethod: null,
     mock: link.mock,
     customer: {
-      fullName: fullName.trim(),
+      firstName: firstName.trim(),
+      middleName: input.customer.middleName?.trim() || undefined,
+      lastName: lastName.trim(),
       email: email.trim(),
       phone: phone.trim(),
-      governorate: input.customer.governorate,
+      country: country.trim(),
+      street: input.customer.street?.trim(),
+      streetNumber: input.customer.streetNumber?.trim(),
+      zip: input.customer.zip?.trim(),
       city: input.customer.city?.trim(),
-      address: input.customer.address?.trim(),
+      state: input.customer.state?.trim(),
+      governorate: country === "IQ" ? input.customer.governorate : undefined,
       notes: input.customer.notes?.slice(0, 500),
     },
     lines: orderLines,

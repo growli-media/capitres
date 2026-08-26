@@ -52,13 +52,29 @@ export interface Order {
   paymentMethod?: string | null;
   mock: boolean;
   customer: {
-    fullName: string;
+    firstName: string;
+    middleName?: string;
+    lastName: string;
     email: string;
+    /** Always E.164 for orders placed since international checkout
+     * shipped (src/components/checkout/CheckoutFlow.tsx combines the
+     * dial code + number before submitting). */
     phone: string;
-    governorate?: string;
+    /** ISO-3166 country code. */
+    country: string;
+    street?: string;
+    streetNumber?: string;
+    zip?: string;
     city?: string;
-    address?: string;
+    state?: string;
+    /** Only set when country === "IQ". */
+    governorate?: string;
     notes?: string;
+    /** Orders placed before international checkout shipped — no
+     * firstName/lastName/country/street split, just one name + address
+     * line, Iraq implicitly. Present only on that older shape. */
+    fullName?: string;
+    address?: string;
   };
   lines: OrderLine[];
   totals: {
@@ -70,6 +86,22 @@ export interface Order {
   promoCode?: string;
   adTracking?: AdTracking;
   metaCapiSent?: boolean;
+}
+
+/** Display name for an order's customer — handles both the current
+ * split-name shape and the legacy `fullName`-only shape (orders placed
+ * before international checkout shipped). */
+export function customerName(c: Order["customer"]): string {
+  const parts = [c.firstName, c.middleName, c.lastName].filter(Boolean);
+  return parts.length > 0 ? parts.join(" ") : (c.fullName ?? "");
+}
+
+/** Compact "City, Region, Country" summary — falls back to the legacy
+ * single `address` line for pre-international-checkout orders. */
+export function customerAddress(c: Order["customer"]): string {
+  const region = c.country === "IQ" ? c.governorate : c.state;
+  const parts = [c.city, region, c.country].filter(Boolean);
+  return parts.length > 0 ? parts.join(", ") : (c.address ?? "");
 }
 
 export interface OrderStore {

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { orderStore } from "@/lib/orders/store";
+import { orderStore, customerName, customerAddress } from "@/lib/orders/store";
 import { PAID_STATUSES, FAILED_STATUSES } from "@/lib/admin/queries";
 import { formatIQD } from "@/lib/money";
 
@@ -63,10 +63,15 @@ export default async function AdminOrdersPage() {
                   </td>
                   <td className="px-4 py-3 text-slate-500">{formatDate(o.createdAt)}</td>
                   <td className="px-4 py-3">
-                    <div className="font-medium text-slate-900">{o.customer.fullName}</div>
+                    <div className="font-medium text-slate-900">{customerName(o.customer)}</div>
                     <div className="text-xs text-slate-400" dir="ltr">
                       {o.customer.phone}
                     </div>
+                    {customerAddress(o.customer) && (
+                      <div className="text-xs text-slate-400">
+                        {customerAddress(o.customer)}
+                      </div>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-slate-600">
                     {o.lines.reduce((n, l) => n + l.qty, 0)}

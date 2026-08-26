@@ -1,11 +1,14 @@
 /** Client-safe validators shared by forms. */
 
+import { isValidPhoneNumber, type CountryCode } from "libphonenumber-js/min";
+
 export function isValidEmailClient(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim());
 }
 
-/** Iraqi mobile numbers: 07XX XXX XXXX (or +964 7XX XXX XXXX). */
-export function isValidIraqiPhone(phone: string): boolean {
-  const digits = phone.replace(/[\s\-()]/g, "");
-  return /^(\+?964|0)?7\d{9}$/.test(digits);
+/** International mobile/landline check — `country` is the dial-code
+ * country selected alongside the number, not the shipping country (a
+ * customer can ship to one country and carry a phone from another). */
+export function isValidPhone(number: string, country: CountryCode): boolean {
+  return isValidPhoneNumber(number, country);
 }

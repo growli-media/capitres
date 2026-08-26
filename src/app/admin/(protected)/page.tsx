@@ -10,7 +10,7 @@ import {
 import { Quotes } from "@phosphor-icons/react/dist/ssr";
 import { getDashboardKpis, getTopProducts } from "@/lib/admin/dashboard";
 import { getAbandonedCount } from "@/lib/admin/queries";
-import { orderStore } from "@/lib/orders/store";
+import { orderStore, customerName } from "@/lib/orders/store";
 import { formatIQD } from "@/lib/money";
 import { randomQuote } from "@/lib/admin/quotes";
 
@@ -139,7 +139,7 @@ export default async function AdminDashboardPage() {
                         {o.ref}
                       </td>
                       <td className="px-4 py-3 font-medium text-slate-900">
-                        {o.customer.fullName}
+                        {customerName(o.customer)}
                       </td>
                       <td className="px-4 py-3 text-slate-500">
                         {formatDate(o.createdAt)}

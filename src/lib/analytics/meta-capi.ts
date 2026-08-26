@@ -1,6 +1,6 @@
 import "server-only";
 import crypto from "node:crypto";
-import { toE164Iraq } from "@/lib/phone";
+import { toE164 } from "@/lib/phone";
 import type { AdTracking, Order } from "@/lib/orders/store";
 
 const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID;
@@ -29,7 +29,7 @@ export async function sendMetaPurchaseEvent(order: Order): Promise<void> {
   const ad: AdTracking = order.adTracking ?? {};
   const userData: Record<string, unknown> = {
     em: [sha256(order.customer.email)],
-    ph: [sha256(toE164Iraq(order.customer.phone).replace("+", ""))],
+    ph: [sha256(toE164(order.customer.phone).replace("+", ""))],
   };
   if (ad.clientIp) userData.client_ip_address = ad.clientIp;
   if (ad.userAgent) userData.client_user_agent = ad.userAgent;

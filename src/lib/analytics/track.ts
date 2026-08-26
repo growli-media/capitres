@@ -1,4 +1,4 @@
-import { toE164Iraq } from "@/lib/phone";
+import { toE164 } from "@/lib/phone";
 
 declare global {
   interface Window {
@@ -99,7 +99,7 @@ export function trackPurchase(order: TrackPurchase) {
   if (order.email || order.phone) {
     gtag("set", "user_data", {
       email: order.email,
-      phone_number: order.phone ? toE164Iraq(order.phone) : undefined,
+      phone_number: order.phone ? toE164(order.phone) : undefined,
     });
   }
 
