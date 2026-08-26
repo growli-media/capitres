@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Noto_Sans_Arabic } from "next/font/google";
 import localFont from "next/font/local";
 import { routing, isRtl } from "@/i18n/routing";
 import { catalog } from "@/lib/catalog";
@@ -29,7 +28,7 @@ import "../globals.css";
  * stretch headings wide the way Archivo's did — display weight now comes
  * from the ExtraBold/Black cuts themselves (see --display-stretch: 100%
  * in globals.css) rather than synthetic width. Arabic-script (ar + ku/
- * Sorani) keeps Noto Sans Arabic — this family has zero Arabic glyphs.
+ * Sorani) uses Noto Kufi Arabic below — this family has zero Arabic glyphs.
  */
 const schrifted = localFont({
   src: [
@@ -45,11 +44,26 @@ const schrifted = localFont({
   display: "swap",
 });
 
-const notoArabic = Noto_Sans_Arabic({
-  subsets: ["arabic"],
+/**
+ * Arabic-script (ar + ku/Sorani): Noto Kufi Arabic — self-hosted static
+ * family, client-supplied. Replaces the previous Google-hosted Noto Sans
+ * Arabic; the CSS variable name stays --font-noto-ar so globals.css and
+ * everything downstream needed no changes.
+ */
+const notoArabic = localFont({
+  src: [
+    { path: "../../fonts/noto-kufi-arabic/Thin.ttf", weight: "100", style: "normal" },
+    { path: "../../fonts/noto-kufi-arabic/ExtraLight.ttf", weight: "200", style: "normal" },
+    { path: "../../fonts/noto-kufi-arabic/Light.ttf", weight: "300", style: "normal" },
+    { path: "../../fonts/noto-kufi-arabic/Regular.ttf", weight: "400", style: "normal" },
+    { path: "../../fonts/noto-kufi-arabic/Medium.ttf", weight: "500", style: "normal" },
+    { path: "../../fonts/noto-kufi-arabic/SemiBold.ttf", weight: "600", style: "normal" },
+    { path: "../../fonts/noto-kufi-arabic/Bold.ttf", weight: "700", style: "normal" },
+    { path: "../../fonts/noto-kufi-arabic/ExtraBold.ttf", weight: "800", style: "normal" },
+    { path: "../../fonts/noto-kufi-arabic/Black.ttf", weight: "900", style: "normal" },
+  ],
   variable: "--font-noto-ar",
   display: "swap",
-  preload: false,
 });
 
 export function generateStaticParams() {
