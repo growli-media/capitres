@@ -29,9 +29,9 @@ interface CheckoutInput {
   promoCode?: string;
   customer: {
     firstName: string;
-    middleName?: string;
+    middleName: string;
     lastName: string;
-    email: string;
+    email?: string;
     /** Already E.164 — CheckoutFlow combines the dial-code + local number
      * client-side before submitting. Re-validated here regardless, since
      * the client is never trusted for a payment-adjacent field. */
@@ -68,11 +68,14 @@ export async function POST(request: NextRequest) {
   if (!input.lines?.length) {
     return NextResponse.json({ error: "empty-cart" }, { status: 400 });
   }
-  const { firstName, lastName, email, phone, country } = input.customer ?? {};
+  const { firstName, middleName, lastName, email, phone, country } =
+    input.customer ?? {};
+  const emailTrimmed = email?.trim() ?? "";
   if (
     !firstName?.trim() ||
+    !middleName?.trim() ||
     !lastName?.trim() ||
-    !isValidEmail(email ?? "") ||
+    (emailTrimmed && !isValidEmail(emailTrimmed)) ||
     !phone?.trim() ||
     !isValidPhoneNumber(phone ?? "") ||
     !country?.trim()
@@ -233,9 +236,9 @@ export async function POST(request: NextRequest) {
     mock: link.mock,
     customer: {
       firstName: firstName.trim(),
-      middleName: input.customer.middleName?.trim() || undefined,
+      middleName: middleName.trim(),
       lastName: lastName.trim(),
-      email: email.trim(),
+      email: emailTrimmed || undefined,
       phone: phone.trim(),
       country: country.trim(),
       street: input.customer.street?.trim(),

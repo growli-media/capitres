@@ -233,6 +233,7 @@
     "confirmFailed": "Payment not completed",
     "confirmFailedBody": "Your payment was cancelled or rejected. No money moved — you can try again below.",
     "confirmBody": "Order {ref} is in. A confirmation email is on its way to {email}.",
+    "confirmBodyNoEmail": "Order {ref} is in.",
     "confirmGiftCards": "Gift cards are delivered by email within minutes of payment.",
     "orderRef": "Order reference",
     "statusLabel": "Payment status",

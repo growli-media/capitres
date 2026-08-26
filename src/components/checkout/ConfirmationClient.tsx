@@ -12,7 +12,7 @@ interface OrderView {
   ref: string;
   status: string;
   mock: boolean;
-  email: string;
+  email?: string;
   phone: string;
   totals: { subtotal: number; discount: number; shipping: number; total: number };
   lines: {
@@ -150,7 +150,9 @@ export default function ConfirmationClient({ orderRef }: { orderRef: string }) {
               {t("confirmTitle")}
             </h1>
             <p className="mt-5 max-w-xl text-lg leading-relaxed text-ink/70">
-              {t("confirmBody", { ref: order.ref, email: order.email })}
+              {order.email
+                ? t("confirmBody", { ref: order.ref, email: order.email })
+                : t("confirmBodyNoEmail", { ref: order.ref })}
             </p>
             {order.hasGiftCards && (
               <p className="mt-4 max-w-xl border-s-2 border-green bg-studio p-4 text-sm leading-relaxed text-ink/75">

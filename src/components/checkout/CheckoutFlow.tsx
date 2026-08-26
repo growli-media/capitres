@@ -196,8 +196,11 @@ export default function CheckoutFlow() {
   function validate(): boolean {
     const next: FieldErrors = {};
     if (!info.firstName.trim()) next.firstName = t("errors.required");
+    if (!info.middleName.trim()) next.middleName = t("errors.required");
     if (!info.lastName.trim()) next.lastName = t("errors.required");
-    if (!isValidEmailClient(info.email)) next.email = t("errors.invalidEmail");
+    if (info.email.trim() && !isValidEmailClient(info.email)) {
+      next.email = t("errors.invalidEmail");
+    }
     if (!isValidPhone(info.phoneNumber, info.phoneCountry)) {
       next.phoneNumber = t("errors.invalidPhone");
     }
@@ -245,9 +248,9 @@ export default function CheckoutFlow() {
           promoCode,
           customer: {
             firstName: info.firstName,
-            middleName: info.middleName || undefined,
+            middleName: info.middleName,
             lastName: info.lastName,
-            email: info.email,
+            email: info.email.trim() || undefined,
             phone: phoneE164,
             country: info.country,
             street: info.street || undefined,
@@ -385,10 +388,7 @@ export default function CheckoutFlow() {
                     htmlFor="co-middleName"
                     className="mb-2 block text-sm font-semibold"
                   >
-                    {t("middleName")}{" "}
-                    <span className="font-normal text-ink/60">
-                      ({t("optional")})
-                    </span>
+                    {t("middleName")} *
                   </label>
                   <input
                     id="co-middleName"
@@ -396,15 +396,21 @@ export default function CheckoutFlow() {
                     autoComplete="additional-name"
                     value={info.middleName}
                     onChange={(e) => setField("middleName", e.target.value)}
-                    className={inputClass(false)}
+                    aria-invalid={Boolean(errors.middleName)}
+                    className={inputClass(Boolean(errors.middleName))}
                   />
+                  {errors.middleName && (
+                    <p role="alert" className="mt-1.5 text-xs text-danger">
+                      {errors.middleName}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label
                     htmlFor="co-email"
                     className="mb-2 block text-sm font-semibold"
                   >
-                    {t("email")} *{" "}
+                    {t("email")}{" "}
                     <span className="font-normal text-ink/60">
                       ({t("emailRecommended")})
                     </span>
@@ -439,7 +445,8 @@ export default function CheckoutFlow() {
                       onChange={(e) =>
                         setPhoneCountry(e.target.value as CountryCode)
                       }
-                      className={`${inputClass(false)} w-32 shrink-0 cursor-pointer appearance-none`}
+                      className={`${inputClass(false)} shrink-0 cursor-pointer appearance-none px-2`}
+                      style={{ width: "6rem" }}
                     >
                       {countries.map((c) => (
                         <option key={c.code} value={c.code}>

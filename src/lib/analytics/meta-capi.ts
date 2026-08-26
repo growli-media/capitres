@@ -28,9 +28,9 @@ export async function sendMetaPurchaseEvent(order: Order): Promise<void> {
 
   const ad: AdTracking = order.adTracking ?? {};
   const userData: Record<string, unknown> = {
-    em: [sha256(order.customer.email)],
     ph: [sha256(toE164(order.customer.phone).replace("+", ""))],
   };
+  if (order.customer.email) userData.em = [sha256(order.customer.email)];
   if (ad.clientIp) userData.client_ip_address = ad.clientIp;
   if (ad.userAgent) userData.client_user_agent = ad.userAgent;
   if (ad.fbp) userData.fbp = ad.fbp;

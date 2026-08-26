@@ -55,7 +55,7 @@ export interface Order {
     firstName: string;
     middleName?: string;
     lastName: string;
-    email: string;
+    email?: string;
     /** Always E.164 for orders placed since international checkout
      * shipped (src/components/checkout/CheckoutFlow.tsx combines the
      * dial code + number before submitting). */
