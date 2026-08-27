@@ -29,7 +29,7 @@ function LineRow({ line }: { line: CartLine }) {
     <li className="flex gap-4 py-5">
       <Link
         href={`/products/${line.productSlug}`}
-        className="relative block h-24 w-20 shrink-0 cursor-pointer overflow-hidden bg-studio"
+        className="relative block h-24 w-20 shrink-0 cursor-pointer overflow-hidden bg-paper"
       >
         <Image
           src={line.image.src}

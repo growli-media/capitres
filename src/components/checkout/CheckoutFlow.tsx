@@ -83,7 +83,7 @@ function SummaryLine({ line, locale }: { line: CartLine; locale: string }) {
   const { currency } = useCurrency();
   return (
     <li className="flex items-center gap-3 py-3">
-      <div className="relative h-16 w-13 shrink-0 overflow-hidden bg-studio">
+      <div className="relative h-16 w-13 shrink-0 overflow-hidden bg-paper">
         <Image
           src={line.image.src}
           alt=""

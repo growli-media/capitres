@@ -30,17 +30,20 @@ export default function ProductCard({
       href={`/products/${product.slug}`}
       className="group block cursor-pointer"
     >
-      <div className="relative aspect-[4/5] overflow-hidden bg-studio">
+      <div className="relative aspect-[4/5] overflow-hidden bg-paper">
         <Image
           src={image.src}
           alt={pick(image.alt, locale)}
           fill
           sizes={sizes}
           priority={priority}
-          className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]"
+          className="object-cover transition-[opacity,transform] duration-700 ease-out group-hover:scale-[1.05] group-hover:opacity-0"
         />
         {/* Editorial hover swap — reveals the second shot on hover; a
-            single-image product simply keeps the slow zoom above. */}
+            single-image product simply keeps the slow zoom above. The
+            first shot fades out as this one fades in (not just this one
+            fading in on top) so a transparent-background product photo
+            doesn't show both images layered at once mid-hover. */}
         {product.images[1] && (
           <Image
             src={product.images[1].src}
