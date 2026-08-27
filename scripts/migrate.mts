@@ -91,6 +91,17 @@ async function main() {
   const schema = readFileSync(path.join(ROOT, "src/lib/db/schema.sql"), "utf8");
   await sql.unsafe(schema);
 
+  const ownerEmail = process.env.ADMIN_OWNER_EMAIL?.trim().toLowerCase();
+  if (ownerEmail) {
+    await sql`
+      insert into admin_allowlist (email) values (${ownerEmail})
+      on conflict (email) do nothing
+    `;
+    console.log(`[migrate] admin allowlist: ensured ${ownerEmail}`);
+  } else {
+    console.log("[migrate] admin allowlist: ADMIN_OWNER_EMAIL not set, skipping seed");
+  }
+
   let productsInserted = 0;
   for (const p of seedProducts) {
     const images = await Promise.all(p.images.map(resolveImage));

@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { isAuthenticated } from "@/lib/admin/auth";
+import { isAuthenticated, legacyLoginAvailable } from "@/lib/admin/auth";
 import LoginForm from "./LoginForm";
 
 export const metadata: Metadata = { title: "Sign in" };
 
 export default async function AdminLoginPage() {
   if (await isAuthenticated()) redirect("/admin");
+  const legacyAvailable = await legacyLoginAvailable();
 
   return (
     <div className="flex min-h-dvh items-center justify-center bg-gradient-to-b from-slate-100 to-slate-50 px-4">
@@ -21,7 +22,7 @@ export default async function AdminLoginPage() {
           <p className="mt-1 text-sm text-slate-500">Store dashboard</p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-7 shadow-sm">
-          <LoginForm />
+          <LoginForm legacyAvailable={legacyAvailable} />
         </div>
         <p className="mt-6 text-center text-[11px] leading-relaxed text-slate-400">
           Made by{" "}

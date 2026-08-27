@@ -128,3 +128,42 @@ CREATE TABLE IF NOT EXISTS records (
   created_at  timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_records_kind ON records(kind, created_at DESC);
+
+-- Admin dashboard accounts. Email is always stored lowercased by
+-- application code (no citext in this schema). token_version is bumped
+-- to revoke an already-issued session (e.g. on disable or password
+-- reset) — the session cookie carries the version it was issued with,
+-- so a stale one stops working immediately, not just for future logins.
+CREATE TABLE IF NOT EXISTS admin_users (
+  id                text PRIMARY KEY,
+  email             text NOT NULL UNIQUE,
+  password_hash     text NOT NULL,
+  totp_secret       text,
+  totp_enabled      boolean NOT NULL DEFAULT false,
+  disabled          boolean NOT NULL DEFAULT false,
+  failed_attempts   integer NOT NULL DEFAULT 0,
+  locked_until      timestamptz,
+  token_version     integer NOT NULL DEFAULT 0,
+  created_at        timestamptz NOT NULL DEFAULT now()
+);
+
+-- Only these emails may sign up for an admin_users account. Removing a
+-- row blocks future signups only — it doesn't touch an existing account.
+CREATE TABLE IF NOT EXISTS admin_allowlist (
+  email       text PRIMARY KEY,
+  created_at  timestamptz NOT NULL DEFAULT now()
+);
+
+-- Password-reset codes. code_hash is an HMAC (see src/lib/admin/auth.ts
+-- sign()), not bcrypt — these are single-use, 10-minute-lived and
+-- attempt-capped, so hash slowness buys nothing a real password needs.
+CREATE TABLE IF NOT EXISTS admin_reset_codes (
+  id          bigserial PRIMARY KEY,
+  email       text NOT NULL,
+  code_hash   text NOT NULL,
+  expires_at  timestamptz NOT NULL,
+  used_at     timestamptz,
+  attempts    integer NOT NULL DEFAULT 0,
+  created_at  timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_admin_reset_codes_email ON admin_reset_codes(email);

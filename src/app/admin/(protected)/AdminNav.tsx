@@ -11,6 +11,7 @@ import {
   Star,
   Tag,
   TShirt,
+  UsersThree,
 } from "@phosphor-icons/react";
 import { logout } from "../logout-action";
 
@@ -22,6 +23,7 @@ const NAV_ITEMS = [
   { href: "/admin/abandoned", label: "Abandoned carts", icon: ShoppingCartSimple, exact: false },
   { href: "/admin/orders", label: "Orders", icon: Receipt, exact: false },
   { href: "/admin/reviews", label: "Reviews", icon: Star, exact: false },
+  { href: "/admin/team", label: "Team", icon: UsersThree, exact: false },
 ] as const;
 
 export default function AdminNav({
