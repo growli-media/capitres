@@ -436,18 +436,18 @@ export default function CheckoutFlow() {
                 <button
                   type="button"
                   onClick={() => setRegion("IQ")}
-                  className="flex flex-col items-center justify-center gap-4 border border-line bg-white px-4 py-10 text-center transition-colors hover:border-ink sm:px-10 sm:py-14"
+                  className="flex flex-col items-center justify-center gap-4 border border-line bg-white px-4 py-10 text-center transition-colors hover:border-ink sm:px-10 sm:py-36"
                 >
-                  <IraqMapIcon className="h-14 w-14 sm:h-20 sm:w-20" />
-                  <span className="text-lg font-bold sm:text-2xl">{t("regionIraq")}</span>
+                  <IraqMapIcon className="h-14 w-14 sm:h-24 sm:w-24" />
+                  <span className="text-lg font-bold sm:text-3xl">{t("regionIraq")}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setRegion("INTL")}
-                  className="flex flex-col items-center justify-center gap-4 border border-line bg-white px-4 py-10 text-center transition-colors hover:border-ink sm:px-10 sm:py-14"
+                  className="flex flex-col items-center justify-center gap-4 border border-line bg-white px-4 py-10 text-center transition-colors hover:border-ink sm:px-10 sm:py-36"
                 >
-                  <Globe size={64} className="h-14 w-14 sm:h-20 sm:w-20" aria-hidden="true" />
-                  <span className="text-lg font-bold sm:text-2xl">{t("regionInternational")}</span>
+                  <Globe size={96} className="h-14 w-14 sm:h-24 sm:w-24" aria-hidden="true" />
+                  <span className="text-lg font-bold sm:text-3xl">{t("regionInternational")}</span>
                 </button>
               </div>
             </div>
@@ -470,21 +470,21 @@ export default function CheckoutFlow() {
                 <button
                   type="button"
                   onClick={() => setMethod("card")}
-                  className="flex flex-col items-center justify-center gap-3 border border-line bg-white px-3 py-10 text-center transition-colors hover:border-ink sm:px-8 sm:py-14"
+                  className="flex flex-col items-center justify-center gap-3 border border-line bg-white px-3 py-10 text-center transition-colors hover:border-ink sm:px-8 sm:py-28"
                 >
-                  <ShieldCheck size={64} className="h-12 w-12 sm:h-16 sm:w-16" aria-hidden="true" />
+                  <ShieldCheck size={80} className="h-12 w-12 sm:h-20 sm:w-20" aria-hidden="true" />
                   <span className="text-lg font-bold sm:text-2xl">{t("methodCard")}</span>
-                  <span className="text-xs text-ink/60 sm:text-sm">{t("methodCardDesc")}</span>
+                  <span className="text-xs text-ink/60 sm:text-base">{t("methodCardDesc")}</span>
                 </button>
                 {hasPhysical && (
                   <button
                     type="button"
                     onClick={() => setMethod("cod")}
-                    className="flex flex-col items-center justify-center gap-3 border border-line bg-white px-3 py-10 text-center transition-colors hover:border-ink sm:px-8 sm:py-14"
+                    className="flex flex-col items-center justify-center gap-3 border border-line bg-white px-3 py-10 text-center transition-colors hover:border-ink sm:px-8 sm:py-28"
                   >
-                    <Truck size={64} className="h-12 w-12 sm:h-16 sm:w-16" aria-hidden="true" />
+                    <Truck size={80} className="h-12 w-12 sm:h-20 sm:w-20" aria-hidden="true" />
                     <span className="text-lg font-bold sm:text-2xl">{t("methodCod")}</span>
-                    <span className="text-xs text-ink/60 sm:text-sm">{t("methodCodDesc")}</span>
+                    <span className="text-xs text-ink/60 sm:text-base">{t("methodCodDesc")}</span>
                   </button>
                 )}
               </div>
