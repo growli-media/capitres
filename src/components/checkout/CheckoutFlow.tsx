@@ -60,6 +60,24 @@ interface CodInfo {
 
 type FieldErrors = Partial<Record<keyof CodInfo, string>>;
 
+/** Iraq's border outline, traced from Natural Earth admin-0 boundary
+ * data (public domain) — not a stock icon, since no icon set carries a
+ * per-country shape. Projected with a cos(latitude) correction so the
+ * silhouette isn't stretched east-west at this latitude. */
+function IraqMapIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 100 100" className={className} fill="currentColor" aria-hidden="true">
+      <path
+        d="M 67.50 16.99 L 74.10 20.61 L 74.85 27.66 L 69.79 31.83 L 67.46 41.24 L 74.43 52.71
+           L 86.75 59.33 L 91.92 68.50 L 90.27 77.24 L 93.49 77.24 L 93.59 83.67 L 99.15 90.01
+           L 93.18 89.42 L 86.43 88.41 L 79.05 100.00 L 60.35 99.04 L 32.00 74.77 L 17.02 66.32
+           L 4.90 63.05 L 0.85 48.35 L 23.11 35.79 L 26.91 21.20 L 25.96 12.39 L 31.47 9.41
+           L 36.62 1.88 L 40.94 0.00 L 52.64 1.56 L 56.17 4.63 L 60.99 2.59 Z"
+      />
+    </svg>
+  );
+}
+
 function SummaryLine({ line, locale }: { line: CartLine; locale: string }) {
   const t = useTranslations("cart");
   const { currency } = useCurrency();
@@ -418,17 +436,15 @@ export default function CheckoutFlow() {
                 <button
                   type="button"
                   onClick={() => setRegion("IQ")}
-                  className="flex flex-col items-center justify-center gap-4 border border-line bg-white p-10 text-center transition-colors hover:border-ink"
+                  className="flex flex-col items-center justify-center gap-4 border border-line bg-white px-10 py-6 text-center transition-colors hover:border-ink"
                 >
-                  <span className="text-6xl leading-none" aria-hidden="true">
-                    🇮🇶
-                  </span>
+                  <IraqMapIcon className="h-14 w-14" />
                   <span className="text-xl font-bold">{t("regionIraq")}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setRegion("INTL")}
-                  className="flex flex-col items-center justify-center gap-4 border border-line bg-white p-10 text-center transition-colors hover:border-ink"
+                  className="flex flex-col items-center justify-center gap-4 border border-line bg-white px-10 py-6 text-center transition-colors hover:border-ink"
                 >
                   <Globe size={56} aria-hidden="true" />
                   <span className="text-xl font-bold">{t("regionInternational")}</span>
@@ -454,7 +470,7 @@ export default function CheckoutFlow() {
                 <button
                   type="button"
                   onClick={() => setMethod("card")}
-                  className="flex flex-col items-center justify-center gap-3 border border-line bg-white p-10 text-center transition-colors hover:border-ink"
+                  className="flex flex-col items-center justify-center gap-3 border border-line bg-white px-8 py-6 text-center transition-colors hover:border-ink"
                 >
                   <ShieldCheck size={48} aria-hidden="true" />
                   <span className="text-xl font-bold">{t("methodCard")}</span>
@@ -464,7 +480,7 @@ export default function CheckoutFlow() {
                   <button
                     type="button"
                     onClick={() => setMethod("cod")}
-                    className="flex flex-col items-center justify-center gap-3 border border-line bg-white p-10 text-center transition-colors hover:border-ink"
+                    className="flex flex-col items-center justify-center gap-3 border border-line bg-white px-8 py-6 text-center transition-colors hover:border-ink"
                   >
                     <Truck size={48} aria-hidden="true" />
                     <span className="text-xl font-bold">{t("methodCod")}</span>
