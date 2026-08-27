@@ -131,22 +131,25 @@ export function useCartPromo(): PromoCode | undefined {
   return code ? findPromo(code) : undefined;
 }
 
-export function useCartTotals() {
+/** `region` defaults to "IQ" (domestic shipping rate) — pass "INTL" only
+ * where the shipping destination is actually known, e.g. checkout once
+ * the customer has picked a region. */
+export function useCartTotals(region?: "IQ" | "INTL") {
   const lines = useCart((s) => s.lines);
   const promo = useCartPromo();
   const subtotal = lines.reduce((sum, l) => sum + l.unitAmount * l.qty, 0);
   const physicalItems = lines.some((l) => !l.giftCard);
-  return computeTotals(subtotal, promo, { physicalItems });
+  return computeTotals(subtotal, promo, { physicalItems, region });
 }
 
 /** Display-only totals in the given currency — see computeDisplayTotals. */
-export function useCartTotalsByCurrency(currency: Currency) {
+export function useCartTotalsByCurrency(currency: Currency, region?: "IQ" | "INTL") {
   const lines = useCart((s) => s.lines);
   const promo = useCartPromo();
-  const totals = useCartTotals();
+  const totals = useCartTotals(region);
   const displaySubtotal = lines.reduce(
     (sum, l) => sum + l.unitAmountByCurrency[currency] * l.qty,
     0,
   );
-  return computeDisplayTotals(totals, displaySubtotal, promo, currency);
+  return computeDisplayTotals(totals, displaySubtotal, promo, currency, region);
 }

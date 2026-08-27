@@ -3,7 +3,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import PolicyShell from "@/components/policy/PolicyShell";
 import { formatIQD } from "@/lib/money";
 import {
-  FLAT_SHIPPING_RATE,
+  SHIPPING_RATE_IQ,
+  SHIPPING_RATE_INTL,
   FREE_SHIPPING_THRESHOLD,
 } from "@/lib/commerce/config";
 
@@ -30,11 +31,17 @@ export default async function ShippingReturnsPage({
     {
       title: t("shippingDomesticTitle"),
       body: t("shippingDomesticBody", {
-        flat: formatIQD(FLAT_SHIPPING_RATE, locale),
+        flat: formatIQD(SHIPPING_RATE_IQ, locale),
         threshold: formatIQD(FREE_SHIPPING_THRESHOLD, locale),
       }),
     },
-    { title: t("shippingIntlTitle"), body: t("shippingIntlBody") },
+    {
+      title: t("shippingIntlTitle"),
+      body: t("shippingIntlBody", {
+        flat: formatIQD(SHIPPING_RATE_INTL, locale),
+        threshold: formatIQD(FREE_SHIPPING_THRESHOLD, locale),
+      }),
+    },
     { title: t("returnsTitle"), body: t("returnsBody") },
   ];
 

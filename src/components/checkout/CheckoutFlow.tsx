@@ -121,15 +121,18 @@ export default function CheckoutFlow() {
   const tGov = useTranslations("governorates");
   const { lines, promoCode, hasHydrated } = useCart();
   const promo = useCartPromo();
-  const totals = useCartTotals();
   const { currency } = useCurrency();
   const tCurrency = useTranslations("currency");
-  const displayTotals = useCartTotalsByCurrency(currency);
 
   // Region/payment-method chooser — derived rendering instead of a
   // linear step machine, since which screen comes next depends on both.
   const [region, setRegion] = useState<"IQ" | "INTL" | null>(null);
   const [method, setMethod] = useState<"card" | "cod" | null>(null);
+  // Shipping is region-dependent (5,000 IQD domestic, 50,000 IQD
+  // international) — defaults to domestic before a region is chosen,
+  // matching computeTotals' own default, then updates once picked.
+  const totals = useCartTotals(region ?? "IQ");
+  const displayTotals = useCartTotalsByCurrency(currency, region ?? "IQ");
   const [info, setInfo] = useState<CodInfo>({
     firstName: "",
     middleName: "",
@@ -248,6 +251,7 @@ export default function CheckoutFlow() {
           locale,
           promoCode,
           paymentMethod: "wayl",
+          region: region ?? "IQ",
           lines: lines.map((l) => ({
             productSlug: l.productSlug,
             variantId: l.variantId,

@@ -32,6 +32,11 @@ interface CheckoutInput {
    * data collected on our side, Wayl's own page asks for it) or "cod"
    * (Cash on Delivery, Iraq-only, collected directly on our form). */
   paymentMethod?: "wayl" | "cod";
+  /** The region choice made at the top of checkout — drives the shipping
+   * rate (5,000 IQD domestic vs. 50,000 IQD international). Required for
+   * "wayl" (the only signal we have, since that path collects no address
+   * on our side); ignored for "cod", which is always "IQ" by construction. */
+  region?: "IQ" | "INTL";
   /** Required only when paymentMethod === "cod". Iraq-only by
    * construction — no country field, since COD never ships elsewhere. */
   customer?: {
@@ -79,6 +84,11 @@ export async function POST(request: NextRequest) {
   if (paymentMethod === "cod" && !hasPhysical) {
     return NextResponse.json({ error: "cod-unavailable" }, { status: 400 });
   }
+
+  if (paymentMethod === "wayl" && input.region !== "IQ" && input.region !== "INTL") {
+    return NextResponse.json({ error: "invalid-region" }, { status: 400 });
+  }
+  const region: "IQ" | "INTL" = paymentMethod === "cod" ? "IQ" : input.region!;
 
   const c = input.customer;
   const emailTrimmed = c?.email?.trim() ?? "";
@@ -177,7 +187,7 @@ export async function POST(request: NextRequest) {
   const subtotal = orderLines.reduce((s, l) => s + l.unitAmount * l.qty, 0);
   const promo = input.promoCode ? findPromo(input.promoCode) : undefined;
   const physicalItems = orderLines.some((l) => !l.giftCard);
-  const totals = computeTotals(subtotal, promo, { physicalItems });
+  const totals = computeTotals(subtotal, promo, { physicalItems, region });
 
   if (totals.discount > 0) {
     waylLineItems.push({
@@ -261,7 +271,7 @@ export async function POST(request: NextRequest) {
             governorate: c!.governorate.trim(),
             notes: c!.notes?.slice(0, 500),
           }
-        : {},
+        : { country: region },
     lines: orderLines,
     totals: {
       subtotal: totals.subtotal,

@@ -18,7 +18,12 @@ export const GIFT_CARDS_ENABLED = false;
 export const GIFT_CARD_CATEGORY = "gift-cards";
 
 export const FREE_SHIPPING_THRESHOLD = 100_000; // IQD
-export const FLAT_SHIPPING_RATE = 5_000; // IQD
+export const SHIPPING_RATE_IQ = 5_000; // IQD — domestic
+export const SHIPPING_RATE_INTL = 50_000; // IQD — everywhere else
+
+function shippingRateFor(region: "IQ" | "INTL"): number {
+  return region === "INTL" ? SHIPPING_RATE_INTL : SHIPPING_RATE_IQ;
+}
 
 export const GIFT_CARD_DENOMINATIONS = [25_000, 50_000, 100_000, 250_000];
 
@@ -50,7 +55,7 @@ export interface Totals {
 export function computeTotals(
   subtotal: number,
   promo: PromoCode | undefined,
-  options: { physicalItems: boolean },
+  options: { physicalItems: boolean; region?: "IQ" | "INTL" },
 ): Totals {
   const discount =
     promo?.type === "percent"
@@ -61,7 +66,7 @@ export function computeTotals(
     !options.physicalItems ||
     discounted >= FREE_SHIPPING_THRESHOLD ||
     promo?.type === "free-shipping";
-  const shipping = freeShipping ? 0 : FLAT_SHIPPING_RATE;
+  const shipping = freeShipping ? 0 : shippingRateFor(options.region ?? "IQ");
   return {
     subtotal,
     discount,
@@ -87,12 +92,15 @@ export function computeDisplayTotals(
   displaySubtotal: number,
   promo: PromoCode | undefined,
   currency: Currency,
+  region?: "IQ" | "INTL",
 ): Totals {
   const discount =
     promo?.type === "percent"
       ? Math.round((displaySubtotal * (promo.value ?? 0)) / 100)
       : 0;
-  const shipping = totals.freeShipping ? 0 : convertFromIqd(FLAT_SHIPPING_RATE, currency);
+  const shipping = totals.freeShipping
+    ? 0
+    : convertFromIqd(shippingRateFor(region ?? "IQ"), currency);
   return {
     subtotal: displaySubtotal,
     discount,
