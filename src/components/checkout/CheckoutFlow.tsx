@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
-import { CaretLeft, LockSimple, ShieldCheck, Truck } from "@phosphor-icons/react";
+import { CaretLeft, Globe, LockSimple, ShieldCheck, Truck } from "@phosphor-icons/react";
 import { parsePhoneNumber } from "libphonenumber-js/min";
 import { Link } from "@/i18n/navigation";
 import {
@@ -151,6 +151,24 @@ export default function CheckoutFlow() {
       totals.total,
     );
   }, [hasHydrated, lines, locale, totals.total]);
+
+  // The order summary sits above the choice cards on purpose — customers
+  // land on the two big decisions first, and can scroll up if they want
+  // to double-check what's in the cart. Each time a new pair of cards
+  // appears (region, then payment method), bring them into view instead
+  // of leaving the customer looking at the order summary.
+  const regionCardsRef = useRef<HTMLDivElement>(null);
+  const methodCardsRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (region === null && hasHydrated && lines.length > 0) {
+      regionCardsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [region, hasHydrated, lines.length]);
+  useEffect(() => {
+    if (region === "IQ" && method === null) {
+      methodCardsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [region, method]);
 
   if (!hasHydrated) {
     return (
@@ -336,33 +354,91 @@ export default function CheckoutFlow() {
         })}
       </ol>
 
-      <div className="mt-10 grid gap-12 lg:grid-cols-[1fr_24rem] lg:gap-16">
-        {/* Main column */}
-        <div>
+      <div className="mx-auto mt-10 max-w-2xl">
+        {/* Order summary — deliberately above the choice cards. The
+            page auto-scrolls past this to focus the customer on the
+            decision; scrolling up gets them back here. */}
+        <aside aria-label={t("orderSummary")} className="border border-line bg-white p-6">
+          <h2 className="text-eyebrow text-ink/60">{t("orderSummary")}</h2>
+          <ul className="mt-4 divide-y divide-line">
+            {lines.map((l) => (
+              <SummaryLine key={l.key} line={l} locale={locale} />
+            ))}
+          </ul>
+          <dl className="mt-4 space-y-2 border-t border-line pt-4 text-sm">
+            <div className="flex justify-between">
+              <dt className="text-ink/60">{tCart("subtotal")}</dt>
+              <dd className="price font-semibold">
+                {formatCurrency(displayTotals.subtotal, currency, locale)}
+              </dd>
+            </div>
+            {displayTotals.discount > 0 && promo && (
+              <div className="flex justify-between text-green">
+                <dt>
+                  {t("discount")} ({promo.code})
+                </dt>
+                <dd className="price font-semibold">
+                  −{formatCurrency(displayTotals.discount, currency, locale)}
+                </dd>
+              </div>
+            )}
+            <div className="flex justify-between">
+              <dt className="text-ink/60">{t("shipping")}</dt>
+              <dd className="price font-semibold">
+                {displayTotals.shipping === 0
+                  ? t("shippingFree")
+                  : formatCurrency(displayTotals.shipping, currency, locale)}
+              </dd>
+            </div>
+            <div className="flex justify-between border-t border-line pt-3 text-base font-bold">
+              <dt>{t("total")}</dt>
+              <dd className="price">{formatCurrency(displayTotals.total, currency, locale)}</dd>
+            </div>
+            {currency !== "IQD" && (
+              <p className="pt-1 text-xs text-ink/60">
+                {tCurrency("chargedAsIqd", { iqd: formatIQD(totals.total, locale) })}
+              </p>
+            )}
+          </dl>
+        </aside>
+
+        {/* min-h guarantees enough room below the order summary for
+            scrollIntoView(block:"start") to actually reach the top of
+            the viewport — without it, short content (e.g. a one-item
+            cart) hits the document's scroll limit first and the cards
+            end up scrolled past, cut off above the fold instead of
+            focused. */}
+        <div className="mt-10 min-h-[75vh]">
           {region === null && (
-            <div>
-              <h2 className="text-eyebrow mb-6 text-ink/60">{t("chooseRegionTitle")}</h2>
+            <div ref={regionCardsRef} className="scroll-mt-28">
+              <h2 className="text-eyebrow mb-6 text-center text-ink/60">
+                {t("chooseRegionTitle")}
+              </h2>
               <div className="grid gap-4 sm:grid-cols-2">
                 <button
                   type="button"
                   onClick={() => setRegion("IQ")}
-                  className="flex flex-col items-start gap-1 border border-line bg-white p-6 text-start transition-colors hover:border-ink"
+                  className="flex flex-col items-center justify-center gap-4 border border-line bg-white p-10 text-center transition-colors hover:border-ink"
                 >
-                  <span className="text-lg font-bold">{t("regionIraq")}</span>
+                  <span className="text-6xl leading-none" aria-hidden="true">
+                    🇮🇶
+                  </span>
+                  <span className="text-xl font-bold">{t("regionIraq")}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setRegion("INTL")}
-                  className="flex flex-col items-start gap-1 border border-line bg-white p-6 text-start transition-colors hover:border-ink"
+                  className="flex flex-col items-center justify-center gap-4 border border-line bg-white p-10 text-center transition-colors hover:border-ink"
                 >
-                  <span className="text-lg font-bold">{t("regionInternational")}</span>
+                  <Globe size={56} aria-hidden="true" />
+                  <span className="text-xl font-bold">{t("regionInternational")}</span>
                 </button>
               </div>
             </div>
           )}
 
           {showMethodChoice && (
-            <div>
+            <div ref={methodCardsRef} className="scroll-mt-28">
               <button
                 type="button"
                 onClick={() => setRegion(null)}
@@ -371,25 +447,27 @@ export default function CheckoutFlow() {
                 <CaretLeft size={14} aria-hidden="true" className="rtl:-scale-x-100" />
                 {t("back")}
               </button>
-              <h2 className="text-eyebrow mb-6 text-ink/60">{t("chooseMethodTitle")}</h2>
+              <h2 className="text-eyebrow mb-6 text-center text-ink/60">
+                {t("chooseMethodTitle")}
+              </h2>
               <div className="grid gap-4 sm:grid-cols-2">
                 <button
                   type="button"
                   onClick={() => setMethod("card")}
-                  className="flex flex-col items-start gap-1.5 border border-line bg-white p-6 text-start transition-colors hover:border-ink"
+                  className="flex flex-col items-center justify-center gap-3 border border-line bg-white p-10 text-center transition-colors hover:border-ink"
                 >
-                  <ShieldCheck size={22} aria-hidden="true" />
-                  <span className="text-lg font-bold">{t("methodCard")}</span>
+                  <ShieldCheck size={48} aria-hidden="true" />
+                  <span className="text-xl font-bold">{t("methodCard")}</span>
                   <span className="text-sm text-ink/60">{t("methodCardDesc")}</span>
                 </button>
                 {hasPhysical && (
                   <button
                     type="button"
                     onClick={() => setMethod("cod")}
-                    className="flex flex-col items-start gap-1.5 border border-line bg-white p-6 text-start transition-colors hover:border-ink"
+                    className="flex flex-col items-center justify-center gap-3 border border-line bg-white p-10 text-center transition-colors hover:border-ink"
                   >
-                    <Truck size={22} aria-hidden="true" />
-                    <span className="text-lg font-bold">{t("methodCod")}</span>
+                    <Truck size={48} aria-hidden="true" />
+                    <span className="text-xl font-bold">{t("methodCod")}</span>
                     <span className="text-sm text-ink/60">{t("methodCodDesc")}</span>
                   </button>
                 )}
@@ -687,54 +765,6 @@ export default function CheckoutFlow() {
             </form>
           )}
         </div>
-
-        {/* Summary sidebar */}
-        <aside
-          aria-label={t("orderSummary")}
-          className="h-fit border border-line bg-white p-6 lg:sticky lg:top-24"
-        >
-          <h2 className="text-eyebrow text-ink/60">{t("orderSummary")}</h2>
-          <ul className="mt-4 divide-y divide-line">
-            {lines.map((l) => (
-              <SummaryLine key={l.key} line={l} locale={locale} />
-            ))}
-          </ul>
-          <dl className="mt-4 space-y-2 border-t border-line pt-4 text-sm">
-            <div className="flex justify-between">
-              <dt className="text-ink/60">{tCart("subtotal")}</dt>
-              <dd className="price font-semibold">
-                {formatCurrency(displayTotals.subtotal, currency, locale)}
-              </dd>
-            </div>
-            {displayTotals.discount > 0 && promo && (
-              <div className="flex justify-between text-green">
-                <dt>
-                  {t("discount")} ({promo.code})
-                </dt>
-                <dd className="price font-semibold">
-                  −{formatCurrency(displayTotals.discount, currency, locale)}
-                </dd>
-              </div>
-            )}
-            <div className="flex justify-between">
-              <dt className="text-ink/60">{t("shipping")}</dt>
-              <dd className="price font-semibold">
-                {displayTotals.shipping === 0
-                  ? t("shippingFree")
-                  : formatCurrency(displayTotals.shipping, currency, locale)}
-              </dd>
-            </div>
-            <div className="flex justify-between border-t border-line pt-3 text-base font-bold">
-              <dt>{t("total")}</dt>
-              <dd className="price">{formatCurrency(displayTotals.total, currency, locale)}</dd>
-            </div>
-            {currency !== "IQD" && (
-              <p className="pt-1 text-xs text-ink/60">
-                {tCurrency("chargedAsIqd", { iqd: formatIQD(totals.total, locale) })}
-              </p>
-            )}
-          </dl>
-        </aside>
       </div>
     </div>
   );
