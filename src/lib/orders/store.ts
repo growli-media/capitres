@@ -47,21 +47,30 @@ export interface Order {
   ref: string;
   createdAt: string;
   locale: string;
-  status: WaylStatus | "MockPaid";
+  /** "CashOnDelivery" is app-only, like "MockPaid" — Wayl never reports
+   * it, since COD orders never touch Wayl at all. */
+  status: WaylStatus | "MockPaid" | "CashOnDelivery";
   waylLinkId?: string;
   paymentMethod?: string | null;
   mock: boolean;
   customer: {
-    firstName: string;
+    /** Absent for orders placed via the Wayl (card) path — we no longer
+     * collect anything before redirecting, to avoid asking twice for
+     * what Wayl's own hosted page asks for. Backfilled asynchronously via
+     * `mergeCustomer` once the Wayl webhook reports what the customer
+     * told them (name/phone/city/country/address, into the legacy
+     * fields below — see the webhook handler). Always present for
+     * Cash on Delivery orders, collected directly on our own form. */
+    firstName?: string;
     middleName?: string;
-    lastName: string;
+    lastName?: string;
     email?: string;
     /** Always E.164 for orders placed since international checkout
      * shipped (src/components/checkout/CheckoutFlow.tsx combines the
      * dial code + number before submitting). */
-    phone: string;
+    phone?: string;
     /** ISO-3166 country code. */
-    country: string;
+    country?: string;
     street?: string;
     streetNumber?: string;
     zip?: string;
@@ -112,6 +121,11 @@ export interface OrderStore {
     status: Order["status"],
     paymentMethod?: string | null,
   ): Promise<Order | undefined>;
+  /** Shallow-merges a patch into `customer` — used by the Wayl webhook to
+   * backfill the name/phone/address the customer gave Wayl directly,
+   * for orders we created with an empty `customer` (the card-payment
+   * path no longer collects anything before redirecting). */
+  mergeCustomer(ref: string, patch: Partial<Order["customer"]>): Promise<void>;
   /** Admin dashboard: full order list, newest first. */
   list(): Promise<Order[]>;
   /** Atomically claims this order for the one-time Meta CAPI purchase
@@ -195,6 +209,13 @@ const postgresOrderStore: OrderStore = {
     `;
     return rows[0] ? toOrder(rows[0]) : undefined;
   },
+  async mergeCustomer(ref, patch) {
+    await sql`
+      update orders
+      set customer = customer || ${jsonb(patch)}
+      where ref = ${ref}
+    `;
+  },
   async list() {
     const rows = await sql<OrderRow[]>`
       select ref, created_at::text as created_at, locale, status,
@@ -256,6 +277,13 @@ const fileOrderStore: OrderStore = {
     if (paymentMethod !== undefined) order.paymentMethod = paymentMethod;
     await writeAll(all);
     return order;
+  },
+  async mergeCustomer(ref, patch) {
+    const all = await readAll();
+    const order = all[ref];
+    if (!order) return;
+    order.customer = { ...order.customer, ...patch };
+    await writeAll(all);
   },
   async list() {
     const all = await readAll();

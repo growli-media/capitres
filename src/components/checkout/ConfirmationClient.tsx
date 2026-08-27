@@ -13,7 +13,7 @@ interface OrderView {
   status: string;
   mock: boolean;
   email?: string;
-  phone: string;
+  phone?: string;
   totals: { subtotal: number; discount: number; shipping: number; total: number };
   lines: {
     productSlug: string;
@@ -29,6 +29,9 @@ interface OrderView {
 
 const PAID = ["Complete", "Delivered", "MockPaid"];
 const FAILED = ["Cancelled", "Rejected", "Returned"];
+// Cash on Delivery never touches Wayl — it's terminal the instant the
+// order is created, there's no external gateway status to wait for.
+const COD = "CashOnDelivery";
 
 /**
  * Polls the order status after returning from the (real or mock) Wayl
@@ -55,11 +58,12 @@ export default function ConfirmationClient({ orderRef }: { orderRef: string }) {
       }
       const data = (await res.json()) as OrderView;
       setOrder(data);
-      if (PAID.includes(data.status) && !clearedRef.current) {
+      const placed = PAID.includes(data.status) || data.status === COD;
+      if (placed && !clearedRef.current) {
         clearedRef.current = true;
         clearCart();
       }
-      if (PAID.includes(data.status) && !purchaseTrackedRef.current) {
+      if (placed && !purchaseTrackedRef.current) {
         purchaseTrackedRef.current = true;
         trackPurchase({
           ref: data.ref,
@@ -85,7 +89,10 @@ export default function ConfirmationClient({ orderRef }: { orderRef: string }) {
       attemptsRef.current += 1;
       const done =
         attemptsRef.current > 40 ||
-        (order && (PAID.includes(order.status) || FAILED.includes(order.status)));
+        (order &&
+          (PAID.includes(order.status) ||
+            FAILED.includes(order.status) ||
+            order.status === COD));
       if (done) {
         clearInterval(id);
         return;
@@ -124,6 +131,7 @@ export default function ConfirmationClient({ orderRef }: { orderRef: string }) {
 
   const paid = PAID.includes(order.status);
   const failed = FAILED.includes(order.status);
+  const isCod = order.status === COD;
   const statusKey = order.status as
     | "Created"
     | "Pending"
@@ -133,7 +141,8 @@ export default function ConfirmationClient({ orderRef }: { orderRef: string }) {
     | "Cancelled"
     | "Rejected"
     | "Returned"
-    | "MockPaid";
+    | "MockPaid"
+    | "CashOnDelivery";
 
   return (
     <div className="container-x grid gap-12 py-14 md:py-20 lg:grid-cols-[1fr_24rem] lg:gap-16">
@@ -159,6 +168,24 @@ export default function ConfirmationClient({ orderRef }: { orderRef: string }) {
                 {t("confirmGiftCards")}
               </p>
             )}
+          </>
+        ) : isCod ? (
+          <>
+            <CheckCircle
+              size={56}
+              weight="fill"
+              className="text-green"
+              aria-hidden="true"
+            />
+            <h1 className="text-display mt-6 text-4xl md:text-6xl">
+              {t("confirmCodTitle")}
+            </h1>
+            <p className="mt-5 max-w-xl text-lg leading-relaxed text-ink/70">
+              {t("confirmCodBody", {
+                ref: order.ref,
+                amount: formatIQD(order.totals.total, locale),
+              })}
+            </p>
           </>
         ) : failed ? (
           <>
@@ -195,7 +222,7 @@ export default function ConfirmationClient({ orderRef }: { orderRef: string }) {
             <dt className="text-ink/60">{t("statusLabel")}</dt>
             <dd
               className={`mt-1 font-bold ${
-                paid ? "text-green" : failed ? "text-danger" : "text-ink"
+                paid || isCod ? "text-green" : failed ? "text-danger" : "text-ink"
               }`}
             >
               {t(`statuses.${statusKey}`)}
@@ -203,7 +230,7 @@ export default function ConfirmationClient({ orderRef }: { orderRef: string }) {
           </div>
         </dl>
 
-        {paid && (
+        {(paid || isCod) && (
           <Link href="/shop" className="btn btn-outline mt-10">
             {t("backToShop")}
           </Link>

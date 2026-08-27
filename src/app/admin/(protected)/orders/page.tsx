@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { orderStore, customerName, customerAddress } from "@/lib/orders/store";
 import { PAID_STATUSES, FAILED_STATUSES } from "@/lib/admin/queries";
 import { formatIQD } from "@/lib/money";
+import { markOrderDeliveredAction } from "./actions";
 
 export const metadata: Metadata = { title: "Orders" };
 
@@ -53,6 +54,7 @@ export default async function AdminOrdersPage() {
                 <th className="px-4 py-3 text-start font-medium">Items</th>
                 <th className="px-4 py-3 text-start font-medium">Total</th>
                 <th className="px-4 py-3 text-start font-medium">Status</th>
+                <th className="px-4 py-3 text-start font-medium" />
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -83,6 +85,18 @@ export default async function AdminOrdersPage() {
                   </td>
                   <td className="px-4 py-3">
                     <StatusBadge status={o.status} />
+                  </td>
+                  <td className="px-4 py-3 text-end">
+                    {o.status === "CashOnDelivery" && (
+                      <form action={markOrderDeliveredAction.bind(null, o.ref)}>
+                        <button
+                          type="submit"
+                          className="rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white transition-opacity hover:opacity-80"
+                        >
+                          Mark as delivered
+                        </button>
+                      </form>
+                    )}
                   </td>
                 </tr>
               ))}

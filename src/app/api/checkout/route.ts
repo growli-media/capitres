@@ -9,6 +9,7 @@ import {
 } from "@/lib/payments/wayl";
 import { newOrderRef, orderStore, type OrderLine } from "@/lib/orders/store";
 import { isValidEmail } from "@/lib/server/records";
+import { sendMetaPurchaseEvent } from "@/lib/analytics/meta-capi";
 
 interface CheckoutLineInput {
   productSlug: string;
@@ -27,29 +28,32 @@ interface CheckoutLineInput {
 interface CheckoutInput {
   locale: string;
   promoCode?: string;
-  customer: {
+  /** "wayl" (card/wallet, redirects to Wayl's hosted page — no customer
+   * data collected on our side, Wayl's own page asks for it) or "cod"
+   * (Cash on Delivery, Iraq-only, collected directly on our form). */
+  paymentMethod?: "wayl" | "cod";
+  /** Required only when paymentMethod === "cod". Iraq-only by
+   * construction — no country field, since COD never ships elsewhere. */
+  customer?: {
     firstName: string;
     middleName: string;
     lastName: string;
     email?: string;
-    /** Already E.164 — CheckoutFlow combines the dial-code + local number
-     * client-side before submitting. Re-validated here regardless, since
-     * the client is never trusted for a payment-adjacent field. */
+    /** Already E.164 — CheckoutFlow formats it client-side before
+     * submitting. Re-validated here regardless, since the client is
+     * never trusted for a payment-adjacent field. */
     phone: string;
-    country: string;
-    street?: string;
-    streetNumber?: string;
-    zip?: string;
-    city?: string;
-    state?: string;
-    governorate?: string;
+    street: string;
+    streetNumber: string;
+    city: string;
+    governorate: string;
     notes?: string;
   };
   lines: CheckoutLineInput[];
 }
 
 /**
- * Creates an order and a Wayl hosted-payment link.
+ * Creates an order and, for card payments, a Wayl hosted-payment link.
  * Prices are always re-derived from the catalog on the server — the
  * client's cart snapshot is never trusted for amounts.
  */
@@ -68,29 +72,31 @@ export async function POST(request: NextRequest) {
   if (!input.lines?.length) {
     return NextResponse.json({ error: "empty-cart" }, { status: 400 });
   }
-  const { firstName, middleName, lastName, email, phone, country } =
-    input.customer ?? {};
-  const emailTrimmed = email?.trim() ?? "";
-  if (
-    !firstName?.trim() ||
-    !middleName?.trim() ||
-    !lastName?.trim() ||
-    (emailTrimmed && !isValidEmail(emailTrimmed)) ||
-    !phone?.trim() ||
-    !isValidPhoneNumber(phone ?? "") ||
-    !country?.trim()
-  ) {
-    return NextResponse.json({ error: "invalid-customer" }, { status: 400 });
-  }
+
+  const paymentMethod = input.paymentMethod === "cod" ? "cod" : "wayl";
   const hasPhysical = input.lines.some((l) => !l.giftCard);
-  if (
-    hasPhysical &&
-    (!input.customer.street?.trim() ||
-      !input.customer.streetNumber?.trim() ||
-      !input.customer.city?.trim() ||
-      (country === "IQ" && !input.customer.governorate?.trim()))
-  ) {
-    return NextResponse.json({ error: "invalid-address" }, { status: 400 });
+
+  if (paymentMethod === "cod" && !hasPhysical) {
+    return NextResponse.json({ error: "cod-unavailable" }, { status: 400 });
+  }
+
+  const c = input.customer;
+  const emailTrimmed = c?.email?.trim() ?? "";
+  if (paymentMethod === "cod") {
+    if (
+      !c?.firstName?.trim() ||
+      !c?.middleName?.trim() ||
+      !c?.lastName?.trim() ||
+      !c?.phone?.trim() ||
+      !isValidPhoneNumber(c?.phone ?? "") ||
+      (emailTrimmed && !isValidEmail(emailTrimmed)) ||
+      !c?.governorate?.trim() ||
+      !c?.city?.trim() ||
+      !c?.street?.trim() ||
+      !c?.streetNumber?.trim()
+    ) {
+      return NextResponse.json({ error: "invalid-customer" }, { status: 400 });
+    }
   }
 
   const orderLines: OrderLine[] = [];
@@ -197,22 +203,24 @@ export async function POST(request: NextRequest) {
     ? `${origin}/api/webhooks/wayl`
     : undefined;
 
-  let link;
-  try {
-    link = await createWaylPaymentLink(
-      {
-        referenceId: ref,
-        total: totals.total,
-        lineItems: waylLineItems,
-        redirectionUrl: confirmationUrl,
-        webhookUrl,
-        customParameter: JSON.stringify({ locale }),
-      },
-      mockCheckoutUrl,
-    );
-  } catch (err) {
-    console.error("[checkout] Wayl link creation failed:", err);
-    return NextResponse.json({ error: "payment-init" }, { status: 502 });
+  let link: Awaited<ReturnType<typeof createWaylPaymentLink>> | undefined;
+  if (paymentMethod === "wayl") {
+    try {
+      link = await createWaylPaymentLink(
+        {
+          referenceId: ref,
+          total: totals.total,
+          lineItems: waylLineItems,
+          redirectionUrl: confirmationUrl,
+          webhookUrl,
+          customParameter: JSON.stringify({ locale }),
+        },
+        mockCheckoutUrl,
+      );
+    } catch (err) {
+      console.error("[checkout] Wayl link creation failed:", err);
+      return NextResponse.json({ error: "payment-init" }, { status: 502 });
+    }
   }
 
   // Captured here because this is the one request in the whole payment
@@ -230,25 +238,30 @@ export async function POST(request: NextRequest) {
     ref,
     createdAt: new Date().toISOString(),
     locale,
-    status: "Created",
-    waylLinkId: link.id,
-    paymentMethod: null,
-    mock: link.mock,
-    customer: {
-      firstName: firstName.trim(),
-      middleName: middleName.trim(),
-      lastName: lastName.trim(),
-      email: emailTrimmed || undefined,
-      phone: phone.trim(),
-      country: country.trim(),
-      street: input.customer.street?.trim(),
-      streetNumber: input.customer.streetNumber?.trim(),
-      zip: input.customer.zip?.trim(),
-      city: input.customer.city?.trim(),
-      state: input.customer.state?.trim(),
-      governorate: country === "IQ" ? input.customer.governorate : undefined,
-      notes: input.customer.notes?.slice(0, 500),
-    },
+    status: paymentMethod === "cod" ? "CashOnDelivery" : "Created",
+    waylLinkId: link?.id,
+    paymentMethod: paymentMethod === "cod" ? "CashOnDelivery" : null,
+    mock: link?.mock ?? false,
+    // "wayl" orders start with nothing — we no longer ask for anything
+    // before redirecting, so Wayl's own hosted page doesn't ask twice.
+    // The webhook backfills this once the customer tells Wayl who they
+    // are (see src/app/api/webhooks/wayl/route.ts).
+    customer:
+      paymentMethod === "cod"
+        ? {
+            firstName: c!.firstName.trim(),
+            middleName: c!.middleName.trim(),
+            lastName: c!.lastName.trim(),
+            email: emailTrimmed || undefined,
+            phone: c!.phone.trim(),
+            country: "IQ",
+            street: c!.street.trim(),
+            streetNumber: c!.streetNumber.trim(),
+            city: c!.city.trim(),
+            governorate: c!.governorate.trim(),
+            notes: c!.notes?.slice(0, 500),
+          }
+        : {},
     lines: orderLines,
     totals: {
       subtotal: totals.subtotal,
@@ -263,9 +276,17 @@ export async function POST(request: NextRequest) {
         : undefined,
   });
 
+  if (paymentMethod === "cod") {
+    // COD orders never touch Wayl, so the webhook that normally fires
+    // this never runs — send it here instead, right after the order is
+    // durably created.
+    const claimed = await orderStore.claimForMetaCapi(ref);
+    if (claimed) await sendMetaPurchaseEvent(claimed);
+  }
+
   return NextResponse.json({
     ref,
-    url: link.url,
-    mock: isWaylMockMode(),
+    url: paymentMethod === "cod" ? confirmationUrl : link!.url,
+    mock: paymentMethod === "cod" ? false : isWaylMockMode(),
   });
 }

@@ -23,8 +23,20 @@ export async function POST(request: NextRequest) {
 
   let payload: {
     referenceId?: string;
-    status?: WaylStatus;
+    // Wayl's webhook body uses `paymentStatus`, not `status` — that
+    // field name is only used by the separate GET /links/{id} endpoint.
+    paymentStatus?: WaylStatus;
     paymentMethod?: string | null;
+    // Present on Wayl's hosted-checkout-collected orders — this is the
+    // only place we ever learn who a card-paying customer was, since
+    // checkout no longer asks for it before redirecting to Wayl.
+    customer?: {
+      name?: string;
+      phone?: string;
+      city?: string;
+      country?: string;
+      address?: string;
+    };
   };
   try {
     payload = JSON.parse(rawBody);
@@ -32,16 +44,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "invalid-json" }, { status: 400 });
   }
 
-  if (payload.referenceId && payload.status) {
+  if (payload.referenceId && payload.paymentStatus) {
+    if (payload.customer) {
+      await orderStore.mergeCustomer(payload.referenceId, {
+        fullName: payload.customer.name,
+        phone: payload.customer.phone,
+        city: payload.customer.city,
+        country: payload.customer.country,
+        address: payload.customer.address,
+      });
+    }
     await orderStore.setStatus(
       payload.referenceId,
-      payload.status,
+      payload.paymentStatus,
       payload.paymentMethod ?? undefined,
     );
     // TODO(production): on "Complete", trigger gift-card email delivery
     // and the order-confirmation email from here.
 
-    if (PAID_STATUSES.includes(payload.status)) {
+    if (PAID_STATUSES.includes(payload.paymentStatus)) {
       const claimed = await orderStore.claimForMetaCapi(payload.referenceId);
       if (claimed) await sendMetaPurchaseEvent(claimed);
     }

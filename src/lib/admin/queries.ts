@@ -5,6 +5,15 @@ import { sql } from "@/lib/db/client";
 export const PAID_STATUSES = ["Complete", "Delivered", "MockPaid"] as const;
 /** Orders that will never be paid — explicitly resolved, not abandoned. */
 export const FAILED_STATUSES = ["Cancelled", "Rejected", "Returned"] as const;
+/** Statuses that are resolved one way or another and should never show
+ * up as a "lead to chase" in the abandoned-carts view — paid, failed,
+ * or Cash on Delivery (a confirmed order awaiting fulfillment, not an
+ * abandoned cart, even though it isn't "paid" yet). */
+const NOT_ABANDONED_STATUSES = [
+  ...PAID_STATUSES,
+  ...FAILED_STATUSES,
+  "CashOnDelivery",
+] as const;
 
 /**
  * An order counts as "abandoned" once it's sat unresolved (no payment,
@@ -18,8 +27,7 @@ export async function getAbandonedCount(): Promise<number> {
   const rows = await sql<{ count: string }[]>`
     select count(*)::text as count
     from orders
-    where status != all(${PAID_STATUSES})
-      and status != all(${FAILED_STATUSES})
+    where status != all(${NOT_ABANDONED_STATUSES})
       and created_at < now() - make_interval(mins => ${ABANDONED_GRACE_MINUTES})
   `;
   return Number(rows[0]?.count ?? 0);
@@ -74,8 +82,7 @@ export async function listAbandonedOrders(): Promise<AbandonedOrder[]> {
          from jsonb_array_elements(lines) as line) as item_titles,
       status
     from orders
-    where status != all(${PAID_STATUSES})
-      and status != all(${FAILED_STATUSES})
+    where status != all(${NOT_ABANDONED_STATUSES})
       and created_at < now() - make_interval(mins => ${ABANDONED_GRACE_MINUTES})
     order by created_at desc
   `;

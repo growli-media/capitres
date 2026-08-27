@@ -27,9 +27,10 @@ export async function sendMetaPurchaseEvent(order: Order): Promise<void> {
   if (!META_PIXEL_ID || !META_CAPI_ACCESS_TOKEN) return;
 
   const ad: AdTracking = order.adTracking ?? {};
-  const userData: Record<string, unknown> = {
-    ph: [sha256(toE164(order.customer.phone).replace("+", ""))],
-  };
+  const userData: Record<string, unknown> = {};
+  if (order.customer.phone) {
+    userData.ph = [sha256(toE164(order.customer.phone).replace("+", ""))];
+  }
   if (order.customer.email) userData.em = [sha256(order.customer.email)];
   if (ad.clientIp) userData.client_ip_address = ad.clientIp;
   if (ad.userAgent) userData.client_user_agent = ad.userAgent;
