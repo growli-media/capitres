@@ -179,12 +179,12 @@ export default function CheckoutFlow() {
   const methodCardsRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (region === null && hasHydrated && lines.length > 0) {
-      regionCardsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      regionCardsRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }, [region, hasHydrated, lines.length]);
   useEffect(() => {
     if (region === "IQ" && method === null) {
-      methodCardsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      methodCardsRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }, [region, method]);
 
@@ -432,22 +432,22 @@ export default function CheckoutFlow() {
               <h2 className="text-eyebrow mb-6 text-center text-ink/60">
                 {t("chooseRegionTitle")}
               </h2>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-2 gap-3 sm:gap-6">
                 <button
                   type="button"
                   onClick={() => setRegion("IQ")}
-                  className="flex flex-col items-center justify-center gap-4 border border-line bg-white px-10 py-6 text-center transition-colors hover:border-ink"
+                  className="flex flex-col items-center justify-center gap-4 border border-line bg-white px-4 py-10 text-center transition-colors hover:border-ink sm:px-10 sm:py-14"
                 >
-                  <IraqMapIcon className="h-14 w-14" />
-                  <span className="text-xl font-bold">{t("regionIraq")}</span>
+                  <IraqMapIcon className="h-14 w-14 sm:h-20 sm:w-20" />
+                  <span className="text-lg font-bold sm:text-2xl">{t("regionIraq")}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setRegion("INTL")}
-                  className="flex flex-col items-center justify-center gap-4 border border-line bg-white px-10 py-6 text-center transition-colors hover:border-ink"
+                  className="flex flex-col items-center justify-center gap-4 border border-line bg-white px-4 py-10 text-center transition-colors hover:border-ink sm:px-10 sm:py-14"
                 >
-                  <Globe size={56} aria-hidden="true" />
-                  <span className="text-xl font-bold">{t("regionInternational")}</span>
+                  <Globe size={64} className="h-14 w-14 sm:h-20 sm:w-20" aria-hidden="true" />
+                  <span className="text-lg font-bold sm:text-2xl">{t("regionInternational")}</span>
                 </button>
               </div>
             </div>
@@ -466,25 +466,25 @@ export default function CheckoutFlow() {
               <h2 className="text-eyebrow mb-6 text-center text-ink/60">
                 {t("chooseMethodTitle")}
               </h2>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-2 gap-3 sm:gap-6">
                 <button
                   type="button"
                   onClick={() => setMethod("card")}
-                  className="flex flex-col items-center justify-center gap-3 border border-line bg-white px-8 py-6 text-center transition-colors hover:border-ink"
+                  className="flex flex-col items-center justify-center gap-3 border border-line bg-white px-3 py-10 text-center transition-colors hover:border-ink sm:px-8 sm:py-14"
                 >
-                  <ShieldCheck size={48} aria-hidden="true" />
-                  <span className="text-xl font-bold">{t("methodCard")}</span>
-                  <span className="text-sm text-ink/60">{t("methodCardDesc")}</span>
+                  <ShieldCheck size={64} className="h-12 w-12 sm:h-16 sm:w-16" aria-hidden="true" />
+                  <span className="text-lg font-bold sm:text-2xl">{t("methodCard")}</span>
+                  <span className="text-xs text-ink/60 sm:text-sm">{t("methodCardDesc")}</span>
                 </button>
                 {hasPhysical && (
                   <button
                     type="button"
                     onClick={() => setMethod("cod")}
-                    className="flex flex-col items-center justify-center gap-3 border border-line bg-white px-8 py-6 text-center transition-colors hover:border-ink"
+                    className="flex flex-col items-center justify-center gap-3 border border-line bg-white px-3 py-10 text-center transition-colors hover:border-ink sm:px-8 sm:py-14"
                   >
-                    <Truck size={48} aria-hidden="true" />
-                    <span className="text-xl font-bold">{t("methodCod")}</span>
-                    <span className="text-sm text-ink/60">{t("methodCodDesc")}</span>
+                    <Truck size={64} className="h-12 w-12 sm:h-16 sm:w-16" aria-hidden="true" />
+                    <span className="text-lg font-bold sm:text-2xl">{t("methodCod")}</span>
+                    <span className="text-xs text-ink/60 sm:text-sm">{t("methodCodDesc")}</span>
                   </button>
                 )}
               </div>
