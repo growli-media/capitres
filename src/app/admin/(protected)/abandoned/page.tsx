@@ -47,7 +47,77 @@ export default async function AbandonedCartsPage() {
           </p>
         </div>
       ) : (
-        <div className={`mt-6 overflow-hidden ${glassCard}`}>
+        <>
+          {/* Mobile: stacked cards, no horizontal scroll */}
+          <div className="mt-6 space-y-3 md:hidden">
+            {carts.map((c) => (
+              <div key={c.ref} className={`p-4 ${glassCard}`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium text-slate-900 dark:text-slate-100">{c.customerName}</p>
+                    {c.phone && (
+                      <p className="text-xs text-slate-400 dark:text-slate-500" dir="ltr">
+                        {c.phone}
+                      </p>
+                    )}
+                  </div>
+                  <span className="shrink-0 text-xs text-slate-500 dark:text-slate-400">{timeAgo(c.minutesAgo)}</span>
+                </div>
+                <p className="mt-2 truncate text-sm text-slate-600 dark:text-slate-400">
+                  {c.itemCount} item{c.itemCount === 1 ? "" : "s"} — {c.itemTitles.join(", ")}
+                </p>
+                <p className="price mt-1 font-medium text-slate-900 dark:text-slate-100">
+                  {formatIQD(c.total, "en")}
+                </p>
+                <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                  <NoteButton orderRef={c.ref} initialNote={c.adminNote} />
+                  {c.phone && (
+                    <>
+                      <a
+                        href={toWhatsAppLink(
+                          c.phone,
+                          `Hi ${c.customerName}, this is Capitres — noticed you didn't finish your order. Can I help with anything?`,
+                        )}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`flex h-9 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-colors hover:bg-emerald-100 dark:hover:bg-emerald-950/70 ${glassTone.success}`}
+                      >
+                        <WhatsappLogo size={15} weight="fill" />
+                        WhatsApp
+                      </a>
+                      <a
+                        href={`tel:${c.phone}`}
+                        aria-label="Call customer"
+                        className={`h-9 w-9 ${glassIconButton}`}
+                      >
+                        <Phone size={16} />
+                      </a>
+                    </>
+                  )}
+                  {c.email && (
+                    <a
+                      href={`mailto:${c.email}?subject=${encodeURIComponent(
+                        "Your Capitres order",
+                      )}&body=${encodeURIComponent(
+                        `Hi ${c.customerName}, this is Capitres — noticed you didn't finish your order. Can I help with anything?`,
+                      )}`}
+                      aria-label="Email customer"
+                      className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                    >
+                      <EnvelopeSimple size={16} />
+                    </a>
+                  )}
+                  {!c.phone && !c.email && (
+                    <span className="text-xs text-slate-400 dark:text-slate-500">No contact info</span>
+                  )}
+                  <CancelOrderButton orderRef={c.ref} status={c.status} />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop: table */}
+          <div className={`mt-6 hidden overflow-hidden md:block ${glassCard}`}>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -132,7 +202,8 @@ export default async function AbandonedCartsPage() {
             </tbody>
             </table>
           </div>
-        </div>
+          </div>
+        </>
       )}
     </div>
   );

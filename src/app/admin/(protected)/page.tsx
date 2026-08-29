@@ -115,30 +115,53 @@ export default async function AdminDashboardPage() {
               <p className="text-sm text-slate-500 dark:text-slate-400">No orders yet.</p>
             </div>
           ) : (
-            <div className={`mt-3 overflow-hidden ${glassCard}`}>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {recentOrders.slice(0, 6).map((o) => (
-                      <tr key={o.ref}>
-                        <td className="px-4 py-3 font-mono text-xs whitespace-nowrap text-slate-500 dark:text-slate-400">
-                          {o.ref}
-                        </td>
-                        <td className="px-4 py-3 font-medium whitespace-nowrap text-slate-900 dark:text-slate-100">
-                          {customerName(o.customer)}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-slate-500 dark:text-slate-400">
-                          {formatDate(o.createdAt)}
-                        </td>
-                        <td className="px-4 py-3 text-end font-medium whitespace-nowrap text-slate-900 dark:text-slate-100">
-                          {formatIQD(o.totals.total, "en")}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            <>
+              {/* Mobile: stacked rows, no horizontal scroll */}
+              <div className={`mt-3 divide-y divide-slate-100 overflow-hidden md:hidden dark:divide-slate-800 ${glassCard}`}>
+                {recentOrders.slice(0, 6).map((o) => (
+                  <div key={o.ref} className="flex items-center justify-between gap-3 px-4 py-3">
+                    <div className="min-w-0">
+                      <p className="truncate font-medium text-slate-900 dark:text-slate-100">
+                        {customerName(o.customer)}
+                      </p>
+                      <p className="font-mono text-xs text-slate-400 dark:text-slate-500">{o.ref}</p>
+                    </div>
+                    <div className="shrink-0 text-end">
+                      <p className="font-medium text-slate-900 dark:text-slate-100">
+                        {formatIQD(o.totals.total, "en")}
+                      </p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500">{formatDate(o.createdAt)}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
+
+              {/* Desktop: table */}
+              <div className={`mt-3 hidden overflow-hidden md:block ${glassCard}`}>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                      {recentOrders.slice(0, 6).map((o) => (
+                        <tr key={o.ref}>
+                          <td className="px-4 py-3 font-mono text-xs whitespace-nowrap text-slate-500 dark:text-slate-400">
+                            {o.ref}
+                          </td>
+                          <td className="px-4 py-3 font-medium whitespace-nowrap text-slate-900 dark:text-slate-100">
+                            {customerName(o.customer)}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-slate-500 dark:text-slate-400">
+                            {formatDate(o.createdAt)}
+                          </td>
+                          <td className="px-4 py-3 text-end font-medium whitespace-nowrap text-slate-900 dark:text-slate-100">
+                            {formatIQD(o.totals.total, "en")}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
           )}
         </div>
 

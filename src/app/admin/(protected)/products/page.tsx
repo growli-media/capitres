@@ -80,7 +80,68 @@ export default async function AdminProductsPage() {
           </Link>
         </div>
       ) : (
-        <div className={`overflow-hidden ${glassCard}`}>
+        <>
+          {/* Mobile: stacked cards, no horizontal scroll — the table
+              below is desktop-only (md:block). Every field is visible
+              immediately, actions included, without needing to scroll
+              sideways to reach them. */}
+          <div className="space-y-3 md:hidden">
+            {products.map((p) => (
+              <div key={p.id} className={`p-4 ${glassCard} ${p.archived ? "opacity-60" : ""}`}>
+                <div className="flex items-start gap-3">
+                  <div className="relative h-14 w-12 shrink-0 overflow-hidden rounded-md bg-slate-100 dark:bg-slate-800">
+                    {p.images[0] && (
+                      <Image
+                        src={p.images[0].url}
+                        alt=""
+                        fill
+                        sizes="48px"
+                        className="object-cover"
+                        unoptimized
+                      />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <Link
+                      href={`/admin/products/${p.id}/edit`}
+                      className="block truncate font-medium text-slate-900 hover:underline dark:text-slate-100"
+                    >
+                      {p.titleEn}
+                    </Link>
+                    <span className="text-xs text-slate-400 dark:text-slate-500">/{p.slug}</span>
+                  </div>
+                  <ProductRowActions id={p.id} archived={p.archived} />
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <span className="text-sm text-slate-600 dark:text-slate-400">{p.category}</span>
+                  <span className="price text-sm font-medium text-slate-900 dark:text-slate-100">
+                    {formatIQD(p.priceAmount, "en")}
+                  </span>
+                  {p.compareAtAmount && (
+                    <span className="price text-xs text-slate-400 line-through dark:text-slate-500">
+                      {formatIQD(p.compareAtAmount, "en")}
+                    </span>
+                  )}
+                  <StockBadge
+                    isGiftCard={p.category === "gift-cards"}
+                    totalStock={p.totalStock}
+                  />
+                  {p.archived ? (
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${glassTone.neutral}`}>
+                      Archived
+                    </span>
+                  ) : (
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${glassTone.info}`}>
+                      Live
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop: table */}
+          <div className={`hidden overflow-hidden md:block ${glassCard}`}>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -157,7 +218,8 @@ export default async function AdminProductsPage() {
               </tbody>
             </table>
           </div>
-        </div>
+          </div>
+        </>
       )}
     </div>
   );

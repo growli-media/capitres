@@ -45,7 +45,57 @@ export default async function AdminOrdersPage() {
           <p className="text-sm text-slate-500 dark:text-slate-400">No orders yet.</p>
         </div>
       ) : (
-        <div className={`mt-6 overflow-hidden ${glassCard}`}>
+        <>
+          {/* Mobile: stacked cards, no horizontal scroll */}
+          <div className="mt-6 space-y-3 md:hidden">
+            {orders.map((o) => (
+              <div key={o.ref} className={`p-4 ${glassCard}`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-mono text-xs font-medium text-slate-900 dark:text-slate-100">{o.ref}</p>
+                    <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">{formatDate(o.createdAt)}</p>
+                  </div>
+                  <StatusBadge status={o.status} />
+                </div>
+                <div className="mt-3">
+                  <div className="font-medium text-slate-900 dark:text-slate-100">{customerName(o.customer)}</div>
+                  <div className="text-xs text-slate-400 dark:text-slate-500" dir="ltr">
+                    {o.customer.phone}
+                  </div>
+                  {customerAddress(o.customer) && (
+                    <div className="text-xs text-slate-400 dark:text-slate-500">
+                      {customerAddress(o.customer)}
+                    </div>
+                  )}
+                </div>
+                <div className="mt-3 flex items-center justify-between gap-3">
+                  <div className="text-sm text-slate-600 dark:text-slate-400">
+                    {o.lines.reduce((n, l) => n + l.qty, 0)} items —{" "}
+                    <span className="price font-medium text-slate-900 dark:text-slate-100">
+                      {formatIQD(o.totals.total, "en")}
+                    </span>
+                  </div>
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                  <NoteButton orderRef={o.ref} initialNote={o.adminNote ?? null} />
+                  {o.status === "CashOnDelivery" && (
+                    <form action={markOrderDeliveredAction.bind(null, o.ref)}>
+                      <button
+                        type="submit"
+                        className="rounded-full bg-slate-900/90 px-3 py-1.5 text-xs font-semibold text-white shadow-sm backdrop-blur-md transition-colors hover:bg-slate-800 dark:bg-white/90 dark:text-slate-900 dark:hover:bg-white"
+                      >
+                        Mark as delivered
+                      </button>
+                    </form>
+                  )}
+                  <CancelOrderButton orderRef={o.ref} status={o.status} />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop: table */}
+          <div className={`mt-6 hidden overflow-hidden md:block ${glassCard}`}>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -109,7 +159,8 @@ export default async function AdminOrdersPage() {
               </tbody>
             </table>
           </div>
-        </div>
+          </div>
+        </>
       )}
     </div>
   );

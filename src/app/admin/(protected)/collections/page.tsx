@@ -44,7 +44,54 @@ export default async function AdminCollectionsPage() {
           </Link>
         </div>
       ) : (
-        <div className={`overflow-hidden ${glassCard}`}>
+        <>
+          {/* Mobile: stacked cards, no horizontal scroll */}
+          <div className="space-y-3 md:hidden">
+            {collections.map((c) => (
+              <div key={c.slug} className={`p-4 ${glassCard} ${c.archived ? "opacity-60" : ""}`}>
+                <div className="flex items-start gap-3">
+                  <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded-md bg-slate-100 dark:bg-slate-800">
+                    {c.heroImageUrl && (
+                      <Image
+                        src={c.heroImageUrl}
+                        alt=""
+                        fill
+                        sizes="80px"
+                        className="object-cover"
+                        unoptimized
+                      />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <Link
+                      href={`/admin/collections/${c.slug}/edit`}
+                      className="block truncate font-medium text-slate-900 hover:underline dark:text-slate-100"
+                    >
+                      {c.titleEn}
+                    </Link>
+                    <span className="text-xs text-slate-400 dark:text-slate-500">/{c.slug}</span>
+                  </div>
+                  <CollectionRowActions slug={c.slug} archived={c.archived} />
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <span className="text-sm capitalize text-slate-600 dark:text-slate-400">{c.theme}</span>
+                  <span className="text-sm text-slate-600 dark:text-slate-400">Order {c.sortOrder}</span>
+                  {c.archived ? (
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${glassTone.neutral}`}>
+                      Archived
+                    </span>
+                  ) : (
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${glassTone.info}`}>
+                      Live
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop: table */}
+          <div className={`hidden overflow-hidden md:block ${glassCard}`}>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -105,7 +152,8 @@ export default async function AdminCollectionsPage() {
               </tbody>
             </table>
           </div>
-        </div>
+          </div>
+        </>
       )}
     </div>
   );

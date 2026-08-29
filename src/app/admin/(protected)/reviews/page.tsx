@@ -37,7 +37,39 @@ export default async function AdminReviewsPage() {
           <p className="text-sm text-slate-500 dark:text-slate-400">No reviews yet.</p>
         </div>
       ) : (
-        <div className={`mt-6 overflow-hidden ${glassCard}`}>
+        <>
+          {/* Mobile: stacked cards, no horizontal scroll */}
+          <div className="mt-6 space-y-3 md:hidden">
+            {[...pending, ...approved].map((r) => (
+              <div key={r.id} className={`p-4 ${glassCard}`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-slate-900 dark:text-slate-100">{r.productTitle}</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500">{r.author}</p>
+                  </div>
+                  {r.approved ? (
+                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${glassTone.info}`}>
+                      Published
+                    </span>
+                  ) : (
+                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${glassTone.warning}`}>
+                      Pending
+                    </span>
+                  )}
+                </div>
+                <div className="mt-2">
+                  <Stars rating={r.rating} />
+                </div>
+                <p className="mt-2 line-clamp-2 text-sm text-slate-600 dark:text-slate-400">{r.body}</p>
+                <div className="mt-3">
+                  <ReviewRowActions id={r.id} approved={r.approved} />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop: table */}
+          <div className={`mt-6 hidden overflow-hidden md:block ${glassCard}`}>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -82,7 +114,8 @@ export default async function AdminReviewsPage() {
               </tbody>
             </table>
           </div>
-        </div>
+          </div>
+        </>
       )}
     </div>
   );

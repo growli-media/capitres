@@ -84,15 +84,88 @@ async function TeamTable({ ownerId }: { ownerId: string }) {
   const users = await listUsers();
 
   return (
-    <div className={`mt-8 overflow-hidden ${glassCard}`}>
-      {/* overflow-x-auto is a mobile-only safety net here, not the primary
-          fix — compact padding/type below is tuned so all 8 columns
-          already fit at typical desktop widths without any scrolling
-          (the wide 1600px content container in AdminShell.tsx helps
-          too), which is what was actually asked for: a horizontally-
-          scrolling table read as "not really responsive." At genuinely
-          narrow widths this still degrades to scroll instead of silently
-          clipping column content with nothing to reveal it. */}
+    <>
+      {/* Mobile: stacked cards, no horizontal scroll */}
+      <div className="mt-8 space-y-3 md:hidden">
+        {allowlist.length === 0 && (
+          <p className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">No approved emails yet.</p>
+        )}
+        {allowlist.map((entry) => {
+          const status = statusLabel(entry);
+          const user = users.find((u) => u.email === entry.email);
+          const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ");
+          const isSelf = user?.id === ownerId;
+          return (
+            <div key={entry.email} className={`p-4 ${glassCard}`}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-medium text-slate-900 dark:text-slate-100">{fullName || entry.email}</p>
+                  <p className="truncate text-xs text-slate-500 dark:text-slate-400">{entry.email}</p>
+                </div>
+                <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${status.cls}`}>
+                  {status.text}
+                </span>
+              </div>
+              {(user?.role || user?.company || user?.phone) && (
+                <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+                  {[user?.role, user?.company, user?.phone].filter(Boolean).join(" · ")}
+                </p>
+              )}
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {!user ? null : user.isOwner ? (
+                  <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${glassTone.info}`}>
+                    Owner — full access
+                  </span>
+                ) : (
+                  <EditPermissionsButton
+                    userId={user.id}
+                    name={fullName || user.email}
+                    permissions={user.permissions}
+                  />
+                )}
+                {isSelf && user && (
+                  <EditProfileForm
+                    firstName={user.firstName}
+                    lastName={user.lastName}
+                    phone={user.phone}
+                    role={user.role}
+                    company={user.company}
+                    email={user.email}
+                  />
+                )}
+                {user && (
+                  <form action={setUserDisabledAction.bind(null, user.id, !user.disabled)}>
+                    <button
+                      type="submit"
+                      disabled={isSelf}
+                      className="rounded-full border border-slate-300/70 bg-white/50 px-3 py-1.5 text-xs font-semibold text-slate-700 backdrop-blur-md transition-colors hover:bg-white/80 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700/70 dark:bg-slate-900/40 dark:text-slate-300 dark:hover:bg-slate-800/70"
+                      title={isSelf ? "You can't disable your own account" : undefined}
+                    >
+                      {user.disabled ? "Enable" : "Disable"}
+                    </button>
+                  </form>
+                )}
+                <form action={removeEmailAction.bind(null, entry.email)}>
+                  <button
+                    type="submit"
+                    className="rounded-full border border-slate-300/70 bg-white/50 px-3 py-1.5 text-xs font-semibold text-slate-500 backdrop-blur-md transition-colors hover:bg-white/80 dark:border-slate-700/70 dark:bg-slate-900/40 dark:text-slate-400 dark:hover:bg-slate-800/70"
+                  >
+                    Remove
+                  </button>
+                </form>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Desktop: table — compact padding/type tuned so all 8 columns fit
+          at typical desktop widths without any scrolling (the wide
+          1600px content container in AdminShell.tsx helps too), which is
+          what was actually asked for: a horizontally-scrolling table read
+          as "not really responsive." overflow-x-auto stays as a safety
+          net for anything still narrower than expected. */}
+      <div className={`mt-8 hidden overflow-hidden md:block ${glassCard}`}>
       <div className="overflow-x-auto">
       <table className="w-full text-xs">
         <thead>
@@ -189,6 +262,7 @@ async function TeamTable({ ownerId }: { ownerId: string }) {
         </tbody>
       </table>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
