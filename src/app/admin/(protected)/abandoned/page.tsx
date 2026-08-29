@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
-import { WhatsappLogo, Phone } from "@phosphor-icons/react/dist/ssr";
+import { WhatsappLogo, Phone, EnvelopeSimple } from "@phosphor-icons/react/dist/ssr";
 import { ABANDONED_GRACE_MINUTES, listAbandonedOrders } from "@/lib/admin/queries";
 import { toWhatsAppLink } from "@/lib/admin/whatsapp";
 import { formatIQD } from "@/lib/money";
+import CancelOrderButton from "../orders/CancelOrderButton";
+import NoteButton from "../orders/NoteButton";
 
 export const metadata: Metadata = { title: "Abandoned carts" };
 
@@ -20,32 +22,32 @@ export default async function AbandonedCartsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+      <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
         Abandoned carts
       </h1>
-      <p className="mt-1 text-sm text-slate-500">
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
         Checkouts started but never paid, at least {ABANDONED_GRACE_MINUTES} minutes
         old — reach out while they still remember what they wanted.
       </p>
 
       {carts.length > 0 && (
-        <div className="mt-4 flex items-center gap-2 rounded-lg bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
+        <div className="mt-4 flex items-center gap-2 rounded-lg bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
           {carts.length} {carts.length === 1 ? "customer" : "customers"} to follow up
           with — {formatIQD(totalValue, "en")} in unpaid carts.
         </div>
       )}
 
       {carts.length === 0 ? (
-        <div className="mt-6 rounded-xl border border-dashed border-slate-300 py-16 text-center">
-          <p className="text-sm text-slate-500">
+        <div className="mt-6 rounded-xl border border-dashed border-slate-300 py-16 text-center dark:border-slate-700">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
             No abandoned carts right now — nice.
           </p>
         </div>
       ) : (
-        <div className="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white">
+        <div className="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400">
+              <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400 dark:border-slate-800 dark:text-slate-500">
                 <th className="px-4 py-3 text-start font-medium">Customer</th>
                 <th className="px-4 py-3 text-start font-medium">Cart</th>
                 <th className="px-4 py-3 text-start font-medium">Value</th>
@@ -53,32 +55,33 @@ export default async function AbandonedCartsPage() {
                 <th className="px-4 py-3" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {carts.map((c) => (
                 <tr key={c.ref}>
                   <td className="px-4 py-3">
-                    <div className="font-medium text-slate-900">{c.customerName}</div>
+                    <div className="font-medium text-slate-900 dark:text-slate-100">{c.customerName}</div>
                     {c.phone && (
-                      <div className="text-xs text-slate-400" dir="ltr">
+                      <div className="text-xs text-slate-400 dark:text-slate-500" dir="ltr">
                         {c.phone}
                       </div>
                     )}
                   </td>
-                  <td className="max-w-56 px-4 py-3 text-slate-600">
+                  <td className="max-w-56 px-4 py-3 text-slate-600 dark:text-slate-400">
                     <p className="truncate">
                       {c.itemCount} item{c.itemCount === 1 ? "" : "s"} —{" "}
                       {c.itemTitles.join(", ")}
                     </p>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="price font-medium text-slate-900">
+                    <span className="price font-medium text-slate-900 dark:text-slate-100">
                       {formatIQD(c.total, "en")}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-slate-500">{timeAgo(c.minutesAgo)}</td>
+                  <td className="px-4 py-3 text-slate-500 dark:text-slate-400">{timeAgo(c.minutesAgo)}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1.5">
-                      {c.phone ? (
+                      <NoteButton orderRef={c.ref} initialNote={c.adminNote} />
+                      {c.phone && (
                         <>
                           <a
                             href={toWhatsAppLink(
@@ -87,7 +90,7 @@ export default async function AbandonedCartsPage() {
                             )}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex h-9 items-center gap-1.5 rounded-lg bg-emerald-50 px-3 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100"
+                            className="flex h-9 items-center gap-1.5 rounded-lg bg-emerald-50 px-3 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-950/70"
                           >
                             <WhatsappLogo size={15} weight="fill" />
                             WhatsApp
@@ -95,14 +98,29 @@ export default async function AbandonedCartsPage() {
                           <a
                             href={`tel:${c.phone}`}
                             aria-label="Call customer"
-                            className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                            className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
                           >
                             <Phone size={16} />
                           </a>
                         </>
-                      ) : (
-                        <span className="text-xs text-slate-400">No phone</span>
                       )}
+                      {c.email && (
+                        <a
+                          href={`mailto:${c.email}?subject=${encodeURIComponent(
+                            "Your Capitres order",
+                          )}&body=${encodeURIComponent(
+                            `Hi ${c.customerName}, this is Capitres — noticed you didn't finish your order. Can I help with anything?`,
+                          )}`}
+                          aria-label="Email customer"
+                          className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                        >
+                          <EnvelopeSimple size={16} />
+                        </a>
+                      )}
+                      {!c.phone && !c.email && (
+                        <span className="text-xs text-slate-400 dark:text-slate-500">No contact info</span>
+                      )}
+                      <CancelOrderButton orderRef={c.ref} status={c.status} />
                     </div>
                   </td>
                 </tr>

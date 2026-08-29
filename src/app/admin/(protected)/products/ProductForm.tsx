@@ -49,17 +49,17 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-sm font-medium text-slate-700">{label}</span>
+      <span className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">{label}</span>
       {children}
-      {hint && <span className="mt-1 block text-xs text-slate-400">{hint}</span>}
+      {hint && <span className="mt-1 block text-xs text-slate-400 dark:text-slate-500">{hint}</span>}
     </label>
   );
 }
 
 const inputClass =
-  "h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none transition-colors focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 disabled:bg-slate-100 disabled:text-slate-500";
+  "h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none transition-colors focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-slate-400 dark:focus:ring-slate-400/10 dark:disabled:bg-slate-800 dark:disabled:text-slate-400";
 const textareaClass =
-  "w-full rounded-lg border border-slate-300 bg-white p-3 text-sm outline-none transition-colors focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10";
+  "w-full rounded-lg border border-slate-300 bg-white p-3 text-sm outline-none transition-colors focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-slate-400 dark:focus:ring-slate-400/10";
 
 export default function ProductForm({
   mode,
@@ -206,9 +206,9 @@ export default function ProductForm({
     <form action={formAction} className="space-y-8">
       {/* Photos */}
       <section>
-        <h2 className="mb-3 text-sm font-semibold text-slate-900">Photos</h2>
-        <p className="mb-3 text-xs text-slate-400">
-          The first photo (marked <span className="font-semibold text-slate-500">Main</span>)
+        <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Photos</h2>
+        <p className="mb-3 text-xs text-slate-400 dark:text-slate-500">
+          The first photo (marked <span className="font-semibold text-slate-500 dark:text-slate-400">Main</span>)
           is the one shown in listings. Drag the handle{" "}
           <DotsSixVertical size={12} className="inline align-middle" aria-hidden="true" /> or
           use the arrows to reorder, and drop an image onto a photo to replace it.
@@ -227,8 +227,8 @@ export default function ProductForm({
                 dragIndex === i ? "opacity-40" : ""
               } ${
                 dropIndex === i && dragIndex !== null && dragIndex !== i
-                  ? "border-slate-900 bg-slate-50"
-                  : "border-slate-200"
+                  ? "border-slate-900 bg-slate-50 dark:border-slate-400 dark:bg-slate-900"
+                  : "border-slate-200 dark:border-slate-800"
               }`}
             >
               {/* Reorder controls */}
@@ -238,7 +238,7 @@ export default function ProductForm({
                   onClick={() => moveImage(i, i - 1)}
                   disabled={i === 0}
                   aria-label="Move photo up"
-                  className="flex h-6 w-6 cursor-pointer items-center justify-center rounded transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:cursor-not-allowed disabled:opacity-30"
+                  className="flex h-6 w-6 cursor-pointer items-center justify-center rounded transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-slate-800 dark:hover:text-slate-400"
                 >
                   <CaretUp size={14} />
                 </button>
@@ -250,7 +250,7 @@ export default function ProductForm({
                     setDropIndex(null);
                   }}
                   aria-label="Drag to reorder"
-                  className="cursor-grab text-slate-400 transition-colors hover:text-slate-600 active:cursor-grabbing"
+                  className="cursor-grab text-slate-400 transition-colors hover:text-slate-600 active:cursor-grabbing dark:text-slate-500 dark:hover:text-slate-400"
                 >
                   <DotsSixVertical size={18} />
                 </span>
@@ -259,18 +259,18 @@ export default function ProductForm({
                   onClick={() => moveImage(i, i + 1)}
                   disabled={i === images.length - 1}
                   aria-label="Move photo down"
-                  className="flex h-6 w-6 cursor-pointer items-center justify-center rounded transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:cursor-not-allowed disabled:opacity-30"
+                  className="flex h-6 w-6 cursor-pointer items-center justify-center rounded transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-slate-800 dark:hover:text-slate-400"
                 >
                   <CaretDown size={14} />
                 </button>
               </div>
 
               {/* Thumbnail (also a drop target for a replacement image) */}
-              <div className="relative h-32 w-26 shrink-0 overflow-hidden rounded-lg border border-slate-100 bg-slate-100">
+              <div className="relative h-32 w-26 shrink-0 overflow-hidden rounded-lg border border-slate-100 bg-slate-100 dark:border-slate-800 dark:bg-slate-800">
                 {row.url ? (
                   <Image src={row.url} alt="" fill sizes="104px" className="object-cover" unoptimized />
                 ) : (
-                  <div className="flex h-full items-center justify-center px-2 text-center text-[11px] leading-tight text-slate-400">
+                  <div className="flex h-full items-center justify-center px-2 text-center text-[11px] leading-tight text-slate-400 dark:text-slate-500">
                     Drop image here or upload
                   </div>
                 )}
@@ -287,7 +287,7 @@ export default function ProductForm({
                     type="button"
                     onClick={() => fileInputRefs.current.get(row.id)?.click()}
                     disabled={uploadingId === row.id}
-                    className="flex h-10 cursor-pointer items-center gap-2 rounded-lg border border-slate-300 bg-white px-3.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60"
+                    className="flex h-10 cursor-pointer items-center gap-2 rounded-lg border border-slate-300 bg-white px-3.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
                   >
                     <UploadSimple size={16} aria-hidden="true" />
                     {uploadingId === row.id ? "Uploading…" : "Upload photo"}
@@ -307,7 +307,7 @@ export default function ProductForm({
                       type="button"
                       onClick={() => removeImage(row.id)}
                       aria-label="Remove photo"
-                      className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                      className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-slate-500 dark:hover:bg-red-950/40 dark:hover:text-red-400"
                     >
                       <Trash size={15} />
                     </button>
@@ -356,7 +356,7 @@ export default function ProductForm({
               </div>
             </div>
           ))}
-          {uploadError && <p className="text-xs text-amber-700">{uploadError}</p>}
+          {uploadError && <p className="text-xs text-amber-700 dark:text-amber-300">{uploadError}</p>}
           <div
             onDragOver={(e) => {
               e.preventDefault();
@@ -365,25 +365,25 @@ export default function ProductForm({
             onDragLeave={() => setAddDragOver(false)}
             onDrop={handleAddDrop}
             className={`flex items-center gap-2 rounded-lg border border-dashed px-3.5 py-2.5 transition-colors ${
-              addDragOver ? "border-slate-900 bg-slate-50" : "border-slate-300"
+              addDragOver ? "border-slate-900 bg-slate-50 dark:border-slate-400 dark:bg-slate-900" : "border-slate-300 dark:border-slate-700"
             }`}
           >
             <button
               type="button"
               onClick={addImage}
-              className="flex h-8 cursor-pointer items-center gap-1.5 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
+              className="flex h-8 cursor-pointer items-center gap-1.5 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
             >
               <Plus size={14} aria-hidden="true" />
               Add another photo
             </button>
-            <span className="text-xs text-slate-400">or drag images here</span>
+            <span className="text-xs text-slate-400 dark:text-slate-500">or drag images here</span>
           </div>
         </div>
       </section>
 
       {/* Title */}
       <section>
-        <h2 className="mb-3 text-sm font-semibold text-slate-900">Title</h2>
+        <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Title</h2>
         <div className="grid grid-cols-3 gap-3">
           <Field label="English">
             <input type="text" name="titleEn" required defaultValue={product?.titleEn} className={inputClass} />
@@ -422,7 +422,7 @@ export default function ProductForm({
           }
         >
           <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-400">/products/</span>
+            <span className="text-sm text-slate-400 dark:text-slate-500">/products/</span>
             <input
               type="text"
               name="slug"
@@ -437,7 +437,7 @@ export default function ProductForm({
 
       {/* Description */}
       <section>
-        <h2 className="mb-3 text-sm font-semibold text-slate-900">Description</h2>
+        <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Description</h2>
         <div className="grid grid-cols-3 gap-3">
           <Field label="English">
             <textarea
@@ -473,10 +473,10 @@ export default function ProductForm({
 
       {/* Details */}
       <section>
-        <h2 className="mb-3 text-sm font-semibold text-slate-900">
+        <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">
           Details &amp; care
         </h2>
-        <p className="mb-3 text-xs text-slate-400">
+        <p className="mb-3 text-xs text-slate-400 dark:text-slate-500">
           One line per detail — same number of lines in each language.
         </p>
         <div className="grid grid-cols-3 gap-3">
@@ -542,8 +542,8 @@ export default function ProductForm({
 
       {/* Pricing */}
       <section>
-        <h2 className="mb-1 text-sm font-semibold text-slate-900">Pricing</h2>
-        <p className="mb-3 text-xs text-slate-400">
+        <h2 className="mb-1 text-sm font-semibold text-slate-900 dark:text-slate-100">Pricing</h2>
+        <p className="mb-3 text-xs text-slate-400 dark:text-slate-500">
           IQD is required and is what actually gets charged at checkout. USD
           and EUR are optional, exact prices for customers browsing in those
           currencies (e.g. set 49.99, not whatever the IQD price happens to
@@ -551,7 +551,7 @@ export default function ProductForm({
         </p>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               IQD
             </p>
             <Field label="Price">
@@ -577,7 +577,7 @@ export default function ProductForm({
             </Field>
           </div>
           <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               USD (optional)
             </p>
             <Field label="Price">
@@ -611,7 +611,7 @@ export default function ProductForm({
             </Field>
           </div>
           <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               EUR (optional)
             </p>
             <Field label="Price">
@@ -664,10 +664,10 @@ export default function ProductForm({
         </section>
       ) : (
         <section>
-          <h2 className="mb-3 text-sm font-semibold text-slate-900">
+          <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">
             Sizes &amp; stock
           </h2>
-          <p className="mb-3 text-xs text-slate-400">
+          <p className="mb-3 text-xs text-slate-400 dark:text-slate-500">
             One size per line, as &ldquo;size, quantity&rdquo; — e.g. &ldquo;M, 10&rdquo;. Set a
             quantity to 0 to mark that size sold out.
           </p>
@@ -684,8 +684,8 @@ export default function ProductForm({
       {/* Colours */}
       {!isGiftCard && (
         <section>
-          <h2 className="mb-3 text-sm font-semibold text-slate-900">Colours</h2>
-          <p className="mb-3 text-xs text-slate-400">
+          <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Colours</h2>
+          <p className="mb-3 text-xs text-slate-400 dark:text-slate-500">
             Optional. Add one row per colour this product comes in — customers
             pick between them on the product page. Leave empty for a
             single-colour product.
@@ -698,7 +698,7 @@ export default function ProductForm({
                     type="color"
                     value={row.hex}
                     onChange={(e) => updateColor(row.id, { hex: e.target.value })}
-                    className="h-10 w-14 cursor-pointer rounded-lg border border-slate-300"
+                    className="h-10 w-14 cursor-pointer rounded-lg border border-slate-300 dark:border-slate-700"
                   />
                   <input type="hidden" name="colorHex" value={row.hex} />
                 </Field>
@@ -735,7 +735,7 @@ export default function ProductForm({
                   type="button"
                   onClick={() => removeColor(row.id)}
                   aria-label="Remove colour"
-                  className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                  className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-slate-500 dark:hover:bg-red-950/40 dark:hover:text-red-400"
                 >
                   <Trash size={15} />
                 </button>
@@ -744,7 +744,7 @@ export default function ProductForm({
             <button
               type="button"
               onClick={addColor}
-              className="flex h-10 cursor-pointer items-center gap-1.5 rounded-lg border border-dashed border-slate-300 px-3.5 text-sm font-medium text-slate-600 transition-colors hover:border-slate-400 hover:bg-slate-50"
+              className="flex h-10 cursor-pointer items-center gap-1.5 rounded-lg border border-dashed border-slate-300 px-3.5 text-sm font-medium text-slate-600 transition-colors hover:border-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
             >
               <Plus size={14} aria-hidden="true" />
               Add a colour
@@ -756,12 +756,12 @@ export default function ProductForm({
       {/* Collections */}
       {collections.length > 0 && (
         <section>
-          <h2 className="mb-3 text-sm font-semibold text-slate-900">Collections</h2>
+          <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Collections</h2>
           <div className="flex flex-wrap gap-2">
             {collections.map((c) => (
               <label
                 key={c.slug}
-                className="flex min-h-10 cursor-pointer items-center gap-2 rounded-lg border border-slate-300 px-3 text-sm has-[:checked]:border-slate-900 has-[:checked]:bg-slate-900 has-[:checked]:text-white"
+                className="flex min-h-10 cursor-pointer items-center gap-2 rounded-lg border border-slate-300 px-3 text-sm has-[:checked]:border-slate-900 has-[:checked]:bg-slate-900 has-[:checked]:text-white dark:border-slate-700 dark:has-[:checked]:border-slate-100 dark:has-[:checked]:bg-slate-100 dark:has-[:checked]:text-slate-900"
               >
                 <input
                   type="checkbox"
@@ -779,11 +779,11 @@ export default function ProductForm({
 
       {/* Flags */}
       <section className="flex gap-6">
-        <label className="flex min-h-10 cursor-pointer items-center gap-2 text-sm font-medium text-slate-700">
+        <label className="flex min-h-10 cursor-pointer items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
           <input type="checkbox" name="isNew" defaultChecked={product?.isNew} className="h-4 w-4" />
           Mark as &ldquo;New&rdquo;
         </label>
-        <label className="flex min-h-10 cursor-pointer items-center gap-2 text-sm font-medium text-slate-700">
+        <label className="flex min-h-10 cursor-pointer items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
           <input
             type="checkbox"
             name="featured"
@@ -796,17 +796,17 @@ export default function ProductForm({
 
       <div aria-live="polite">
         {state.error && (
-          <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+          <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:bg-red-950/40 dark:text-red-300">
             {state.error}
           </p>
         )}
       </div>
 
-      <div className="flex items-center gap-3 border-t border-slate-200 pt-6">
+      <div className="flex items-center gap-3 border-t border-slate-200 pt-6 dark:border-slate-800">
         <button
           type="submit"
           disabled={pending}
-          className="flex h-11 cursor-pointer items-center rounded-lg bg-slate-900 px-6 text-sm font-semibold text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="flex h-11 cursor-pointer items-center rounded-lg bg-slate-900 px-6 text-sm font-semibold text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
         >
           {pending ? "Saving…" : mode === "create" ? "Create product" : "Save changes"}
         </button>

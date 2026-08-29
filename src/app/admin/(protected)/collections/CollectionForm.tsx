@@ -18,17 +18,17 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-sm font-medium text-slate-700">{label}</span>
+      <span className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">{label}</span>
       {children}
-      {hint && <span className="mt-1 block text-xs text-slate-400">{hint}</span>}
+      {hint && <span className="mt-1 block text-xs text-slate-400 dark:text-slate-500">{hint}</span>}
     </label>
   );
 }
 
 const inputClass =
-  "h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none transition-colors focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 disabled:bg-slate-100 disabled:text-slate-500";
+  "h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none transition-colors focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-slate-400 dark:focus:ring-slate-400/10 dark:disabled:bg-slate-800 dark:disabled:text-slate-400";
 const textareaClass =
-  "w-full rounded-lg border border-slate-300 bg-white p-3 text-sm outline-none transition-colors focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10";
+  "w-full rounded-lg border border-slate-300 bg-white p-3 text-sm outline-none transition-colors focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-slate-400 dark:focus:ring-slate-400/10";
 
 export default function CollectionForm({
   mode,
@@ -68,9 +68,9 @@ export default function CollectionForm({
     <form action={formAction} className="space-y-8">
       {/* Cover photo */}
       <section>
-        <h2 className="mb-3 text-sm font-semibold text-slate-900">Cover photo</h2>
+        <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Cover photo</h2>
         <div className="flex items-start gap-5">
-          <div className="relative h-32 w-52 shrink-0 overflow-hidden rounded-lg bg-slate-100">
+          <div className="relative h-32 w-52 shrink-0 overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800">
             {heroUrl && (
               <Image src={heroUrl} alt="" fill sizes="208px" className="object-cover" unoptimized />
             )}
@@ -81,7 +81,7 @@ export default function CollectionForm({
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
-                className="flex h-10 cursor-pointer items-center gap-2 rounded-lg border border-slate-300 bg-white px-3.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60"
+                className="flex h-10 cursor-pointer items-center gap-2 rounded-lg border border-slate-300 bg-white px-3.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
               >
                 <UploadSimple size={16} aria-hidden="true" />
                 {uploading ? "Uploading…" : "Upload photo"}
@@ -94,7 +94,7 @@ export default function CollectionForm({
                 onChange={handleFileChange}
               />
             </div>
-            {uploadError && <p className="text-xs text-amber-700">{uploadError}</p>}
+            {uploadError && <p className="text-xs text-amber-700 dark:text-amber-300">{uploadError}</p>}
             <Field label="Or paste an image URL">
               <input
                 type="text"
@@ -138,7 +138,7 @@ export default function CollectionForm({
 
       {/* Title */}
       <section>
-        <h2 className="mb-3 text-sm font-semibold text-slate-900">Title</h2>
+        <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Title</h2>
         <div className="grid grid-cols-3 gap-3">
           <Field label="English">
             <input type="text" name="titleEn" required defaultValue={collection?.titleEn} className={inputClass} />
@@ -177,7 +177,7 @@ export default function CollectionForm({
           }
         >
           <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-400">/collections/</span>
+            <span className="text-sm text-slate-400 dark:text-slate-500">/collections/</span>
             <input
               type="text"
               name="slug"
@@ -192,8 +192,8 @@ export default function CollectionForm({
 
       {/* Tagline */}
       <section>
-        <h2 className="mb-3 text-sm font-semibold text-slate-900">Tagline</h2>
-        <p className="mb-3 text-xs text-slate-400">Short line shown under the title on the collection page.</p>
+        <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Tagline</h2>
+        <p className="mb-3 text-xs text-slate-400 dark:text-slate-500">Short line shown under the title on the collection page.</p>
         <div className="grid grid-cols-3 gap-3">
           <Field label="English">
             <input type="text" name="taglineEn" required defaultValue={collection?.taglineEn} className={inputClass} />
@@ -223,7 +223,7 @@ export default function CollectionForm({
 
       {/* Description */}
       <section>
-        <h2 className="mb-3 text-sm font-semibold text-slate-900">Description</h2>
+        <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Description</h2>
         <div className="grid grid-cols-3 gap-3">
           <Field label="English">
             <textarea
@@ -282,17 +282,17 @@ export default function CollectionForm({
 
       <div aria-live="polite">
         {state.error && (
-          <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+          <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:bg-red-950/40 dark:text-red-300">
             {state.error}
           </p>
         )}
       </div>
 
-      <div className="flex items-center gap-3 border-t border-slate-200 pt-6">
+      <div className="flex items-center gap-3 border-t border-slate-200 pt-6 dark:border-slate-800">
         <button
           type="submit"
           disabled={pending}
-          className="flex h-11 cursor-pointer items-center rounded-lg bg-slate-900 px-6 text-sm font-semibold text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="flex h-11 cursor-pointer items-center rounded-lg bg-slate-900 px-6 text-sm font-semibold text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
         >
           {pending ? "Saving…" : mode === "create" ? "Create collection" : "Save changes"}
         </button>

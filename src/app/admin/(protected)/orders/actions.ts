@@ -19,3 +19,25 @@ export async function markOrderDeliveredAction(ref: string): Promise<void> {
   revalidatePath("/admin/orders");
   revalidatePath("/admin");
 }
+
+/**
+ * Cancels an order that hasn't been paid yet (see CANCELABLE_STATUSES in
+ * CancelOrderButton.tsx — the button itself is hidden for anything else).
+ * There's no refund integration in this codebase, so a paid order is
+ * deliberately never reachable here — cancelling one would flip its
+ * status while the customer's money stays uncollected-back.
+ */
+export async function cancelOrderAction(ref: string): Promise<void> {
+  if (!(await isAuthenticated())) return;
+  await orderStore.setStatus(ref, "Cancelled");
+  revalidatePath("/admin/orders");
+  revalidatePath("/admin/abandoned");
+  revalidatePath("/admin");
+}
+
+export async function updateOrderNoteAction(ref: string, note: string): Promise<void> {
+  if (!(await isAuthenticated())) return;
+  await orderStore.updateNote(ref, note.trim().slice(0, 2000));
+  revalidatePath("/admin/orders");
+  revalidatePath("/admin/abandoned");
+}

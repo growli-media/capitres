@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db/client";
 
 /**
- * Reviews are inserted with approved = false and only appear on the PDP
- * once approved in /admin/reviews — keeps drive-by review spam off the
- * live site without needing a human to write code to publish one.
+ * 4-5★ reviews publish immediately; 1-3★ reviews are inserted with
+ * approved = false and only appear on the PDP once approved in
+ * /admin/reviews — keeps low-rated drive-by reviews off the live site
+ * without needing a human to sign off on every positive one.
  */
 export async function POST(request: NextRequest) {
   const { productSlug, author, rating, text, locale } = (await request
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
     insert into reviews (id, product_slug, author, rating, body, locale, approved)
     values (
       ${id}, ${productSlug}, ${author.trim().slice(0, 80)}, ${stars},
-      ${text.trim().slice(0, 2000)}, ${locale ?? null}, false
+      ${text.trim().slice(0, 2000)}, ${locale ?? null}, ${stars >= 4}
     )
   `;
   return NextResponse.json({ ok: true });

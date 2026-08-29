@@ -22,22 +22,22 @@ export default async function AdminReviewsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold tracking-tight text-slate-900">Reviews</h1>
-      <p className="mt-1 text-sm text-slate-500">
+      <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Reviews</h1>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
         {pending.length > 0
           ? `${pending.length} awaiting approval — nothing shows on the site until you approve it.`
           : "All caught up — nothing waiting for approval."}
       </p>
 
       {reviews.length === 0 ? (
-        <div className="mt-6 rounded-xl border border-dashed border-slate-300 py-16 text-center">
-          <p className="text-sm text-slate-500">No reviews yet.</p>
+        <div className="mt-6 rounded-xl border border-dashed border-slate-300 py-16 text-center dark:border-slate-700">
+          <p className="text-sm text-slate-500 dark:text-slate-400">No reviews yet.</p>
         </div>
       ) : (
-        <div className="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white">
+        <div className="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400">
+              <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400 dark:border-slate-800 dark:text-slate-500">
                 <th className="px-4 py-3 text-start font-medium">Product</th>
                 <th className="px-4 py-3 text-start font-medium">Author</th>
                 <th className="px-4 py-3 text-start font-medium">Rating</th>
@@ -46,26 +46,26 @@ export default async function AdminReviewsPage() {
                 <th className="px-4 py-3" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {[...pending, ...approved].map((r) => (
                 <tr key={r.id}>
-                  <td className="max-w-40 truncate px-4 py-3 font-medium text-slate-900">
+                  <td className="max-w-40 truncate px-4 py-3 font-medium text-slate-900 dark:text-slate-100">
                     {r.productTitle}
                   </td>
-                  <td className="px-4 py-3 text-slate-600">{r.author}</td>
+                  <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{r.author}</td>
                   <td className="px-4 py-3">
                     <Stars rating={r.rating} />
                   </td>
-                  <td className="max-w-sm px-4 py-3 text-slate-600">
+                  <td className="max-w-sm px-4 py-3 text-slate-600 dark:text-slate-400">
                     <p className="line-clamp-2">{r.body}</p>
                   </td>
                   <td className="px-4 py-3">
                     {r.approved ? (
-                      <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
+                      <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
                         Published
                       </span>
                     ) : (
-                      <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                      <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
                         Pending
                       </span>
                     )}

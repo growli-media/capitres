@@ -17,27 +17,27 @@ function StockBadge({
 }) {
   if (isGiftCard) {
     return (
-      <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+      <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
         Digital
       </span>
     );
   }
   if (totalStock === 0) {
     return (
-      <span className="rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">
+      <span className="rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 dark:bg-red-950/40 dark:text-red-300">
         Sold out
       </span>
     );
   }
   if (totalStock <= 10) {
     return (
-      <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+      <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
         Low — {totalStock} left
       </span>
     );
   }
   return (
-    <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+    <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
       In stock — {totalStock}
     </span>
   );
@@ -50,16 +50,16 @@ export default async function AdminProductsPage() {
     <div>
       <div className="mb-6 flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
             Products
           </h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             {products.length} total — changes go live on the site immediately.
           </p>
         </div>
         <Link
           href="/admin/products/new"
-          className="flex h-10 shrink-0 cursor-pointer items-center gap-2 rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white transition-colors hover:bg-slate-700"
+          className="flex h-10 shrink-0 cursor-pointer items-center gap-2 rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white transition-colors hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
         >
           <Plus size={16} aria-hidden="true" />
           New product
@@ -67,20 +67,20 @@ export default async function AdminProductsPage() {
       </div>
 
       {products.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-slate-300 py-16 text-center">
-          <p className="text-sm text-slate-500">No products yet.</p>
+        <div className="rounded-xl border border-dashed border-slate-300 py-16 text-center dark:border-slate-700">
+          <p className="text-sm text-slate-500 dark:text-slate-400">No products yet.</p>
           <Link
             href="/admin/products/new"
-            className="mt-4 inline-flex h-10 cursor-pointer items-center rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-700"
+            className="mt-4 inline-flex h-10 cursor-pointer items-center rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
           >
             Add your first product
           </Link>
         </div>
       ) : (
-        <div className="rounded-xl border border-slate-200 bg-white">
+        <div className="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400">
+              <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400 dark:border-slate-800 dark:text-slate-500">
                 <th className="px-4 py-3 text-start font-medium">Product</th>
                 <th className="px-4 py-3 text-start font-medium">Category</th>
                 <th className="px-4 py-3 text-start font-medium">Price</th>
@@ -89,15 +89,12 @@ export default async function AdminProductsPage() {
                 <th className="px-4 py-3" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {products.map((p) => (
-                <tr
-                  key={p.id}
-                  className={p.archived ? "opacity-50" : undefined}
-                >
-                  <td className="px-4 py-3">
+                <tr key={p.id}>
+                  <td className={`px-4 py-3 ${p.archived ? "opacity-50" : ""}`}>
                     <div className="flex items-center gap-3">
-                      <div className="relative h-12 w-10 shrink-0 overflow-hidden rounded-md bg-slate-100">
+                      <div className="relative h-12 w-10 shrink-0 overflow-hidden rounded-md bg-slate-100 dark:bg-slate-800">
                         {p.images[0] && (
                           <Image
                             src={p.images[0].url}
@@ -112,38 +109,38 @@ export default async function AdminProductsPage() {
                       <div className="min-w-0">
                         <Link
                           href={`/admin/products/${p.id}/edit`}
-                          className="block truncate font-medium text-slate-900 hover:underline"
+                          className="block truncate font-medium text-slate-900 hover:underline dark:text-slate-100"
                         >
                           {p.titleEn}
                         </Link>
-                        <span className="text-xs text-slate-400">/{p.slug}</span>
+                        <span className="text-xs text-slate-400 dark:text-slate-500">/{p.slug}</span>
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-slate-600">{p.category}</td>
-                  <td className="px-4 py-3">
-                    <span className="price font-medium text-slate-900">
+                  <td className={`px-4 py-3 text-slate-600 dark:text-slate-400 ${p.archived ? "opacity-50" : ""}`}>{p.category}</td>
+                  <td className={`px-4 py-3 ${p.archived ? "opacity-50" : ""}`}>
+                    <span className="price font-medium text-slate-900 dark:text-slate-100">
                       {formatIQD(p.priceAmount, "en")}
                     </span>
                     {p.compareAtAmount && (
-                      <span className="price ms-2 text-xs text-slate-400 line-through">
+                      <span className="price ms-2 text-xs text-slate-400 line-through dark:text-slate-500">
                         {formatIQD(p.compareAtAmount, "en")}
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className={`px-4 py-3 ${p.archived ? "opacity-50" : ""}`}>
                     <StockBadge
                       isGiftCard={p.category === "gift-cards"}
                       totalStock={p.totalStock}
                     />
                   </td>
-                  <td className="px-4 py-3">
+                  <td className={`px-4 py-3 ${p.archived ? "opacity-50" : ""}`}>
                     {p.archived ? (
-                      <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">
+                      <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">
                         Archived
                       </span>
                     ) : (
-                      <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
+                      <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
                         Live
                       </span>
                     )}

@@ -18,6 +18,12 @@ export interface AdminUser {
   lockedUntil: string | null;
   tokenVersion: number;
   createdAt: string;
+  firstName: string | null;
+  lastName: string | null;
+  phone: string | null;
+  /** Free-text display label (e.g. "Store Manager") — not a permissions
+   * system, every admin_users account has identical capabilities. */
+  role: string | null;
 }
 
 interface AdminUserRow {
@@ -31,6 +37,10 @@ interface AdminUserRow {
   locked_until: string | null;
   token_version: number;
   created_at: string;
+  first_name: string | null;
+  last_name: string | null;
+  phone: string | null;
+  role: string | null;
 }
 
 function toUser(row: AdminUserRow): AdminUser {
@@ -45,6 +55,10 @@ function toUser(row: AdminUserRow): AdminUser {
     lockedUntil: row.locked_until,
     tokenVersion: row.token_version,
     createdAt: row.created_at,
+    firstName: row.first_name,
+    lastName: row.last_name,
+    phone: row.phone,
+    role: row.role,
   };
 }
 
@@ -76,7 +90,8 @@ export function isLocked(user: Pick<AdminUser, "lockedUntil">): boolean {
 export async function getUserByEmail(email: string): Promise<AdminUser | undefined> {
   const rows = await sql<AdminUserRow[]>`
     select id, email, password_hash, totp_secret, totp_enabled, disabled,
-           failed_attempts, locked_until::text, token_version, created_at::text
+           failed_attempts, locked_until::text, token_version, created_at::text,
+           first_name, last_name, phone, role
     from admin_users where email = ${normalizeEmail(email)} limit 1
   `;
   return rows[0] ? toUser(rows[0]) : undefined;
@@ -85,7 +100,8 @@ export async function getUserByEmail(email: string): Promise<AdminUser | undefin
 export async function getUserById(id: string): Promise<AdminUser | undefined> {
   const rows = await sql<AdminUserRow[]>`
     select id, email, password_hash, totp_secret, totp_enabled, disabled,
-           failed_attempts, locked_until::text, token_version, created_at::text
+           failed_attempts, locked_until::text, token_version, created_at::text,
+           first_name, last_name, phone, role
     from admin_users where id = ${id} limit 1
   `;
   return rows[0] ? toUser(rows[0]) : undefined;
@@ -97,7 +113,8 @@ export async function createUser(email: string, passwordHash: string): Promise<A
     insert into admin_users (id, email, password_hash)
     values (${id}, ${normalizeEmail(email)}, ${passwordHash})
     returning id, email, password_hash, totp_secret, totp_enabled, disabled,
-              failed_attempts, locked_until::text, token_version, created_at::text
+              failed_attempts, locked_until::text, token_version, created_at::text,
+              first_name, last_name, phone, role
   `;
   return toUser(rows[0]);
 }
@@ -170,10 +187,59 @@ export async function countEnabledAdmins(excludingId?: string): Promise<number> 
   return Number(rows[0]?.count ?? 0);
 }
 
+/**
+ * Self-service profile update. Callers MUST already have verified, before
+ * calling this, that `patch.email` (once normalized) is either unchanged
+ * or is an allowlist-approved address not claimed by a different account
+ * — see updateOwnProfileAction in team/actions.ts. When the email does
+ * change, the admin_allowlist row has to move with it (listAllowlist()
+ * LEFT JOINs admin_users on email, so leaving the old row behind would
+ * orphan the join and leave a phantom "not signed up yet" entry) — done
+ * as one transaction so a mid-way failure can't leave the account and
+ * allowlist inconsistent. Renaming the old allowlist row directly isn't
+ * possible: the new email is required to already have its own row (that's
+ * the precondition above, so self-service can't grant itself access), and
+ * `email` is that table's primary key, so delete-then-insert is used
+ * instead of update.
+ */
+export async function updateOwnProfile(
+  id: string,
+  patch: { firstName: string; lastName: string; phone: string; role: string; email: string },
+): Promise<void> {
+  const current = await getUserById(id);
+  if (!current) return;
+  const newEmail = normalizeEmail(patch.email);
+  const firstName = patch.firstName.trim() || null;
+  const lastName = patch.lastName.trim() || null;
+  const phone = patch.phone.trim() || null;
+  const role = patch.role.trim() || null;
+
+  if (newEmail === current.email) {
+    await sql`
+      update admin_users
+      set first_name = ${firstName}, last_name = ${lastName}, phone = ${phone}, role = ${role}
+      where id = ${id}
+    `;
+    return;
+  }
+
+  await sql.begin(async (tx) => {
+    await tx`
+      update admin_users
+      set email = ${newEmail}, first_name = ${firstName}, last_name = ${lastName},
+          phone = ${phone}, role = ${role}
+      where id = ${id}
+    `;
+    await tx`delete from admin_allowlist where email = ${current.email}`;
+    await tx`insert into admin_allowlist (email) values (${newEmail}) on conflict do nothing`;
+  });
+}
+
 export async function listUsers(): Promise<AdminUser[]> {
   const rows = await sql<AdminUserRow[]>`
     select id, email, password_hash, totp_secret, totp_enabled, disabled,
-           failed_attempts, locked_until::text, token_version, created_at::text
+           failed_attempts, locked_until::text, token_version, created_at::text,
+           first_name, last_name, phone, role
     from admin_users order by created_at asc
   `;
   return rows.map(toUser);

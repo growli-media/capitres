@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+/* Admin-dashboard-only dark mode. Scoped to a `.admin-dark` DOM ancestor
+   (never <html>) so `dark:` utilities can never activate on the public
+   storefront, which has its own light-only brand design and uses zero
+   dark: classes today. See AdminShell.tsx for where `.admin-dark` gets
+   applied and toggled. */
+@custom-variant dark (&:where(.admin-dark, .admin-dark *));
+
 /* ------------------------------------------------------------------ */
 /* CAPITRES design tokens — palette traced from real brand assets      */
 /* (capitres.com wordmark, logo and product photography).              */

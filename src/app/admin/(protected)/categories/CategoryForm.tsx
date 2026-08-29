@@ -15,15 +15,15 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-sm font-medium text-slate-700">{label}</span>
+      <span className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">{label}</span>
       {children}
-      {hint && <span className="mt-1 block text-xs text-slate-400">{hint}</span>}
+      {hint && <span className="mt-1 block text-xs text-slate-400 dark:text-slate-500">{hint}</span>}
     </label>
   );
 }
 
 const inputClass =
-  "h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none transition-colors focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 disabled:bg-slate-100 disabled:text-slate-500";
+  "h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none transition-colors focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-slate-400 dark:focus:ring-slate-400/10 dark:disabled:bg-slate-800 dark:disabled:text-slate-400";
 
 export default function CategoryForm({
   mode,
@@ -41,7 +41,7 @@ export default function CategoryForm({
   return (
     <form action={formAction} className="space-y-8">
       <section>
-        <h2 className="mb-3 text-sm font-semibold text-slate-900">Name</h2>
+        <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Name</h2>
         <div className="grid grid-cols-3 gap-3">
           <Field label="English">
             <input type="text" name="titleEn" required defaultValue={category?.titleEn} className={inputClass} />
@@ -79,7 +79,7 @@ export default function CategoryForm({
           }
         >
           <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-400">/shop?category=</span>
+            <span className="text-sm text-slate-400 dark:text-slate-500">/shop?category=</span>
             <input
               type="text"
               name="slug"
@@ -106,17 +106,17 @@ export default function CategoryForm({
 
       <div aria-live="polite">
         {state.error && (
-          <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+          <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:bg-red-950/40 dark:text-red-300">
             {state.error}
           </p>
         )}
       </div>
 
-      <div className="flex items-center gap-3 border-t border-slate-200 pt-6">
+      <div className="flex items-center gap-3 border-t border-slate-200 pt-6 dark:border-slate-800">
         <button
           type="submit"
           disabled={pending}
-          className="flex h-11 cursor-pointer items-center rounded-lg bg-slate-900 px-6 text-sm font-semibold text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="flex h-11 cursor-pointer items-center rounded-lg bg-slate-900 px-6 text-sm font-semibold text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
         >
           {pending ? "Saving…" : mode === "create" ? "Create category" : "Save changes"}
         </button>

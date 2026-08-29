@@ -39,11 +39,12 @@ export interface AbandonedOrder {
   minutesAgo: number;
   customerName: string;
   phone: string | null;
-  email: string;
+  email: string | null;
   total: number;
   itemCount: number;
   itemTitles: string[];
   status: string;
+  adminNote: string | null;
 }
 
 /** Carts that were started (an order row exists) but never reached a
@@ -60,11 +61,12 @@ export async function listAbandonedOrders(): Promise<AbandonedOrder[]> {
       last_name: string | null;
       legacy_full_name: string | null;
       phone: string | null;
-      email: string;
+      email: string | null;
       total: string;
       item_count: string;
       item_titles: string[];
       status: string;
+      admin_note: string | null;
     }[]
   >`
     select
@@ -80,7 +82,8 @@ export async function listAbandonedOrders(): Promise<AbandonedOrder[]> {
       jsonb_array_length(lines)::text as item_count,
       (select coalesce(array_agg(line->>'title'), '{}')
          from jsonb_array_elements(lines) as line) as item_titles,
-      status
+      status,
+      admin_note
     from orders
     where status != all(${NOT_ABANDONED_STATUSES})
       and created_at < now() - make_interval(mins => ${ABANDONED_GRACE_MINUTES})
@@ -102,5 +105,6 @@ export async function listAbandonedOrders(): Promise<AbandonedOrder[]> {
     itemCount: Number(r.item_count),
     itemTitles: r.item_titles ?? [],
     status: r.status,
+    adminNote: r.admin_note,
   }));
 }

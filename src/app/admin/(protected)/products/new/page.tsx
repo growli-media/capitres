@@ -16,12 +16,12 @@ export default async function NewProductPage() {
     <div className="max-w-3xl">
       <Link
         href="/admin/products"
-        className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-slate-900"
+        className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
       >
         <CaretLeft size={14} aria-hidden="true" />
         Products
       </Link>
-      <h1 className="mb-6 text-2xl font-bold tracking-tight text-slate-900">
+      <h1 className="mb-6 text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
         New product
       </h1>
       <ProductForm

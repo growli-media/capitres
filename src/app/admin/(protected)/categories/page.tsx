@@ -20,16 +20,16 @@ export default async function AdminCategoriesPage({
     <div>
       <div className="mb-6 flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
             Categories
           </h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             The product types customers browse by. Changes go live immediately.
           </p>
         </div>
         <Link
           href="/admin/categories/new"
-          className="flex h-10 shrink-0 cursor-pointer items-center gap-2 rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white transition-colors hover:bg-slate-700"
+          className="flex h-10 shrink-0 cursor-pointer items-center gap-2 rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white transition-colors hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
         >
           <Plus size={16} aria-hidden="true" />
           New category
@@ -37,16 +37,16 @@ export default async function AdminCategoriesPage({
       </div>
 
       {created === "1" && (
-        <div className="mb-6 flex items-center gap-2 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+        <div className="mb-6 flex items-center gap-2 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
           <Check size={16} aria-hidden="true" />
           Category created and live on the site.
         </div>
       )}
 
-      <div className="rounded-xl border border-slate-200 bg-white">
+      <div className="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400">
+            <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400 dark:border-slate-800 dark:text-slate-500">
               <th className="px-4 py-3 text-start font-medium">Category</th>
               <th className="px-4 py-3 text-start font-medium">Products</th>
               <th className="px-4 py-3 text-start font-medium">Order</th>
@@ -54,27 +54,27 @@ export default async function AdminCategoriesPage({
               <th className="px-4 py-3" />
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
             {categories.map((c) => (
-              <tr key={c.slug} className={c.archived ? "opacity-50" : undefined}>
-                <td className="px-4 py-3">
+              <tr key={c.slug}>
+                <td className={`px-4 py-3 ${c.archived ? "opacity-50" : ""}`}>
                   <Link
                     href={`/admin/categories/${c.slug}/edit`}
-                    className="font-medium text-slate-900 hover:underline"
+                    className="font-medium text-slate-900 hover:underline dark:text-slate-100"
                   >
                     {c.titleEn}
                   </Link>
-                  <span className="ms-2 text-xs text-slate-400">/{c.slug}</span>
+                  <span className="ms-2 text-xs text-slate-400 dark:text-slate-500">/{c.slug}</span>
                 </td>
-                <td className="px-4 py-3 text-slate-600">{c.productCount}</td>
-                <td className="px-4 py-3 text-slate-600">{c.sortOrder}</td>
-                <td className="px-4 py-3">
+                <td className={`px-4 py-3 text-slate-600 dark:text-slate-400 ${c.archived ? "opacity-50" : ""}`}>{c.productCount}</td>
+                <td className={`px-4 py-3 text-slate-600 dark:text-slate-400 ${c.archived ? "opacity-50" : ""}`}>{c.sortOrder}</td>
+                <td className={`px-4 py-3 ${c.archived ? "opacity-50" : ""}`}>
                   {c.archived ? (
-                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">
+                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">
                       Archived
                     </span>
                   ) : (
-                    <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
+                    <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
                       Live
                     </span>
                   )}

@@ -3,8 +3,15 @@
 import { revalidatePath } from "next/cache";
 import { isValidEmail } from "@/lib/server/records";
 import { requireUserSession } from "@/lib/admin/auth";
-import { addToAllowlist, removeFromAllowlist } from "@/lib/admin/allowlist";
-import { countEnabledAdmins, setDisabled } from "@/lib/admin/users";
+import { addToAllowlist, removeFromAllowlist, isAllowed } from "@/lib/admin/allowlist";
+import {
+  countEnabledAdmins,
+  setDisabled,
+  getUserById,
+  getUserByEmail,
+  updateOwnProfile,
+  normalizeEmail,
+} from "@/lib/admin/users";
 
 /**
  * Every action here checks the caller's session itself — the legacy
@@ -47,4 +54,41 @@ export async function setUserDisabledAction(userId: string, disabled: boolean): 
 
   await setDisabled(userId, disabled);
   revalidatePath("/admin/team");
+}
+
+/** Self-service only — always resolves the target from the caller's own
+ * session, never from client input, so an authenticated request can never
+ * edit a different admin's profile. */
+export async function updateOwnProfileAction(
+  _prevState: { error?: string } | undefined,
+  formData: FormData,
+): Promise<{ error?: string }> {
+  const session = await requireUserSession();
+  if (!session) return { error: "Sign in with a named account to edit your profile." };
+
+  const email = String(formData.get("email") ?? "").trim();
+  const firstName = String(formData.get("firstName") ?? "").trim();
+  const lastName = String(formData.get("lastName") ?? "").trim();
+  const phone = String(formData.get("phone") ?? "").trim();
+  const role = String(formData.get("role") ?? "").trim();
+
+  if (!isValidEmail(email)) return { error: "Enter a valid email address." };
+
+  const current = await getUserById(session.id);
+  if (!current) return { error: "Account not found." };
+
+  const normalized = normalizeEmail(email);
+  if (normalized !== current.email) {
+    if (!(await isAllowed(normalized))) {
+      return { error: "That email isn't approved yet — add it below first." };
+    }
+    const existing = await getUserByEmail(normalized);
+    if (existing && existing.id !== session.id) {
+      return { error: "That email is already in use by another account." };
+    }
+  }
+
+  await updateOwnProfile(session.id, { firstName, lastName, phone, role, email });
+  revalidatePath("/admin/team");
+  return {};
 }

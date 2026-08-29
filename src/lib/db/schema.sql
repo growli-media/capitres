@@ -167,3 +167,16 @@ CREATE TABLE IF NOT EXISTS admin_reset_codes (
   created_at  timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_admin_reset_codes_email ON admin_reset_codes(email);
+
+-- Admin-authored free-text note per order — surfaced in Orders and
+-- Abandoned Carts. Distinct from customer.notes (delivery instructions,
+-- inside the customer jsonb blob) — do not conflate the two.
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS admin_note text;
+
+-- Self-service profile fields for admin_users. `role` is a free-text
+-- display label only (job title), not an RBAC/permissions system — every
+-- admin_users account keeps identical capabilities regardless of this value.
+ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS first_name text;
+ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS last_name text;
+ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS phone text;
+ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS role text;

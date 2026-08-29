@@ -14,16 +14,16 @@ export default async function AdminCollectionsPage() {
     <div>
       <div className="mb-6 flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
             Collections
           </h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             {collections.length} total — changes go live on the site immediately.
           </p>
         </div>
         <Link
           href="/admin/collections/new"
-          className="flex h-10 shrink-0 cursor-pointer items-center gap-2 rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white transition-colors hover:bg-slate-700"
+          className="flex h-10 shrink-0 cursor-pointer items-center gap-2 rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white transition-colors hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
         >
           <Plus size={16} aria-hidden="true" />
           New collection
@@ -31,20 +31,20 @@ export default async function AdminCollectionsPage() {
       </div>
 
       {collections.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-slate-300 py-16 text-center">
-          <p className="text-sm text-slate-500">No collections yet.</p>
+        <div className="rounded-xl border border-dashed border-slate-300 py-16 text-center dark:border-slate-700">
+          <p className="text-sm text-slate-500 dark:text-slate-400">No collections yet.</p>
           <Link
             href="/admin/collections/new"
-            className="mt-4 inline-flex h-10 cursor-pointer items-center rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-700"
+            className="mt-4 inline-flex h-10 cursor-pointer items-center rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
           >
             Add your first collection
           </Link>
         </div>
       ) : (
-        <div className="rounded-xl border border-slate-200 bg-white">
+        <div className="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400">
+              <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400 dark:border-slate-800 dark:text-slate-500">
                 <th className="px-4 py-3 text-start font-medium">Collection</th>
                 <th className="px-4 py-3 text-start font-medium">Theme</th>
                 <th className="px-4 py-3 text-start font-medium">Order</th>
@@ -52,12 +52,12 @@ export default async function AdminCollectionsPage() {
                 <th className="px-4 py-3" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {collections.map((c) => (
-                <tr key={c.slug} className={c.archived ? "opacity-50" : undefined}>
-                  <td className="px-4 py-3">
+                <tr key={c.slug}>
+                  <td className={`px-4 py-3 ${c.archived ? "opacity-50" : ""}`}>
                     <div className="flex items-center gap-3">
-                      <div className="relative h-12 w-16 shrink-0 overflow-hidden rounded-md bg-slate-100">
+                      <div className="relative h-12 w-16 shrink-0 overflow-hidden rounded-md bg-slate-100 dark:bg-slate-800">
                         {c.heroImageUrl && (
                           <Image
                             src={c.heroImageUrl}
@@ -72,23 +72,23 @@ export default async function AdminCollectionsPage() {
                       <div className="min-w-0">
                         <Link
                           href={`/admin/collections/${c.slug}/edit`}
-                          className="block truncate font-medium text-slate-900 hover:underline"
+                          className="block truncate font-medium text-slate-900 hover:underline dark:text-slate-100"
                         >
                           {c.titleEn}
                         </Link>
-                        <span className="text-xs text-slate-400">/{c.slug}</span>
+                        <span className="text-xs text-slate-400 dark:text-slate-500">/{c.slug}</span>
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-slate-600 capitalize">{c.theme}</td>
-                  <td className="px-4 py-3 text-slate-600">{c.sortOrder}</td>
-                  <td className="px-4 py-3">
+                  <td className={`px-4 py-3 capitalize text-slate-600 dark:text-slate-400 ${c.archived ? "opacity-50" : ""}`}>{c.theme}</td>
+                  <td className={`px-4 py-3 text-slate-600 dark:text-slate-400 ${c.archived ? "opacity-50" : ""}`}>{c.sortOrder}</td>
+                  <td className={`px-4 py-3 ${c.archived ? "opacity-50" : ""}`}>
                     {c.archived ? (
-                      <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">
+                      <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">
                         Archived
                       </span>
                     ) : (
-                      <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
+                      <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
                         Live
                       </span>
                     )}

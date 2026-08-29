@@ -20,7 +20,7 @@ export default function ReviewRowActions({
           type="button"
           onClick={() => startTransition(() => unapproveReviewAction(id))}
           disabled={pending}
-          className="flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:opacity-50"
+          className="flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
         >
           <X size={14} />
           Unpublish
@@ -30,7 +30,7 @@ export default function ReviewRowActions({
           type="button"
           onClick={() => startTransition(() => approveReviewAction(id))}
           disabled={pending}
-          className="flex h-9 items-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100 disabled:opacity-50"
+          className="flex h-9 items-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100 disabled:opacity-50 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-950/70"
         >
           <Check size={14} />
           Approve
@@ -41,7 +41,7 @@ export default function ReviewRowActions({
         onClick={() => startTransition(() => deleteReviewAction(id))}
         disabled={pending}
         aria-label="Delete review"
-        className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+        className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-50 dark:text-slate-500 dark:hover:bg-red-950/40 dark:hover:text-red-400"
       >
         <Trash size={14} />
       </button>

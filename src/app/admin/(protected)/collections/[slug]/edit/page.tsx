@@ -24,20 +24,20 @@ export default async function EditCollectionPage({
     <div className="max-w-3xl">
       <Link
         href="/admin/collections"
-        className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-slate-900"
+        className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
       >
         <CaretLeft size={14} aria-hidden="true" />
         Collections
       </Link>
 
       {created === "1" && (
-        <div className="mb-6 flex items-center gap-2 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+        <div className="mb-6 flex items-center gap-2 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
           <Check size={16} aria-hidden="true" />
           Collection created and live on the site.
         </div>
       )}
 
-      <h1 className="mb-6 text-2xl font-bold tracking-tight text-slate-900">
+      <h1 className="mb-6 text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
         Edit collection
       </h1>
       <CollectionForm mode="edit" collection={collection} />

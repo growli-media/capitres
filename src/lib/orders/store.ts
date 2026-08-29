@@ -95,6 +95,8 @@ export interface Order {
   promoCode?: string;
   adTracking?: AdTracking;
   metaCapiSent?: boolean;
+  /** Staff-only note, never shown to the customer — see admin/(protected)/orders/NoteButton.tsx. */
+  adminNote?: string;
 }
 
 /** Display name for an order's customer — handles both the current
@@ -132,6 +134,8 @@ export interface OrderStore {
    * event — returns the order if this call is the one that should send
    * it, or undefined if it was already sent (or the order doesn't exist). */
   claimForMetaCapi(ref: string): Promise<Order | undefined>;
+  /** Overwrites the staff-only admin note (single field, not a log). */
+  updateNote(ref: string, note: string): Promise<void>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -152,6 +156,7 @@ interface OrderRow {
   promo_code: string | null;
   ad_tracking: AdTracking | null;
   meta_capi_sent: boolean;
+  admin_note: string | null;
 }
 
 function toOrder(row: OrderRow): Order {
@@ -169,6 +174,7 @@ function toOrder(row: OrderRow): Order {
     promoCode: row.promo_code ?? undefined,
     adTracking: row.ad_tracking ?? undefined,
     metaCapiSent: row.meta_capi_sent,
+    adminNote: row.admin_note ?? undefined,
   };
 }
 
@@ -191,7 +197,7 @@ const postgresOrderStore: OrderStore = {
     const rows = await sql<OrderRow[]>`
       select ref, created_at::text as created_at, locale, status,
              wayl_link_id, payment_method, mock, customer, lines, totals,
-             promo_code, ad_tracking, meta_capi_sent
+             promo_code, ad_tracking, meta_capi_sent, admin_note
       from orders where ref = ${ref} limit 1
     `;
     return rows[0] ? toOrder(rows[0]) : undefined;
@@ -205,7 +211,7 @@ const postgresOrderStore: OrderStore = {
       where ref = ${ref}
       returning ref, created_at::text as created_at, locale, status,
                 wayl_link_id, payment_method, mock, customer, lines, totals,
-                promo_code, ad_tracking, meta_capi_sent
+                promo_code, ad_tracking, meta_capi_sent, admin_note
     `;
     return rows[0] ? toOrder(rows[0]) : undefined;
   },
@@ -220,7 +226,7 @@ const postgresOrderStore: OrderStore = {
     const rows = await sql<OrderRow[]>`
       select ref, created_at::text as created_at, locale, status,
              wayl_link_id, payment_method, mock, customer, lines, totals,
-             promo_code, ad_tracking, meta_capi_sent
+             promo_code, ad_tracking, meta_capi_sent, admin_note
       from orders order by created_at desc limit 500
     `;
     return rows.map(toOrder);
@@ -232,9 +238,14 @@ const postgresOrderStore: OrderStore = {
       where ref = ${ref} and meta_capi_sent = false
       returning ref, created_at::text as created_at, locale, status,
                 wayl_link_id, payment_method, mock, customer, lines, totals,
-                promo_code, ad_tracking, meta_capi_sent
+                promo_code, ad_tracking, meta_capi_sent, admin_note
     `;
     return rows[0] ? toOrder(rows[0]) : undefined;
+  },
+  async updateNote(ref, note) {
+    await sql`
+      update orders set admin_note = ${note || null} where ref = ${ref}
+    `;
   },
 };
 
@@ -298,6 +309,13 @@ const fileOrderStore: OrderStore = {
     order.metaCapiSent = true;
     await writeAll(all);
     return order;
+  },
+  async updateNote(ref, note) {
+    const all = await readAll();
+    const order = all[ref];
+    if (!order) return;
+    order.adminNote = note || undefined;
+    await writeAll(all);
   },
 };
 

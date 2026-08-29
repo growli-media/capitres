@@ -25,6 +25,14 @@ interface ReviewRow {
   created_at: string;
 }
 
+export async function getPendingReviewsCount(): Promise<number> {
+  if (!process.env.DATABASE_URL) return 0;
+  const rows = await sql<{ count: string }[]>`
+    select count(*)::text as count from reviews where approved = false
+  `;
+  return Number(rows[0]?.count ?? 0);
+}
+
 export async function listAdminReviews(): Promise<AdminReview[]> {
   const rows = await sql<ReviewRow[]>`
     select r.id, r.product_slug, p.title_en, r.author, r.rating, r.body,

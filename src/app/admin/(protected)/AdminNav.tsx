@@ -15,6 +15,7 @@ import {
   UsersThree,
 } from "@phosphor-icons/react";
 import { logout } from "../logout-action";
+import SupportPanel from "./components/SupportPanel";
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", icon: ChartLineUp, exact: true },
@@ -28,25 +29,34 @@ const NAV_ITEMS = [
 ] as const;
 
 export default function AdminNav({
-  abandonedCount,
+  badgeCounts,
   onNavigate,
 }: {
-  abandonedCount: number;
+  badgeCounts: Partial<Record<string, number>>;
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
 
   return (
     <nav className="flex h-full flex-col">
-      <Link href="/admin" onClick={onNavigate} className="block px-6 pt-6 pb-2">
+      <Link href="/admin" onClick={onNavigate} className="group block px-6 pt-6 pb-2">
         <Image
           src="/brand/logo-black.svg"
           alt="Capitres"
           width={867}
           height={99}
-          className="h-4 w-auto"
+          priority
+          className="h-4 w-auto transition-transform duration-300 ease-out group-hover:scale-[1.03] group-hover:drop-shadow-sm dark:hidden"
         />
-        <span className="mt-1 block text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+        <Image
+          src="/brand/logo-white.svg"
+          alt="Capitres"
+          width={867}
+          height={99}
+          priority
+          className="hidden h-4 w-auto transition-transform duration-300 ease-out group-hover:scale-[1.03] group-hover:drop-shadow-sm dark:block"
+        />
+        <span className="mt-1 block text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
           Admin
         </span>
       </Link>
@@ -65,21 +75,17 @@ export default function AdminNav({
                 aria-current={active ? "page" : undefined}
                 className={`flex min-h-11 items-center justify-between gap-3 rounded-lg px-3 text-sm font-medium transition-colors ${
                   active
-                    ? "bg-slate-900 text-white"
-                    : "text-slate-600 hover:bg-slate-200/70 hover:text-slate-900"
+                    ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
+                    : "text-slate-600 hover:bg-slate-200/70 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
                 }`}
               >
                 <span className="flex items-center gap-3">
                   <Icon size={18} aria-hidden="true" />
                   {item.label}
                 </span>
-                {item.href === "/admin/abandoned" && abandonedCount > 0 && (
-                  <span
-                    className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-bold ${
-                      active ? "bg-white text-slate-900" : "bg-red-500 text-white"
-                    }`}
-                  >
-                    {abandonedCount}
+                {!!badgeCounts[item.href] && (
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold text-white">
+                    {badgeCounts[item.href]}
                   </span>
                 )}
               </Link>
@@ -88,19 +94,30 @@ export default function AdminNav({
         })}
       </ul>
 
-      <div className="border-t border-slate-100 px-4 pt-3 pb-4">
+      <div className="border-t border-slate-100 px-4 pt-3 pb-4 dark:border-slate-800">
+        <SupportPanel />
         <form action={logout}>
           <button
             type="submit"
-            className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-lg px-3 text-sm font-medium text-slate-500 transition-colors hover:bg-slate-200/70 hover:text-slate-900"
+            className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-lg px-3 text-sm font-medium text-slate-500 transition-colors hover:bg-slate-200/70 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
           >
             <SignOut size={18} aria-hidden="true" />
             Log out
           </button>
         </form>
-        <div className="mt-3 flex items-start gap-1.5 px-3 text-[11px] leading-relaxed text-slate-400">
+        <div className="mt-3 flex items-start gap-1.5 px-3 text-[11px] leading-relaxed text-slate-400 dark:text-slate-500">
           {/* eslint-disable-next-line @next/next/no-img-element -- tiny footer mark, next/image is overkill */}
-          <img src="/brand/growli-icon.png" alt="" className="mt-0.5 h-3.5 w-3.5 shrink-0 opacity-70" />
+          <img
+            src="/brand/growli-icon.png"
+            alt=""
+            className="mt-0.5 h-3.5 w-3.5 shrink-0 opacity-70 dark:hidden"
+          />
+          {/* eslint-disable-next-line @next/next/no-img-element -- tiny footer mark, next/image is overkill */}
+          <img
+            src="/brand/growli-icon-white.png"
+            alt=""
+            className="mt-0.5 hidden h-3.5 w-3.5 shrink-0 opacity-70 dark:block"
+          />
           <div>
             <p>
               Made by{" "}
@@ -108,7 +125,7 @@ export default function AdminNav({
                 href="https://growli.media"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-bold text-slate-600 transition-colors hover:text-slate-900"
+                className="font-bold text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
               >
                 Growli Media
               </a>{" "}
