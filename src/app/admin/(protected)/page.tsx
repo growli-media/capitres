@@ -12,6 +12,7 @@ import { getAbandonedCount } from "@/lib/admin/queries";
 import { orderStore, customerName } from "@/lib/orders/store";
 import { formatIQD } from "@/lib/money";
 import { glassCard } from "../glass";
+import NightSkyBanner from "./components/NightSkyBanner";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -80,7 +81,11 @@ export default async function AdminDashboardPage() {
         status changes.
       </p>
 
-      <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="mt-6">
+        <NightSkyBanner />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <KpiCard icon={CurrencyCircleDollar} label="Revenue" value={formatIQD(kpis.revenue, "en")} />
         <KpiCard icon={Receipt} label="Paid orders" value={String(kpis.orderCount)} />
         <KpiCard icon={ChartLineUp} label="Avg. order value" value={formatIQD(kpis.aov, "en")} />

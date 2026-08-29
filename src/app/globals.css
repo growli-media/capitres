@@ -228,6 +228,58 @@ body.admin-font-inter {
   }
 }
 
+/* Night-sky dashboard banner — see NightSkyBanner.tsx. Two shooting-star
+   keyframes with different periods (7s / 11s) so their "shoot" moments
+   drift apart over time instead of both firing in a visibly repeating
+   pair — the loop is technically periodic (every 77s) but reads as
+   effectively endless on a dashboard nobody watches continuously. */
+@keyframes star-twinkle {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+@keyframes shooting-star-a {
+  0% {
+    transform: translate(0, 0) rotate(-20deg);
+    opacity: 0;
+  }
+  1% {
+    opacity: 1;
+  }
+  9%,
+  100% {
+    transform: translate(90px, 34px) rotate(-20deg);
+    opacity: 0;
+  }
+}
+@keyframes shooting-star-b {
+  0% {
+    transform: translate(0, 0) rotate(-14deg);
+    opacity: 0;
+  }
+  1% {
+    opacity: 1;
+  }
+  7%,
+  100% {
+    transform: translate(-110px, 40px) rotate(-14deg);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .night-sky-star,
+  .night-sky-shooting-star {
+    animation: none !important;
+    opacity: 0.5;
+  }
+}
+
 /* Collection story-banner progress segments — see CollectionHero.tsx.
    A plain global keyframe (not a Tailwind --animate-* token) since it's
    referenced via an inline `animation` style with a duration that's a JS
