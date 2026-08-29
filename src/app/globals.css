@@ -106,6 +106,34 @@ html[lang="ku"] {
       transform: translate(-8%, -10%) scale(0.9);
     }
   }
+
+  /* Large, heavily-blurred light sources drifting across the admin
+     dashboard background (see AdminShell.tsx) — slow, but with enough
+     travel distance to actually read as movement, unlike the barely-
+     perceptible admin-gradient-drift position shift below. Different
+     periods/paths so the two never move in lockstep. motion-safe: only. */
+  --animate-glow-drift-a: glow-drift-a 42s ease-in-out infinite;
+  --animate-glow-drift-b: glow-drift-b 58s ease-in-out infinite;
+
+  @keyframes glow-drift-a {
+    0%,
+    100% {
+      transform: translate(0%, 0%) scale(1);
+    }
+    50% {
+      transform: translate(55%, 30%) scale(1.2);
+    }
+  }
+
+  @keyframes glow-drift-b {
+    0%,
+    100% {
+      transform: translate(0%, 0%) scale(1.1);
+    }
+    50% {
+      transform: translate(-45%, -25%) scale(0.9);
+    }
+  }
 }
 
 @theme inline {
@@ -145,6 +173,39 @@ body {
    this class's sibling storefront tree. */
 body.admin-font-inter {
   font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Slow-moving ambient gradient wash for the admin dashboard + auth pages'
+   background — a large multi-stop gradient with its position animated
+   over the better part of a minute, so the color wash drifts almost
+   imperceptibly rather than reading as a moving shape. Bigger, more
+   distinct color stops than the flat slate-to-white gradient this
+   replaced, so the glass surfaces' translucency has something visible to
+   show through. Dark mode's darker stop set applies via the .admin-dark
+   combinator — AdminShell's root div carries both classes at once, see
+   AdminShell.tsx; auth pages never carry .admin-dark so they always get
+   the light stops. */
+.admin-gradient-bg {
+  background-image: linear-gradient(135deg, #dbeafe 0%, #f8fafc 45%, #fef3c7 100%);
+  background-size: 200% 200%;
+  animation: admin-gradient-drift 48s ease-in-out infinite;
+}
+.admin-gradient-bg.admin-dark {
+  background-image: linear-gradient(135deg, #0f172a 0%, #020617 45%, #1e293b 100%);
+}
+@keyframes admin-gradient-drift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-gradient-bg {
+    animation: none;
+  }
 }
 
 /* Collection story-banner progress segments — see CollectionHero.tsx.

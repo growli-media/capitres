@@ -52,8 +52,12 @@ export default function Modal({
       aria-modal="true"
       aria-label={title}
     >
+      {/* Darkened, not blurred — the page behind should read as dimmed,
+          not obscured by blur. The glass panel below keeps its own blur,
+          so the "liquid glass" look stays on the surface meant to have
+          it, not the backdrop. */}
       <div
-        className="absolute inset-0 bg-slate-950/60 backdrop-blur-2xl dark:bg-black/75"
+        className="absolute inset-0 bg-slate-950/55 dark:bg-black/70"
         onClick={onClose}
         aria-hidden="true"
       />

@@ -7,8 +7,11 @@
  * this file lives at src/app/admin/ rather than nested under (protected)/.
  */
 
+/** The inset top highlight on both surfaces below is a thin catch-light
+ * line simulating a glass edge — the "reflecting" quality asked for,
+ * kept subtle so it reads as a material property, not a stripe. */
 export const glassCard =
-  "rounded-2xl border border-white/40 bg-white/70 shadow-[0_8px_30px_rgb(0,0,0,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/60 dark:shadow-[0_8px_30px_rgb(0,0,0,0.35)]";
+  "rounded-2xl border border-white/40 bg-white/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_8px_30px_rgb(0,0,0,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/60 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_8px_30px_rgb(0,0,0,0.35)]";
 
 /** Higher opacity than glassCard — for surfaces that sit over scrolling
  * page content (sidebar, modal) where text legibility matters more than
@@ -17,7 +20,7 @@ export const glassCard =
  * width (border-e on the sidebar, border-b on the top bar, plain `border`
  * for the modal, since they each want different sides). */
 export const glassPanel =
-  "border-white/40 bg-white/75 shadow-[0_8px_30px_rgb(0,0,0,0.10)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/70 dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)]";
+  "border-white/40 bg-white/75 shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_8px_30px_rgb(0,0,0,0.10)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/70 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_8px_30px_rgb(0,0,0,0.4)]";
 
 /** No height/width/padding baked in — callers vary (h-10 + px-3 in most
  * dashboard forms, h-11 + px-3.5 on the auth pages, textareas want
@@ -29,14 +32,21 @@ export const glassInput =
  * varies across the codebase, so this is convenient as-is. */
 export const glassTextarea = `w-full resize-none px-3 py-2 ${glassInput}`;
 
+/** Pill-shaped (rounded-full), with a visible outline border and a
+ * stronger blur than the card/panel surfaces — buttons are small and sit
+ * directly over moving background content, so they need more blur to
+ * read as glass rather than a flat tint. Top-to-bottom gradient (lighter
+ * at the top edge, fading toward the base) plus an inset highlight line
+ * on the top edge itself read as a glass surface catching light from
+ * above, i.e. the "reflecting" look. */
 export const glassButtonPrimary =
-  "rounded-lg bg-slate-900/90 text-white shadow-sm backdrop-blur-md transition-colors hover:bg-slate-800 disabled:opacity-50 dark:bg-white/90 dark:text-slate-900 dark:hover:bg-white";
+  "rounded-full border border-white/20 bg-gradient-to-b from-slate-700 to-slate-950 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_4px_14px_rgba(0,0,0,0.25)] backdrop-blur-xl transition-all hover:brightness-110 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_6px_18px_rgba(0,0,0,0.3)] disabled:opacity-50 disabled:hover:brightness-100 dark:border-white/10 dark:from-white dark:to-slate-200 dark:text-slate-900 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_4px_14px_rgba(0,0,0,0.35)] dark:hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_6px_18px_rgba(0,0,0,0.4)]";
 
 export const glassButtonSecondary =
-  "rounded-lg border border-slate-300/70 bg-white/50 backdrop-blur-md transition-colors hover:bg-white/80 dark:border-slate-700/70 dark:bg-slate-900/40 dark:hover:bg-slate-800/70";
+  "rounded-full border border-white/60 bg-gradient-to-b from-white/70 to-white/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] backdrop-blur-xl transition-all hover:from-white/90 hover:to-white/40 dark:border-white/15 dark:from-white/20 dark:to-white/5 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] dark:hover:from-white/30 dark:hover:to-white/10";
 
 export const glassIconButton =
-  "flex items-center justify-center rounded-lg text-slate-600 transition-colors hover:bg-white/60 dark:text-slate-300 dark:hover:bg-white/10";
+  "flex items-center justify-center rounded-full border border-white/40 text-slate-600 backdrop-blur-xl transition-all hover:bg-gradient-to-b hover:from-white/80 hover:to-white/30 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] dark:border-white/10 dark:text-slate-300 dark:hover:from-white/20 dark:hover:to-white/5 dark:hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]";
 
 /** Tone-tinted pill/badge variants — same emerald/amber/red/blue palette
  * used across orders/reviews/team, now with a translucent glass base. */

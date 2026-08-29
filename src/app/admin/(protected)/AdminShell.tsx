@@ -60,7 +60,7 @@ export default function AdminShell({
     <div
       id="admin-shell"
       suppressHydrationWarning
-      className={`relative flex min-h-dvh bg-gradient-to-br from-slate-100 via-slate-50 to-white dark:from-slate-950 dark:via-slate-950 dark:to-slate-900 ${dark ? "admin-dark" : ""}`}
+      className={`admin-gradient-bg relative flex min-h-dvh ${dark ? "admin-dark" : ""}`}
     >
       {/* eslint-disable-next-line @next/next/no-sync-scripts -- must run before hydration to avoid a flash of the wrong theme */}
       <script
@@ -69,13 +69,14 @@ export default function AdminShell({
         }}
       />
 
-      {/* Soft ambient color behind the glass — gives the blur something
-          to work with, kept low-opacity and brand-monochrome-adjacent
-          rather than a rainbow gradient. Fixed so it doesn't scroll. */}
-      <div className="pointer-events-none fixed inset-0 z-0" aria-hidden="true">
-        <div className="absolute -left-24 -top-24 h-96 w-96 rounded-full bg-slate-300/30 blur-3xl dark:bg-slate-700/20" />
-        <div className="absolute -right-24 top-1/3 h-[28rem] w-[28rem] rounded-full bg-blue-200/20 blur-3xl dark:bg-blue-500/10" />
-        <div className="absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-amber-100/20 blur-3xl dark:bg-amber-500/5" />
+      {/* Large, heavily-blurred light sources drifting slowly across the
+          background — layered on top of admin-gradient-bg's subtle
+          position shift so there's a visible moving light, not just an
+          almost-imperceptible color wash. Fixed + overflow-hidden on the
+          wrapper so the blobs never introduce page scroll. */}
+      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
+        <div className="motion-safe:animate-glow-drift-a absolute -left-1/4 top-1/4 h-[36rem] w-[36rem] rounded-full bg-blue-300/35 blur-3xl dark:bg-blue-500/10" />
+        <div className="motion-safe:animate-glow-drift-b absolute -right-1/4 bottom-1/4 h-[32rem] w-[32rem] rounded-full bg-amber-200/30 blur-3xl dark:bg-amber-500/5" />
       </div>
 
       {/* Desktop sidebar — sticky, full viewport height */}
@@ -92,8 +93,10 @@ export default function AdminShell({
       {/* Mobile drawer */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
+          {/* Darkened, not blurred — matches Modal.tsx's backdrop; opening
+              the mobile menu should dim the page, not obscure it. */}
           <div
-            className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm"
+            className="absolute inset-0 bg-slate-950/55"
             onClick={() => setMobileOpen(false)}
             aria-hidden="true"
           />
