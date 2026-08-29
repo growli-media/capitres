@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { List, SidebarSimple } from "@phosphor-icons/react";
 import AdminNav from "./AdminNav";
-import ThemeToggle from "./ThemeToggle";
 import { glassIconButton, sidebarGlass } from "../glass";
 import type { AccessLevel } from "@/lib/admin/permissions";
 
@@ -12,12 +11,17 @@ const THEME_KEY = "capitres-admin-theme";
 /**
  * Admin chrome: a floating, deeply-rounded sidebar inset from every edge
  * (not a flush edge-to-edge bar — position: fixed, not sticky-in-flow, so
- * it "hovers" independently of the content column) plus two floating
- * circular buttons (sidebar toggle, theme toggle) in place of the old
- * full-width top bar. Both float above the sidebar's own top inset
- * (buttons at top-4, sidebar starting at inset-y-20) so neither overlaps
- * the sidebar's logo. A slide-in drawer covers mobile, where a floating
- * panel would be the wrong touch pattern — that part is unchanged.
+ * it "hovers" independently of the content column), with no separate top
+ * bar or floating buttons at all while it's showing — the sidebar-toggle
+ * and theme-toggle controls live inside the sidebar/drawer itself (see
+ * AdminNav's header + footer). The only floating buttons rendered here
+ * are the two *reopen* handles, and only while there's nothing on screen
+ * to click instead: a vertically-centered handle next to the sidebar's
+ * position on desktop while it's collapsed, and a hamburger in the usual
+ * mobile corner while the drawer is closed. Each disappears the instant
+ * the sidebar/drawer it reopens is showing, replaced by that panel's own
+ * in-header control — so on mobile the toggle never gets stuck hidden
+ * under the drawer's backdrop the way a separate floating button would.
  *
  * Also owns dark-mode state for the whole (protected) tree. The class
  * lives on this root div (id="admin-shell"), never on <html> — see the
@@ -79,7 +83,7 @@ export default function AdminShell({
       suppressHydrationWarning
       className={`admin-gradient-bg relative min-h-dvh ${dark ? "admin-dark" : ""}`}
     >
-      {/* eslint-disable-next-line @next/next/no-sync-scripts -- must run before hydration to avoid a flash of the wrong theme */}
+      {/* Must run before hydration to avoid a flash of the wrong theme. */}
       <script
         dangerouslySetInnerHTML={{
           __html: `try{if(localStorage.getItem(${JSON.stringify(THEME_KEY)})==="dark"){document.getElementById("admin-shell").classList.add("admin-dark")}}catch(e){}`,
@@ -97,23 +101,34 @@ export default function AdminShell({
         <div className="motion-safe:animate-glow-drift-b absolute -right-1/4 bottom-1/4 h-[32rem] w-[32rem] rounded-full bg-[#5A7387]/25 blur-3xl dark:bg-[#5A7387]/10" />
       </div>
 
-      {/* The only two floating buttons — replaces the old full-width top
-          bar entirely. Both sit above the sidebar's own top inset
-          (top-4 vs. the sidebar's inset-y-20) so neither ever overlaps
-          the floating panel or its logo. */}
-      <button
-        type="button"
-        onClick={toggleSidebar}
-        aria-label={collapsed ? "Show sidebar" : "Hide sidebar"}
-        aria-pressed={collapsed}
-        className={`fixed top-4 start-4 z-30 h-11 w-11 cursor-pointer ${glassIconButton}`}
-      >
-        <List size={19} className="md:hidden" />
-        <SidebarSimple size={19} className="hidden md:block" />
-      </button>
-      <div className="fixed top-4 end-4 z-30">
-        <ThemeToggle dark={dark} onToggle={toggleDark} />
-      </div>
+      {/* Desktop reopen handle — vertically centered right next to where
+          the sidebar itself sits, not pinned in a separate corner above
+          it. Only rendered while collapsed; once the sidebar is showing,
+          its own header has this same control (see AdminNav). */}
+      {collapsed && (
+        <button
+          type="button"
+          onClick={toggleSidebar}
+          aria-label="Show sidebar"
+          className={`fixed top-1/2 start-4 z-30 hidden h-11 w-11 -translate-y-1/2 cursor-pointer md:flex ${glassIconButton}`}
+        >
+          <SidebarSimple size={19} />
+        </button>
+      )}
+
+      {/* Mobile hamburger — only rendered while the drawer is closed, so
+          it never ends up hidden under the drawer's own backdrop; once
+          open, the drawer's header has the close control instead. */}
+      {!mobileOpen && (
+        <button
+          type="button"
+          onClick={toggleSidebar}
+          aria-label="Show sidebar"
+          className={`fixed top-4 start-4 z-30 h-11 w-11 cursor-pointer md:hidden ${glassIconButton}`}
+        >
+          <List size={19} />
+        </button>
+      )}
 
       {/* Desktop sidebar — floating, inset from every edge, never flush.
           Collapse slides it out via translate rather than animating
@@ -121,11 +136,18 @@ export default function AdminShell({
           shrinks; a translate keeps the pill shape intact the whole way
           off-screen. */}
       <aside
-        className={`fixed inset-y-20 start-4 z-20 hidden w-64 overflow-hidden rounded-[2rem] border transition-transform duration-300 ease-out md:block ${sidebarGlass} ${
+        className={`fixed inset-y-4 start-4 z-20 hidden w-64 overflow-hidden rounded-[2rem] border transition-transform duration-300 ease-out md:block ${sidebarGlass} ${
           collapsed ? "-translate-x-[calc(100%+2rem)]" : "translate-x-0"
         }`}
       >
-        <AdminNav badgeCounts={badgeCounts} access={access} />
+        <AdminNav
+          badgeCounts={badgeCounts}
+          access={access}
+          dark={dark}
+          onToggleDark={toggleDark}
+          onToggleSidebar={toggleSidebar}
+          sidebarToggleVariant="collapse"
+        />
       </aside>
 
       {/* Mobile drawer — unchanged flush full-height slide-in; a floating
@@ -144,13 +166,17 @@ export default function AdminShell({
               badgeCounts={badgeCounts}
               access={access}
               onNavigate={() => setMobileOpen(false)}
+              dark={dark}
+              onToggleDark={toggleDark}
+              onToggleSidebar={toggleSidebar}
+              sidebarToggleVariant="close"
             />
           </aside>
         </div>
       )}
 
       <main
-        className={`relative z-10 min-h-dvh pt-20 transition-[padding] duration-300 ease-out ${
+        className={`relative z-10 min-h-dvh pt-20 transition-[padding] duration-300 ease-out md:pt-8 ${
           collapsed ? "md:ps-8" : "md:ps-[18rem]"
         }`}
       >

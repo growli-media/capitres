@@ -4,11 +4,11 @@ import { revalidatePath } from "next/cache";
 import { isAuthenticated } from "@/lib/admin/auth";
 import { orderStore, type Order } from "@/lib/orders/store";
 import { can, requirePermission } from "@/lib/admin/permissions";
-import { rangeToDates, type TimeRangeKey } from "@/lib/admin/time-range";
+import { resolveTimeRange, type TimeRangeValue } from "@/lib/admin/time-range";
 
-export async function getOrdersForRangeAction(rangeKey: TimeRangeKey): Promise<Order[]> {
+export async function getOrdersForRangeAction(range: TimeRangeValue): Promise<Order[]> {
   await requirePermission("orders");
-  const { start, end } = rangeToDates(rangeKey);
+  const { start, end } = resolveTimeRange(range);
   return orderStore.listInRange(start, end);
 }
 

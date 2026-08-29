@@ -3,7 +3,7 @@
 import { getDashboardKpis, getTopProducts, type DashboardKpis, type TopProduct } from "@/lib/admin/dashboard";
 import { getAbandonedCount } from "@/lib/admin/queries";
 import { orderStore, type Order } from "@/lib/orders/store";
-import { rangeToDates, type TimeRangeKey } from "@/lib/admin/time-range";
+import { resolveTimeRange, type TimeRangeValue } from "@/lib/admin/time-range";
 
 export interface DashboardRangeResult {
   kpis: DashboardKpis;
@@ -12,8 +12,8 @@ export interface DashboardRangeResult {
   topProducts: TopProduct[];
 }
 
-export async function getDashboardForRangeAction(rangeKey: TimeRangeKey): Promise<DashboardRangeResult> {
-  const { start, end } = rangeToDates(rangeKey);
+export async function getDashboardForRangeAction(range: TimeRangeValue): Promise<DashboardRangeResult> {
+  const { start, end } = resolveTimeRange(range);
   const [kpis, abandonedCount, recentOrders, topProducts] = await Promise.all([
     getDashboardKpis(start, end),
     getAbandonedCount(start, end),

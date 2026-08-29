@@ -3,7 +3,7 @@
 import { getRevenueSeries } from "@/lib/admin/revenue";
 import { getDashboardKpis } from "@/lib/admin/dashboard";
 import { requirePermission } from "@/lib/admin/permissions";
-import { rangeToDates, type TimeRangeKey } from "@/lib/admin/time-range";
+import { resolveTimeRange, type TimeRangeValue } from "@/lib/admin/time-range";
 
 export interface RevenueRangeResult {
   series: Awaited<ReturnType<typeof getRevenueSeries>>;
@@ -12,9 +12,9 @@ export interface RevenueRangeResult {
   aov: number;
 }
 
-export async function getRevenueForRangeAction(rangeKey: TimeRangeKey): Promise<RevenueRangeResult> {
+export async function getRevenueForRangeAction(range: TimeRangeValue): Promise<RevenueRangeResult> {
   await requirePermission("revenue");
-  const { start, end } = rangeToDates(rangeKey);
+  const { start, end } = resolveTimeRange(range);
   const [series, kpis] = await Promise.all([
     getRevenueSeries(start, end),
     getDashboardKpis(start, end),

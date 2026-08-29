@@ -8,16 +8,27 @@ import {
   CurrencyCircleDollar,
   Receipt,
   ShoppingCartSimple,
+  SidebarSimple,
   SignOut,
   Stack,
   Star,
   Tag,
   TShirt,
   UsersThree,
+  X,
 } from "@phosphor-icons/react";
 import { logout } from "../logout-action";
 import SupportPanel from "./components/SupportPanel";
+import ThemeToggle from "./ThemeToggle";
 import type { AccessLevel } from "@/lib/admin/permissions";
+
+/** Same pill language as the Support/Log out buttons below (color-on-navy
+ * in dark mode, not the general-purpose glassIconButton), sized down into
+ * a circle — used for the two controls that now live inside the sidebar
+ * itself (collapse/close toggle, theme toggle) instead of floating over
+ * the page as separate buttons. */
+const navIconButton =
+  "flex shrink-0 cursor-pointer items-center justify-center rounded-full border border-[#1B3445]/10 bg-[#1B3445]/[0.03] text-[#5A7387] shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] backdrop-blur-md transition-all hover:border-[#1B3445]/20 hover:bg-[#1B3445]/[0.06] hover:text-[#1B3445] dark:border-white/12 dark:bg-white/5 dark:text-[#aebfce] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] dark:hover:border-white/25 dark:hover:bg-white/12 dark:hover:text-white dark:hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]";
 
 /** `permission: null` means always visible (Dashboard); `"owner"` is a
  * sentinel for Team, which is owner-only by construction rather than a
@@ -38,10 +49,23 @@ export default function AdminNav({
   badgeCounts,
   access,
   onNavigate,
+  dark,
+  onToggleDark,
+  onToggleSidebar,
+  sidebarToggleVariant = "collapse",
 }: {
   badgeCounts: Partial<Record<string, number>>;
   access: AccessLevel;
   onNavigate?: () => void;
+  dark: boolean;
+  onToggleDark: () => void;
+  onToggleSidebar: () => void;
+  /** "collapse" for the desktop floating sidebar (SidebarSimple icon,
+   * slides the panel away), "close" for the mobile drawer (X icon,
+   * closes it) — same handler either way (AdminShell's toggleSidebar
+   * flips both bits of state together; whichever doesn't apply at the
+   * current viewport is simply inert). */
+  sidebarToggleVariant?: "collapse" | "close";
 }) {
   const pathname = usePathname();
   const visibleItems = NAV_ITEMS.filter((item) => {
@@ -52,30 +76,40 @@ export default function AdminNav({
 
   return (
     <nav className="flex h-full flex-col">
-      <Link href="/admin" onClick={onNavigate} className="group block px-6 pt-6 pb-2">
-        {/* Sidebar is white-dominant in light mode, navy in dark mode (see
-            globals.css's .sidebar-glass-bg / .admin-dark .sidebar-glass-bg)
-            — same dark: swap the wordmark uses everywhere else. */}
-        <Image
-          src="/brand/logo-black.svg"
-          alt="Capitres"
-          width={867}
-          height={99}
-          priority
-          className="h-4 w-auto transition-transform duration-300 ease-out group-hover:scale-[1.03] group-hover:drop-shadow-sm dark:hidden"
-        />
-        <Image
-          src="/brand/logo-white.svg"
-          alt="Capitres"
-          width={867}
-          height={99}
-          priority
-          className="hidden h-4 w-auto transition-transform duration-300 ease-out group-hover:scale-[1.03] group-hover:drop-shadow-sm dark:block"
-        />
-        <span className="mt-1 block text-[10px] font-semibold tracking-wider text-[#5A7387] uppercase dark:text-[#aebfce]">
-          Admin
-        </span>
-      </Link>
+      <div className="flex items-start justify-between gap-2 px-6 pt-6 pb-2">
+        <Link href="/admin" onClick={onNavigate} className="group block min-w-0">
+          {/* Sidebar is white-dominant in light mode, navy in dark mode (see
+              globals.css's .sidebar-glass-bg / .admin-dark .sidebar-glass-bg)
+              — same dark: swap the wordmark uses everywhere else. */}
+          <Image
+            src="/brand/logo-black.svg"
+            alt="Capitres"
+            width={867}
+            height={99}
+            priority
+            className="h-4 w-auto transition-transform duration-300 ease-out group-hover:scale-[1.03] group-hover:drop-shadow-sm dark:hidden"
+          />
+          <Image
+            src="/brand/logo-white.svg"
+            alt="Capitres"
+            width={867}
+            height={99}
+            priority
+            className="hidden h-4 w-auto transition-transform duration-300 ease-out group-hover:scale-[1.03] group-hover:drop-shadow-sm dark:block"
+          />
+          <span className="mt-1 block text-[10px] font-semibold tracking-wider text-[#5A7387] uppercase dark:text-[#aebfce]">
+            Admin
+          </span>
+        </Link>
+        <button
+          type="button"
+          onClick={onToggleSidebar}
+          aria-label={sidebarToggleVariant === "close" ? "Close sidebar" : "Hide sidebar"}
+          className={`${navIconButton} mt-0.5 h-8 w-8`}
+        >
+          {sidebarToggleVariant === "close" ? <X size={14} /> : <SidebarSimple size={14} />}
+        </button>
+      </div>
 
       <ul className="mt-6 flex-1 space-y-2 overflow-y-auto px-4">
         {visibleItems.map((item) => {
@@ -111,7 +145,12 @@ export default function AdminNav({
       </ul>
 
       <div className="border-t border-[#1B3445]/10 px-4 pt-3 pb-4 dark:border-white/15">
-        <SupportPanel />
+        <div className="flex items-center gap-2">
+          <div className="min-w-0 flex-1">
+            <SupportPanel />
+          </div>
+          <ThemeToggle dark={dark} onToggle={onToggleDark} className={`${navIconButton} h-11 w-11`} />
+        </div>
         <form action={logout} className="mt-2">
           <button
             type="submit"

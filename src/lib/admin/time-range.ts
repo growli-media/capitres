@@ -52,3 +52,33 @@ export function rangeToDates(key: TimeRangeKey): { start: Date | null; end: Date
   start.setDate(start.getDate() - stop.days);
   return { start, end };
 }
+
+/**
+ * A time range as picked by TimeRangeSlider — either one of the fixed
+ * preset stops (dragging the slider), or an exact "From"/"To" date pair
+ * (the two calendar pickers next to it) for zeroing in on a specific day
+ * or custom window the preset stops don't land on exactly. Dates are
+ * plain `yyyy-mm-dd` strings — the native `<input type="date">` value
+ * format — not `Date` objects, so this stays trivially serializable
+ * across the client -> Server Action boundary.
+ */
+export type TimeRangeValue =
+  | { mode: "preset"; key: TimeRangeKey }
+  | { mode: "custom"; start: string; end: string };
+
+export const DEFAULT_TIME_RANGE_VALUE: TimeRangeValue = { mode: "preset", key: DEFAULT_TIME_RANGE };
+
+/** Resolves either shape of TimeRangeValue down to the same `{ start, end }`
+ * every range-aware query already accepts. A custom range's `end` is
+ * pushed to the end of that calendar day (not midnight) so picking the
+ * same date for both From and To still includes everything that
+ * happened that day, matching "see details from a specific day". */
+export function resolveTimeRange(value: TimeRangeValue): { start: Date | null; end: Date } {
+  if (value.mode === "custom") {
+    return {
+      start: new Date(`${value.start}T00:00:00`),
+      end: new Date(`${value.end}T23:59:59.999`),
+    };
+  }
+  return rangeToDates(value.key);
+}

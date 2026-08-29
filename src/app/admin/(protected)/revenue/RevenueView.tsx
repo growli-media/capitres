@@ -5,7 +5,7 @@ import { CurrencyCircleDollar, Receipt, ChartLineUp } from "@phosphor-icons/reac
 import TimeRangeSlider from "../components/TimeRangeSlider";
 import RevenueChart from "./RevenueChart";
 import { getRevenueForRangeAction, type RevenueRangeResult } from "./actions";
-import { DEFAULT_TIME_RANGE, type TimeRangeKey } from "@/lib/admin/time-range";
+import { DEFAULT_TIME_RANGE_VALUE, type TimeRangeValue } from "@/lib/admin/time-range";
 import { formatIQD } from "@/lib/money";
 import { glassCard } from "../../glass";
 
@@ -16,14 +16,14 @@ import { glassCard } from "../../glass";
  * instead of a skeleton, per the dataviz skill's "refetch keeps the
  * frame" rule. */
 export default function RevenueView({ initial }: { initial: RevenueRangeResult }) {
-  const [range, setRange] = useState<TimeRangeKey>(DEFAULT_TIME_RANGE);
+  const [range, setRange] = useState<TimeRangeValue>(DEFAULT_TIME_RANGE_VALUE);
   const [data, setData] = useState<RevenueRangeResult>(initial);
   const [isPending, startTransition] = useTransition();
 
-  function handleChange(key: TimeRangeKey) {
-    setRange(key);
+  function handleChange(value: TimeRangeValue) {
+    setRange(value);
     startTransition(async () => {
-      const result = await getRevenueForRangeAction(key);
+      const result = await getRevenueForRangeAction(value);
       setData(result);
     });
   }

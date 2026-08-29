@@ -9,7 +9,7 @@ import NoteButton from "../orders/NoteButton";
 import TimeRangeSlider from "../components/TimeRangeSlider";
 import { getAbandonedForRangeAction } from "./actions";
 import type { AbandonedOrder } from "@/lib/admin/queries";
-import { DEFAULT_TIME_RANGE, type TimeRangeKey } from "@/lib/admin/time-range";
+import { DEFAULT_TIME_RANGE_VALUE, type TimeRangeValue } from "@/lib/admin/time-range";
 import { ABANDONED_GRACE_MINUTES } from "@/lib/admin/queries-shared";
 import { glassCard, glassTone, glassIconButton } from "../../glass";
 
@@ -22,14 +22,14 @@ function timeAgo(minutes: number): string {
 }
 
 export default function AbandonedView({ initial }: { initial: AbandonedOrder[] }) {
-  const [range, setRange] = useState<TimeRangeKey>(DEFAULT_TIME_RANGE);
+  const [range, setRange] = useState<TimeRangeValue>(DEFAULT_TIME_RANGE_VALUE);
   const [carts, setCarts] = useState<AbandonedOrder[]>(initial);
   const [isPending, startTransition] = useTransition();
 
-  function handleChange(key: TimeRangeKey) {
-    setRange(key);
+  function handleChange(value: TimeRangeValue) {
+    setRange(value);
     startTransition(async () => {
-      setCarts(await getAbandonedForRangeAction(key));
+      setCarts(await getAbandonedForRangeAction(value));
     });
   }
 

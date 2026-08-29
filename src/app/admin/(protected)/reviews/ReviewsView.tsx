@@ -6,7 +6,7 @@ import ReviewRowActions from "./ReviewRowActions";
 import { getReviewsForRangeAction } from "./actions";
 import type { AdminReview } from "@/lib/admin/reviews";
 import TimeRangeSlider from "../components/TimeRangeSlider";
-import { DEFAULT_TIME_RANGE, type TimeRangeKey } from "@/lib/admin/time-range";
+import { DEFAULT_TIME_RANGE_VALUE, type TimeRangeValue } from "@/lib/admin/time-range";
 import { glassCard, glassTone } from "../../glass";
 
 function Stars({ rating }: { rating: number }) {
@@ -20,14 +20,14 @@ function Stars({ rating }: { rating: number }) {
 }
 
 export default function ReviewsView({ initial }: { initial: AdminReview[] }) {
-  const [range, setRange] = useState<TimeRangeKey>(DEFAULT_TIME_RANGE);
+  const [range, setRange] = useState<TimeRangeValue>(DEFAULT_TIME_RANGE_VALUE);
   const [reviews, setReviews] = useState<AdminReview[]>(initial);
   const [isPending, startTransition] = useTransition();
 
-  function handleChange(key: TimeRangeKey) {
-    setRange(key);
+  function handleChange(value: TimeRangeValue) {
+    setRange(value);
     startTransition(async () => {
-      setReviews(await getReviewsForRangeAction(key));
+      setReviews(await getReviewsForRangeAction(value));
     });
   }
 

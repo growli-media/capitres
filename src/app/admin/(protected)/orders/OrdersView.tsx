@@ -8,7 +8,7 @@ import { markOrderDeliveredAction, getOrdersForRangeAction } from "./actions";
 import CancelOrderButton from "./CancelOrderButton";
 import NoteButton from "./NoteButton";
 import TimeRangeSlider from "../components/TimeRangeSlider";
-import { DEFAULT_TIME_RANGE, type TimeRangeKey } from "@/lib/admin/time-range";
+import { DEFAULT_TIME_RANGE_VALUE, type TimeRangeValue } from "@/lib/admin/time-range";
 import { glassCard, glassTone } from "../../glass";
 
 function StatusBadge({ status }: { status: string }) {
@@ -33,14 +33,14 @@ function formatDate(iso: string): string {
 }
 
 export default function OrdersView({ initial }: { initial: Order[] }) {
-  const [range, setRange] = useState<TimeRangeKey>(DEFAULT_TIME_RANGE);
+  const [range, setRange] = useState<TimeRangeValue>(DEFAULT_TIME_RANGE_VALUE);
   const [orders, setOrders] = useState<Order[]>(initial);
   const [isPending, startTransition] = useTransition();
 
-  function handleChange(key: TimeRangeKey) {
-    setRange(key);
+  function handleChange(value: TimeRangeValue) {
+    setRange(value);
     startTransition(async () => {
-      setOrders(await getOrdersForRangeAction(key));
+      setOrders(await getOrdersForRangeAction(value));
     });
   }
 

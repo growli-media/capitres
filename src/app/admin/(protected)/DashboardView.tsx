@@ -11,7 +11,7 @@ import {
 } from "@phosphor-icons/react";
 import TimeRangeSlider from "./components/TimeRangeSlider";
 import { getDashboardForRangeAction, type DashboardRangeResult } from "./dashboard-actions";
-import { DEFAULT_TIME_RANGE, type TimeRangeKey } from "@/lib/admin/time-range";
+import { DEFAULT_TIME_RANGE_VALUE, type TimeRangeValue } from "@/lib/admin/time-range";
 import { customerName } from "@/lib/orders/order-helpers";
 import { formatIQD } from "@/lib/money";
 import { glassCard } from "../glass";
@@ -69,14 +69,14 @@ function formatDate(iso: string): string {
  * Server Action call per range change, previous render dimmed while
  * pending instead of a skeleton. */
 export default function DashboardView({ initial }: { initial: DashboardRangeResult }) {
-  const [range, setRange] = useState<TimeRangeKey>(DEFAULT_TIME_RANGE);
+  const [range, setRange] = useState<TimeRangeValue>(DEFAULT_TIME_RANGE_VALUE);
   const [data, setData] = useState<DashboardRangeResult>(initial);
   const [isPending, startTransition] = useTransition();
 
-  function handleChange(key: TimeRangeKey) {
-    setRange(key);
+  function handleChange(value: TimeRangeValue) {
+    setRange(value);
     startTransition(async () => {
-      setData(await getDashboardForRangeAction(key));
+      setData(await getDashboardForRangeAction(value));
     });
   }
 

@@ -25,6 +25,9 @@ export default function ThemeToggleIcon({ dark }: { dark: boolean }) {
           <motion.circle
             r="6.5"
             fill="black"
+            cx={dark ? 9.5 : 27}
+            cy={dark ? 8.5 : 27}
+            initial={false}
             animate={{ cx: dark ? 9.5 : 27, cy: dark ? 8.5 : 27 }}
             transition={spring}
           />
@@ -37,6 +40,9 @@ export default function ThemeToggleIcon({ dark }: { dark: boolean }) {
             x1="12"
             x2="12"
             y1="3"
+            y2={dark ? 4.5 : 6}
+            opacity={dark ? 0 : 1}
+            initial={false}
             animate={{ opacity: dark ? 0 : 1, y2: dark ? 4.5 : 6 }}
             transition={spring}
             stroke="currentColor"
