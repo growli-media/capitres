@@ -227,14 +227,14 @@ body.admin-font-inter {
   animation: admin-gradient-drift 48s ease-in-out infinite;
 }
 .admin-dark .sidebar-glass-bg {
-  background-image: linear-gradient(
-    165deg,
-    #ffffff 0%,
-    #8fc7ef 14%,
-    #2a4a61 32%,
-    #1b3445 65%,
-    #111827 100%
-  );
+  /* No white stop, unlike .night-sky-bg's reuse of this same gradient
+     shape below — this is a real surface that light-colored nav-item
+     text sits directly on top of, and the drift animation sliding a
+     200%-size background through this box means ANY light stop here
+     (even one that starts at 0%) rotates into view often enough to
+     wreck that text's contrast. Deep-navy tones only, still animated
+     via background-position for the same subtle drift. */
+  background-image: linear-gradient(165deg, #2a4a61 0%, #1b3445 45%, #111827 100%);
 }
 @media (prefers-reduced-motion: reduce) {
   .sidebar-glass-bg {
