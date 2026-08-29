@@ -40,23 +40,18 @@ export default function AdminNav({
   return (
     <nav className="flex h-full flex-col">
       <Link href="/admin" onClick={onNavigate} className="group block px-6 pt-6 pb-2">
-        <Image
-          src="/brand/logo-black.svg"
-          alt="Capitres"
-          width={867}
-          height={99}
-          priority
-          className="h-4 w-auto transition-transform duration-300 ease-out group-hover:scale-[1.03] group-hover:drop-shadow-sm dark:hidden"
-        />
+        {/* Sidebar is permanently navy (see globals.css's .sidebar-glass-bg)
+            regardless of the admin light/dark toggle, so this always uses
+            the white wordmark — no dark: swap needed here. */}
         <Image
           src="/brand/logo-white.svg"
           alt="Capitres"
           width={867}
           height={99}
           priority
-          className="hidden h-4 w-auto transition-transform duration-300 ease-out group-hover:scale-[1.03] group-hover:drop-shadow-sm dark:block"
+          className="h-4 w-auto transition-transform duration-300 ease-out group-hover:scale-[1.03] group-hover:drop-shadow-sm"
         />
-        <span className="mt-1 block text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+        <span className="mt-1 block text-[10px] font-semibold tracking-wider text-[#aebfce] uppercase">
           Admin
         </span>
       </Link>
@@ -73,10 +68,10 @@ export default function AdminNav({
                 href={item.href}
                 onClick={onNavigate}
                 aria-current={active ? "page" : undefined}
-                className={`flex min-h-11 items-center justify-between gap-3 rounded-lg px-3 text-sm font-medium backdrop-blur-sm transition-colors ${
+                className={`flex min-h-11 items-center justify-between gap-3 rounded-full border px-3 text-sm font-medium backdrop-blur-md transition-all ${
                   active
-                    ? "bg-slate-900/90 text-white shadow-sm dark:bg-white/90 dark:text-slate-900"
-                    : "text-slate-600 hover:bg-white/50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-100"
+                    ? "border-[#8FC7EF]/50 bg-gradient-to-b from-[#8FC7EF]/30 to-[#8FC7EF]/10 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]"
+                    : "border-transparent text-[#aebfce] hover:border-white/20 hover:bg-white/10 hover:text-white hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
                 }`}
               >
                 <span className="flex items-center gap-3">
@@ -94,29 +89,23 @@ export default function AdminNav({
         })}
       </ul>
 
-      <div className="border-t border-white/40 px-4 pt-3 pb-4 dark:border-white/10">
+      <div className="border-t border-white/15 px-4 pt-3 pb-4">
         <SupportPanel />
         <form action={logout}>
           <button
             type="submit"
-            className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-lg px-3 text-sm font-medium text-slate-500 backdrop-blur-sm transition-colors hover:bg-white/50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-100"
+            className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-full border border-transparent px-3 text-sm font-medium text-[#aebfce] backdrop-blur-md transition-all hover:border-white/20 hover:bg-white/10 hover:text-white hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
           >
             <SignOut size={18} aria-hidden="true" />
             Log out
           </button>
         </form>
-        <div className="mt-3 flex items-start gap-1.5 px-3 text-[11px] leading-relaxed text-slate-400 dark:text-slate-500">
-          {/* eslint-disable-next-line @next/next/no-img-element -- tiny footer mark, next/image is overkill */}
-          <img
-            src="/brand/growli-icon.png"
-            alt=""
-            className="mt-0.5 h-3.5 w-3.5 shrink-0 opacity-70 dark:hidden"
-          />
+        <div className="mt-3 flex items-start gap-1.5 px-3 text-[11px] leading-relaxed text-[#aebfce]">
           {/* eslint-disable-next-line @next/next/no-img-element -- tiny footer mark, next/image is overkill */}
           <img
             src="/brand/growli-icon-white.png"
             alt=""
-            className="mt-0.5 hidden h-3.5 w-3.5 shrink-0 opacity-70 dark:block"
+            className="mt-0.5 h-3.5 w-3.5 shrink-0 opacity-80"
           />
           <div>
             <p>
@@ -125,7 +114,7 @@ export default function AdminNav({
                 href="https://growli.media"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-bold text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+                className="font-bold text-white/90 transition-colors hover:text-white"
               >
                 Growli Media
               </a>{" "}

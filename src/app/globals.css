@@ -208,6 +208,26 @@ body.admin-font-inter {
   }
 }
 
+/* Admin sidebar — Growli's own brand navy, not the page's slate/amber
+   wash. Deliberately the same regardless of the admin light/dark toggle
+   (see AdminShell.tsx, AdminNav.tsx): the sidebar is a fixed brand
+   surface, not a themeable one, so it reads as "Growli built this" no
+   matter which theme the rest of the dashboard is in. Colors and the
+   "clean gradient, no vignette" direction are straight from
+   Growli-Brand-Guidelines.html §03/§05 (Deep Navy #1B3445, Navy #2A4A61,
+   Dark #111827). Reuses admin-gradient-drift — it only animates
+   background-position, so any background-image works with it. */
+.sidebar-glass-bg {
+  background-image: linear-gradient(165deg, #1b3445 0%, #2a4a61 55%, #111827 100%);
+  background-size: 200% 200%;
+  animation: admin-gradient-drift 48s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-glass-bg {
+    animation: none;
+  }
+}
+
 /* Collection story-banner progress segments — see CollectionHero.tsx.
    A plain global keyframe (not a Tailwind --animate-* token) since it's
    referenced via an inline `animation` style with a duration that's a JS

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { List, SidebarSimple } from "@phosphor-icons/react";
 import AdminNav from "./AdminNav";
 import ThemeToggle from "./ThemeToggle";
-import { glassPanel, glassIconButton } from "../glass";
+import { glassPanel, glassIconButton, sidebarGlass } from "../glass";
 
 const THEME_KEY = "capitres-admin-theme";
 
@@ -81,7 +81,7 @@ export default function AdminShell({
 
       {/* Desktop sidebar — sticky, full viewport height */}
       <aside
-        className={`sticky top-0 z-10 hidden h-dvh shrink-0 overflow-hidden border-e transition-[width] duration-200 md:block ${glassPanel} ${
+        className={`sticky top-0 z-10 hidden h-dvh shrink-0 overflow-hidden border-e transition-[width] duration-200 md:block ${sidebarGlass} ${
           collapsed ? "w-0 border-e-0" : "w-64"
         }`}
       >
@@ -100,7 +100,7 @@ export default function AdminShell({
             onClick={() => setMobileOpen(false)}
             aria-hidden="true"
           />
-          <aside className={`absolute inset-y-0 start-0 h-dvh w-64 border-e shadow-xl ${glassPanel}`}>
+          <aside className={`absolute inset-y-0 start-0 h-dvh w-64 border-e shadow-xl ${sidebarGlass}`}>
             <AdminNav
               badgeCounts={badgeCounts}
               onNavigate={() => setMobileOpen(false)}

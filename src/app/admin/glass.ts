@@ -22,6 +22,14 @@ export const glassCard =
 export const glassPanel =
   "border-white/40 bg-white/75 shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_8px_30px_rgb(0,0,0,0.10)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/70 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_8px_30px_rgb(0,0,0,0.4)]";
 
+/** Sidebar only — Growli's own brand navy (see globals.css's
+ * .sidebar-glass-bg for the gradient itself and why it doesn't switch
+ * with the admin light/dark toggle). Same glass structure as glassPanel
+ * (soft border, inset light edge, blur) just recolored for a permanently
+ * dark surface, so sidebar text/icons need light-on-navy treatment, not
+ * the slate-on-white glassPanel assumes. */
+export const sidebarGlass = "sidebar-glass-bg border-white/15 shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_8px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl";
+
 /** No height/width/padding baked in — callers vary (h-10 + px-3 in most
  * dashboard forms, h-11 + px-3.5 on the auth pages, textareas want
  * h-auto + py-2) so every caller sets its own sizing alongside this. */
