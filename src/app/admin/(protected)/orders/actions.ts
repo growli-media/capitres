@@ -2,8 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { isAuthenticated } from "@/lib/admin/auth";
-import { orderStore } from "@/lib/orders/store";
-import { can } from "@/lib/admin/permissions";
+import { orderStore, type Order } from "@/lib/orders/store";
+import { can, requirePermission } from "@/lib/admin/permissions";
+import { rangeToDates, type TimeRangeKey } from "@/lib/admin/time-range";
+
+export async function getOrdersForRangeAction(rangeKey: TimeRangeKey): Promise<Order[]> {
+  await requirePermission("orders");
+  const { start, end } = rangeToDates(rangeKey);
+  return orderStore.listInRange(start, end);
+}
 
 /**
  * Confirms a Cash on Delivery order was actually delivered and the cash

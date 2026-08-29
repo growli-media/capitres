@@ -1,8 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { deleteReview, setReviewApproved } from "@/lib/admin/reviews";
+import { deleteReview, setReviewApproved, listAdminReviews, type AdminReview } from "@/lib/admin/reviews";
 import { requirePermission } from "@/lib/admin/permissions";
+import { rangeToDates, type TimeRangeKey } from "@/lib/admin/time-range";
+
+export async function getReviewsForRangeAction(rangeKey: TimeRangeKey): Promise<AdminReview[]> {
+  await requirePermission("reviews");
+  const { start, end } = rangeToDates(rangeKey);
+  return listAdminReviews(start, end);
+}
 
 function revalidateStorefront() {
   revalidatePath("/", "layout");

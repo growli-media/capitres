@@ -1,8 +1,8 @@
 import "server-only";
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import type { WaylStatus } from "@/lib/payments/wayl";
 import { sql, jsonb } from "@/lib/db/client";
+import type { Order, OrderLine, AdTracking } from "./order-helpers";
 
 /**
  * Order persistence boundary.
@@ -13,107 +13,16 @@ import { sql, jsonb } from "@/lib/db/client";
  * production: Vercel's serverless functions have a read-only,
  * per-invocation filesystem, so writes to `.data/orders.json` silently
  * vanish between requests and orders would be lost.
+ *
+ * Types (Order, OrderLine, AdTracking) and the pure customerName()/
+ * customerAddress() display helpers live in ./order-helpers instead of
+ * here — that file has no "server-only", so client components can still
+ * import them without pulling this DB-backed module (and its "fs"/
+ * "postgres" imports) into the browser bundle. Re-exported below so
+ * every existing `from "@/lib/orders/store"` import keeps working.
  */
-
-export interface OrderLine {
-  productSlug: string;
-  title: string;
-  size?: string;
-  color?: string;
-  qty: number;
-  unitAmount: number;
-  giftCard?: {
-    denomination: number;
-    recipientEmail: string;
-    recipientName: string;
-    senderName: string;
-    message: string;
-  };
-}
-
-/** Browser-side signals captured at checkout time (a real, cookie-bearing
- * request) so the async Wayl webhook — a server-to-server call with no
- * access to the customer's browser — can still send a well-matched Meta
- * Conversions API event once payment completes. */
-export interface AdTracking {
-  clientIp?: string;
-  userAgent?: string;
-  /** Meta's `_fbp`/`_fbc` cookies — first-party click/browser IDs. */
-  fbp?: string;
-  fbc?: string;
-}
-
-export interface Order {
-  ref: string;
-  createdAt: string;
-  locale: string;
-  /** "CashOnDelivery" is app-only, like "MockPaid" — Wayl never reports
-   * it, since COD orders never touch Wayl at all. */
-  status: WaylStatus | "MockPaid" | "CashOnDelivery";
-  waylLinkId?: string;
-  paymentMethod?: string | null;
-  mock: boolean;
-  customer: {
-    /** Absent for orders placed via the Wayl (card) path — we no longer
-     * collect anything before redirecting, to avoid asking twice for
-     * what Wayl's own hosted page asks for. Backfilled asynchronously via
-     * `mergeCustomer` once the Wayl webhook reports what the customer
-     * told them (name/phone/city/country/address, into the legacy
-     * fields below — see the webhook handler). Always present for
-     * Cash on Delivery orders, collected directly on our own form. */
-    firstName?: string;
-    middleName?: string;
-    lastName?: string;
-    email?: string;
-    /** Always E.164 for orders placed since international checkout
-     * shipped (src/components/checkout/CheckoutFlow.tsx combines the
-     * dial code + number before submitting). */
-    phone?: string;
-    /** ISO-3166 country code. */
-    country?: string;
-    street?: string;
-    streetNumber?: string;
-    zip?: string;
-    city?: string;
-    state?: string;
-    /** Only set when country === "IQ". */
-    governorate?: string;
-    notes?: string;
-    /** Orders placed before international checkout shipped — no
-     * firstName/lastName/country/street split, just one name + address
-     * line, Iraq implicitly. Present only on that older shape. */
-    fullName?: string;
-    address?: string;
-  };
-  lines: OrderLine[];
-  totals: {
-    subtotal: number;
-    discount: number;
-    shipping: number;
-    total: number;
-  };
-  promoCode?: string;
-  adTracking?: AdTracking;
-  metaCapiSent?: boolean;
-  /** Staff-only note, never shown to the customer — see admin/(protected)/orders/NoteButton.tsx. */
-  adminNote?: string;
-}
-
-/** Display name for an order's customer — handles both the current
- * split-name shape and the legacy `fullName`-only shape (orders placed
- * before international checkout shipped). */
-export function customerName(c: Order["customer"]): string {
-  const parts = [c.firstName, c.middleName, c.lastName].filter(Boolean);
-  return parts.length > 0 ? parts.join(" ") : (c.fullName ?? "");
-}
-
-/** Compact "City, Region, Country" summary — falls back to the legacy
- * single `address` line for pre-international-checkout orders. */
-export function customerAddress(c: Order["customer"]): string {
-  const region = c.country === "IQ" ? c.governorate : c.state;
-  const parts = [c.city, region, c.country].filter(Boolean);
-  return parts.length > 0 ? parts.join(", ") : (c.address ?? "");
-}
+export type { Order, OrderLine, AdTracking } from "./order-helpers";
+export { customerName, customerAddress } from "./order-helpers";
 
 export interface OrderStore {
   create(order: Order): Promise<void>;
@@ -130,6 +39,11 @@ export interface OrderStore {
   mergeCustomer(ref: string, patch: Partial<Order["customer"]>): Promise<void>;
   /** Admin dashboard: full order list, newest first. */
   list(): Promise<Order[]>;
+  /** Range-scoped list for the time-range slider (Orders, Dashboard,
+   * Revenue) — a separate method rather than adding params to list()
+   * so list()'s existing unfiltered/500-cap contract stays untouched for
+   * its other callers. `start: null` means no lower bound ("All time"). */
+  listInRange(start: Date | null, end: Date): Promise<Order[]>;
   /** Atomically claims this order for the one-time Meta CAPI purchase
    * event — returns the order if this call is the one that should send
    * it, or undefined if it was already sent (or the order doesn't exist). */
@@ -247,6 +161,26 @@ const postgresOrderStore: OrderStore = {
       update orders set admin_note = ${note || null} where ref = ${ref}
     `;
   },
+  async listInRange(start, end) {
+    const rows = start
+      ? await sql<OrderRow[]>`
+          select ref, created_at::text as created_at, locale, status,
+                 wayl_link_id, payment_method, mock, customer, lines, totals,
+                 promo_code, ad_tracking, meta_capi_sent, admin_note
+          from orders
+          where created_at >= ${start} and created_at <= ${end}
+          order by created_at desc
+        `
+      : await sql<OrderRow[]>`
+          select ref, created_at::text as created_at, locale, status,
+                 wayl_link_id, payment_method, mock, customer, lines, totals,
+                 promo_code, ad_tracking, meta_capi_sent, admin_note
+          from orders
+          where created_at <= ${end}
+          order by created_at desc
+        `;
+    return rows.map(toOrder);
+  },
 };
 
 /* ------------------------------------------------------------------ */
@@ -316,6 +250,17 @@ const fileOrderStore: OrderStore = {
     if (!order) return;
     order.adminNote = note || undefined;
     await writeAll(all);
+  },
+  async listInRange(start, end) {
+    const all = await readAll();
+    const endMs = end.getTime();
+    const startMs = start?.getTime();
+    return Object.values(all)
+      .filter((o) => {
+        const t = new Date(o.createdAt).getTime();
+        return (startMs === undefined || t >= startMs) && t <= endMs;
+      })
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   },
 };
 

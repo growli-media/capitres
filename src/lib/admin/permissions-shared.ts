@@ -13,6 +13,7 @@
  * can't be used to escalate into managing other accounts).
  */
 export const PERMISSIONS = [
+  "revenue",
   "products",
   "collections",
   "categories",
@@ -24,6 +25,7 @@ export const PERMISSIONS = [
 export type Permission = (typeof PERMISSIONS)[number];
 
 export const PERMISSION_LABELS: Record<Permission, string> = {
+  revenue: "Revenue",
   products: "Products",
   collections: "Collections",
   categories: "Categories",

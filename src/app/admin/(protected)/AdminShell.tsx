@@ -4,16 +4,20 @@ import { useEffect, useState } from "react";
 import { List, SidebarSimple } from "@phosphor-icons/react";
 import AdminNav from "./AdminNav";
 import ThemeToggle from "./ThemeToggle";
-import { glassPanel, glassIconButton, sidebarGlass } from "../glass";
+import { glassIconButton, sidebarGlass } from "../glass";
 import type { AccessLevel } from "@/lib/admin/permissions";
 
 const THEME_KEY = "capitres-admin-theme";
 
 /**
- * Admin chrome: a full-height sticky sidebar that keeps Log out and the
- * footer pinned in view no matter how long the page is, a desktop
- * collapse toggle for a full-width main area, and a slide-in drawer on
- * mobile (where the sidebar is otherwise hidden).
+ * Admin chrome: a floating, deeply-rounded sidebar inset from every edge
+ * (not a flush edge-to-edge bar — position: fixed, not sticky-in-flow, so
+ * it "hovers" independently of the content column) plus two floating
+ * circular buttons (sidebar toggle, theme toggle) in place of the old
+ * full-width top bar. Both float above the sidebar's own top inset
+ * (buttons at top-4, sidebar starting at inset-y-20) so neither overlaps
+ * the sidebar's logo. A slide-in drawer covers mobile, where a floating
+ * panel would be the wrong touch pattern — that part is unchanged.
  *
  * Also owns dark-mode state for the whole (protected) tree. The class
  * lives on this root div (id="admin-shell"), never on <html> — see the
@@ -59,11 +63,21 @@ export default function AdminShell({
     });
   }
 
+  /** One button, two contexts: on mobile it opens the slide-in drawer, on
+   * desktop it collapses/expands the floating sidebar. Both bits of state
+   * update together — whichever one doesn't apply at the current
+   * viewport is simply inert (its element is CSS-hidden at that
+   * breakpoint), so there's no need to branch on viewport width in JS. */
+  function toggleSidebar() {
+    setMobileOpen((v) => !v);
+    setCollapsed((v) => !v);
+  }
+
   return (
     <div
       id="admin-shell"
       suppressHydrationWarning
-      className={`admin-gradient-bg relative flex min-h-dvh ${dark ? "admin-dark" : ""}`}
+      className={`admin-gradient-bg relative min-h-dvh ${dark ? "admin-dark" : ""}`}
     >
       {/* eslint-disable-next-line @next/next/no-sync-scripts -- must run before hydration to avoid a flash of the wrong theme */}
       <script
@@ -83,18 +97,39 @@ export default function AdminShell({
         <div className="motion-safe:animate-glow-drift-b absolute -right-1/4 bottom-1/4 h-[32rem] w-[32rem] rounded-full bg-[#5A7387]/25 blur-3xl dark:bg-[#5A7387]/10" />
       </div>
 
-      {/* Desktop sidebar — sticky, full viewport height */}
+      {/* The only two floating buttons — replaces the old full-width top
+          bar entirely. Both sit above the sidebar's own top inset
+          (top-4 vs. the sidebar's inset-y-20) so neither ever overlaps
+          the floating panel or its logo. */}
+      <button
+        type="button"
+        onClick={toggleSidebar}
+        aria-label={collapsed ? "Show sidebar" : "Hide sidebar"}
+        aria-pressed={collapsed}
+        className={`fixed top-4 start-4 z-30 h-11 w-11 cursor-pointer ${glassIconButton}`}
+      >
+        <List size={19} className="md:hidden" />
+        <SidebarSimple size={19} className="hidden md:block" />
+      </button>
+      <div className="fixed top-4 end-4 z-30">
+        <ThemeToggle dark={dark} onToggle={toggleDark} />
+      </div>
+
+      {/* Desktop sidebar — floating, inset from every edge, never flush.
+          Collapse slides it out via translate rather than animating
+          width to 0 — width-to-0 would flatten the rounded corners as it
+          shrinks; a translate keeps the pill shape intact the whole way
+          off-screen. */}
       <aside
-        className={`sticky top-0 z-10 hidden h-dvh shrink-0 overflow-hidden border-e transition-[width] duration-200 md:block ${sidebarGlass} ${
-          collapsed ? "w-0 border-e-0" : "w-64"
+        className={`fixed inset-y-20 start-4 z-20 hidden w-64 overflow-hidden rounded-[2rem] border transition-transform duration-300 ease-out md:block ${sidebarGlass} ${
+          collapsed ? "-translate-x-[calc(100%+2rem)]" : "translate-x-0"
         }`}
       >
-        <div className="h-full w-64">
-          <AdminNav badgeCounts={badgeCounts} access={access} />
-        </div>
+        <AdminNav badgeCounts={badgeCounts} access={access} />
       </aside>
 
-      {/* Mobile drawer */}
+      {/* Mobile drawer — unchanged flush full-height slide-in; a floating
+          inset panel is the wrong pattern for a touch drawer. */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
           {/* Darkened, not blurred — matches Modal.tsx's backdrop; opening
@@ -114,32 +149,12 @@ export default function AdminShell({
         </div>
       )}
 
-      <main className="relative z-10 flex min-w-0 flex-1 flex-col">
-        {/* Slim top bar with the menu toggle */}
-        <div className={`sticky top-0 z-30 flex h-12 items-center gap-2 border-b px-3 ${glassPanel}`}>
-          <button
-            type="button"
-            onClick={() => setMobileOpen(true)}
-            aria-label="Open menu"
-            className={`h-9 w-9 cursor-pointer md:hidden ${glassIconButton}`}
-          >
-            <List size={20} />
-          </button>
-          <button
-            type="button"
-            onClick={() => setCollapsed((v) => !v)}
-            aria-label={collapsed ? "Show sidebar" : "Hide sidebar"}
-            aria-pressed={collapsed}
-            className={`hidden h-9 w-9 cursor-pointer md:flex ${glassIconButton}`}
-          >
-            <SidebarSimple size={18} />
-          </button>
-          <div className="ms-auto">
-            <ThemeToggle dark={dark} onToggle={toggleDark} />
-          </div>
-        </div>
-
-        <div className="mx-auto w-full max-w-[1600px] px-5 py-8 md:px-10 md:py-10">
+      <main
+        className={`relative z-10 min-h-dvh pt-20 transition-[padding] duration-300 ease-out ${
+          collapsed ? "md:ps-8" : "md:ps-[18rem]"
+        }`}
+      >
+        <div className="mx-auto w-full max-w-[1600px] px-5 pb-8 md:px-10 md:pb-10">
           {children}
         </div>
       </main>

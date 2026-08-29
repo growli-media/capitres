@@ -1,6 +1,6 @@
 "use client";
 
-import { Sun, Moon } from "@phosphor-icons/react";
+import ThemeToggleIcon from "./ThemeToggleIcon";
 import { glassIconButton } from "../glass";
 
 export default function ThemeToggle({
@@ -18,7 +18,7 @@ export default function ThemeToggle({
       aria-pressed={dark}
       className={`h-9 w-9 cursor-pointer ${glassIconButton}`}
     >
-      {dark ? <Sun size={18} /> : <Moon size={18} />}
+      <ThemeToggleIcon dark={dark} />
     </button>
   );
 }

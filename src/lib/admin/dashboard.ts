@@ -9,14 +9,22 @@ export interface DashboardKpis {
   pendingReviews: number;
 }
 
-export async function getDashboardKpis(): Promise<DashboardKpis> {
+export async function getDashboardKpis(start: Date | null = null, end: Date = new Date()): Promise<DashboardKpis> {
   const [orderRows, reviewRows] = await Promise.all([
-    sql<{ revenue: string; order_count: string }[]>`
-      select coalesce(sum((totals->>'total')::int), 0)::text as revenue,
-             count(*)::text as order_count
-      from orders
-      where status = any(${PAID_STATUSES})
-    `,
+    start
+      ? sql<{ revenue: string; order_count: string }[]>`
+          select coalesce(sum((totals->>'total')::int), 0)::text as revenue,
+                 count(*)::text as order_count
+          from orders
+          where status = any(${PAID_STATUSES})
+            and created_at >= ${start} and created_at <= ${end}
+        `
+      : sql<{ revenue: string; order_count: string }[]>`
+          select coalesce(sum((totals->>'total')::int), 0)::text as revenue,
+                 count(*)::text as order_count
+          from orders
+          where status = any(${PAID_STATUSES}) and created_at <= ${end}
+        `,
     sql<{ count: string }[]>`
       select count(*)::text as count from reviews where approved = false
     `,
@@ -37,18 +45,35 @@ export interface TopProduct {
   revenue: number;
 }
 
-export async function getTopProducts(limit = 5): Promise<TopProduct[]> {
-  const rows = await sql<{ title: string; qty: string; revenue: string }[]>`
-    select
-      line->>'title' as title,
-      sum((line->>'qty')::int)::text as qty,
-      sum((line->>'qty')::int * (line->>'unitAmount')::int)::text as revenue
-    from orders, jsonb_array_elements(lines) as line
-    where status = any(${PAID_STATUSES})
-    group by line->>'title'
-    order by sum((line->>'qty')::int * (line->>'unitAmount')::int) desc
-    limit ${limit}
-  `;
+export async function getTopProducts(
+  limit = 5,
+  start: Date | null = null,
+  end: Date = new Date(),
+): Promise<TopProduct[]> {
+  const rows = start
+    ? await sql<{ title: string; qty: string; revenue: string }[]>`
+        select
+          line->>'title' as title,
+          sum((line->>'qty')::int)::text as qty,
+          sum((line->>'qty')::int * (line->>'unitAmount')::int)::text as revenue
+        from orders, jsonb_array_elements(lines) as line
+        where status = any(${PAID_STATUSES})
+          and created_at >= ${start} and created_at <= ${end}
+        group by line->>'title'
+        order by sum((line->>'qty')::int * (line->>'unitAmount')::int) desc
+        limit ${limit}
+      `
+    : await sql<{ title: string; qty: string; revenue: string }[]>`
+        select
+          line->>'title' as title,
+          sum((line->>'qty')::int)::text as qty,
+          sum((line->>'qty')::int * (line->>'unitAmount')::int)::text as revenue
+        from orders, jsonb_array_elements(lines) as line
+        where status = any(${PAID_STATUSES}) and created_at <= ${end}
+        group by line->>'title'
+        order by sum((line->>'qty')::int * (line->>'unitAmount')::int) desc
+        limit ${limit}
+      `;
   return rows.map((r) => ({
     title: r.title,
     qty: Number(r.qty),

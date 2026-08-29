@@ -33,14 +33,27 @@ export async function getPendingReviewsCount(): Promise<number> {
   return Number(rows[0]?.count ?? 0);
 }
 
-export async function listAdminReviews(): Promise<AdminReview[]> {
-  const rows = await sql<ReviewRow[]>`
-    select r.id, r.product_slug, p.title_en, r.author, r.rating, r.body,
-           r.locale, r.approved, r.created_at::text as created_at
-    from reviews r
-    join products p on p.slug = r.product_slug
-    order by r.approved asc, r.created_at desc
-  `;
+export async function listAdminReviews(
+  start: Date | null = null,
+  end: Date = new Date(),
+): Promise<AdminReview[]> {
+  const rows = start
+    ? await sql<ReviewRow[]>`
+        select r.id, r.product_slug, p.title_en, r.author, r.rating, r.body,
+               r.locale, r.approved, r.created_at::text as created_at
+        from reviews r
+        join products p on p.slug = r.product_slug
+        where r.created_at >= ${start} and r.created_at <= ${end}
+        order by r.approved asc, r.created_at desc
+      `
+    : await sql<ReviewRow[]>`
+        select r.id, r.product_slug, p.title_en, r.author, r.rating, r.body,
+               r.locale, r.approved, r.created_at::text as created_at
+        from reviews r
+        join products p on p.slug = r.product_slug
+        where r.created_at <= ${end}
+        order by r.approved asc, r.created_at desc
+      `;
   return rows.map((r) => ({
     id: r.id,
     productSlug: r.product_slug,

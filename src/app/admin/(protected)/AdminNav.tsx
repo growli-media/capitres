@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   ChartLineUp,
+  CurrencyCircleDollar,
   Receipt,
   ShoppingCartSimple,
   SignOut,
@@ -23,6 +24,7 @@ import type { AccessLevel } from "@/lib/admin/permissions";
  * grantable permission — see src/lib/admin/permissions.ts. */
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", icon: ChartLineUp, exact: true, permission: null },
+  { href: "/admin/revenue", label: "Revenue", icon: CurrencyCircleDollar, exact: false, permission: "revenue" },
   { href: "/admin/products", label: "Products", icon: TShirt, exact: false, permission: "products" },
   { href: "/admin/collections", label: "Collections", icon: Stack, exact: false, permission: "collections" },
   { href: "/admin/categories", label: "Categories", icon: Tag, exact: false, permission: "categories" },
