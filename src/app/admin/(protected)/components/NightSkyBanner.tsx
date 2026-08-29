@@ -4,7 +4,9 @@
  * pass). Replaced with a piece of Growli-branded art instead: a dark navy
  * night sky (reusing sidebar-glass-bg's gradient/drift so it ties into the
  * same brand surface as the sidebar), twinkling stars, two shooting stars
- * on independent cycles, a moon, and Growli's own mark centered small.
+ * on independent cycles, a moon, and — this is the store owner's own
+ * dashboard, not Growli's — the Capitres wordmark centered small, not
+ * Growli's mark (that lives in the sidebar as the "built by" signature).
  * Purely decorative — aria-hidden, no data or interaction here.
  */
 
@@ -38,21 +40,26 @@ export default function NightSkyBanner() {
       aria-hidden="true"
     >
       <div className="relative flex h-36 items-center justify-center md:h-44">
-        <div className="absolute end-8 top-6 h-9 w-9 rounded-full bg-[#eef2f7] shadow-[0_0_28px_8px_rgba(238,242,247,0.3)]" />
+        {/* Moon + stars drift together as one layer (see
+            starfield-drift-30 in globals.css) — shooting stars stay
+            outside it, their own streak animation already moves them. */}
+        <div className="night-sky-drift absolute inset-0" style={{ animation: "starfield-drift-30 90s ease-in-out infinite" }}>
+          <div className="absolute end-8 top-6 h-9 w-9 rounded-full bg-[#eef2f7] shadow-[0_0_28px_8px_rgba(238,242,247,0.3)]" />
 
-        {STARS.map((s, i) => (
-          <span
-            key={i}
-            className="night-sky-star pointer-events-none absolute rounded-full bg-white"
-            style={{
-              top: s.top,
-              left: s.left,
-              width: s.size,
-              height: s.size,
-              animation: `star-twinkle ${s.duration} ease-in-out ${s.delay} infinite`,
-            }}
-          />
-        ))}
+          {STARS.map((s, i) => (
+            <span
+              key={i}
+              className="night-sky-star pointer-events-none absolute rounded-full bg-white"
+              style={{
+                top: s.top,
+                left: s.left,
+                width: s.size,
+                height: s.size,
+                animation: `star-twinkle ${s.duration} ease-in-out ${s.delay} infinite`,
+              }}
+            />
+          ))}
+        </div>
 
         {/* Two independent cycles (7s / 11s) so the shooting stars drift
             out of sync instead of visibly repeating together. */}
@@ -65,11 +72,11 @@ export default function NightSkyBanner() {
           style={{ animation: "shooting-star-b 11s linear infinite" }}
         />
 
-        {/* eslint-disable-next-line @next/next/no-img-element -- tiny brand mark, next/image is overkill */}
+        {/* eslint-disable-next-line @next/next/no-img-element -- next/image needs a fixed size, this scales with the banner */}
         <img
-          src="/brand/growli-icon-white.png"
-          alt=""
-          className="relative z-10 h-8 w-8 opacity-90 drop-shadow-[0_0_14px_rgba(143,199,239,0.4)]"
+          src="/brand/logo-white.svg"
+          alt="Capitres"
+          className="relative z-10 h-7 w-auto opacity-95 drop-shadow-[0_0_14px_rgba(143,199,239,0.4)] md:h-8"
         />
       </div>
     </div>

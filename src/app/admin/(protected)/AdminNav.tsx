@@ -71,7 +71,7 @@ export default function AdminNav({
                 className={`flex min-h-11 items-center justify-between gap-3 rounded-full border px-3 text-sm font-medium backdrop-blur-md transition-all ${
                   active
                     ? "border-[#8FC7EF]/50 bg-gradient-to-b from-[#8FC7EF]/30 to-[#8FC7EF]/10 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]"
-                    : "border-transparent text-[#aebfce] hover:border-white/20 hover:bg-white/10 hover:text-white hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
+                    : "border-white/12 bg-white/5 text-[#aebfce] shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] hover:border-white/25 hover:bg-white/12 hover:text-white hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]"
                 }`}
               >
                 <span className="flex items-center gap-3">
@@ -94,7 +94,7 @@ export default function AdminNav({
         <form action={logout}>
           <button
             type="submit"
-            className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-full border border-transparent px-3 text-sm font-medium text-[#aebfce] backdrop-blur-md transition-all hover:border-white/20 hover:bg-white/10 hover:text-white hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
+            className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-full border border-white/12 bg-white/5 px-3 text-sm font-medium text-[#aebfce] shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] backdrop-blur-md transition-all hover:border-white/25 hover:bg-white/12 hover:text-white hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]"
           >
             <SignOut size={18} aria-hidden="true" />
             Log out

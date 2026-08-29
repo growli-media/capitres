@@ -178,20 +178,23 @@ body.admin-font-inter {
 /* Slow-moving ambient gradient wash for the admin dashboard + auth pages'
    background — a large multi-stop gradient with its position animated
    over the better part of a minute, so the color wash drifts almost
-   imperceptibly rather than reading as a moving shape. Bigger, more
-   distinct color stops than the flat slate-to-white gradient this
-   replaced, so the glass surfaces' translucency has something visible to
-   show through. Dark mode's darker stop set applies via the .admin-dark
-   combinator — AdminShell's root div carries both classes at once, see
-   AdminShell.tsx; auth pages never carry .admin-dark so they always get
-   the light stops. */
+   imperceptibly rather than reading as a moving shape. Built from Growli's
+   own palette (Growli-Brand-Guidelines.html §03: White Core #FFFFFF, plus
+   the l3/l2/l1 light-navy-tinted greys #dbe4ee/#cdd9e3/#aebfce) so the
+   main content area reads as the same brand surface as the sidebar,
+   just white-dominant instead of navy-dominant — it still needs to stay
+   light enough for dark body text to read on top of the glass cards.
+   Dark mode's stop set applies via the .admin-dark combinator —
+   AdminShell's root div carries both classes at once, see AdminShell.tsx;
+   auth pages never carry .admin-dark so they always get the light
+   stops. */
 .admin-gradient-bg {
-  background-image: linear-gradient(135deg, #dbeafe 0%, #f8fafc 45%, #fef3c7 100%);
+  background-image: linear-gradient(135deg, #ffffff 0%, #dbe4ee 40%, #cdd9e3 70%, #aebfce 100%);
   background-size: 200% 200%;
   animation: admin-gradient-drift 48s ease-in-out infinite;
 }
 .admin-gradient-bg.admin-dark {
-  background-image: linear-gradient(135deg, #0f172a 0%, #020617 45%, #1e293b 100%);
+  background-image: linear-gradient(135deg, #111827 0%, #1b3445 55%, #2a4a61 100%);
 }
 @keyframes admin-gradient-drift {
   0%,
@@ -212,13 +215,23 @@ body.admin-font-inter {
    wash. Deliberately the same regardless of the admin light/dark toggle
    (see AdminShell.tsx, AdminNav.tsx): the sidebar is a fixed brand
    surface, not a themeable one, so it reads as "Growli built this" no
-   matter which theme the rest of the dashboard is in. Colors and the
-   "clean gradient, no vignette" direction are straight from
-   Growli-Brand-Guidelines.html §03/§05 (Deep Navy #1B3445, Navy #2A4A61,
-   Dark #111827). Reuses admin-gradient-drift — it only animates
-   background-position, so any background-image works with it. */
+   matter which theme the rest of the dashboard is in. Colors are straight
+   from Growli-Brand-Guidelines.html §03/§05 — Deep Navy #1B3445, Navy
+   #2A4A61, Dark #111827, plus a White Core + Sky #8FC7EF highlight in one
+   corner so it's a white-into-navy blend rather than flat navy. The white
+   corner is a fast stop (0%→22%) so it reads as a light source catching
+   the glass edge, not a wash that would fight with the light sidebar
+   text over most of the surface. Reuses admin-gradient-drift — it only
+   animates background-position, so any background-image works with it. */
 .sidebar-glass-bg {
-  background-image: linear-gradient(165deg, #1b3445 0%, #2a4a61 55%, #111827 100%);
+  background-image: linear-gradient(
+    165deg,
+    #ffffff 0%,
+    #8fc7ef 14%,
+    #2a4a61 32%,
+    #1b3445 65%,
+    #111827 100%
+  );
   background-size: 200% 200%;
   animation: admin-gradient-drift 48s ease-in-out infinite;
 }
@@ -272,7 +285,25 @@ body.admin-font-inter {
     opacity: 0;
   }
 }
+/* The moon + star layer drifts as one unit along a 30° diagonal (not a
+   flat left-right pan) — cos30°≈0.87, sin30°≈0.5, scaled up so the drift
+   is visible without the stars ever leaving the banner. Very slow
+   (90s half-cycle) and ease-in-out so it reads as gentle rather than
+   mechanical. Shooting stars stay outside this wrapper — their own
+   streak animation already provides motion. */
+@keyframes starfield-drift-30 {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(35px, 20px);
+  }
+}
 @media (prefers-reduced-motion: reduce) {
+  .night-sky-drift {
+    animation: none !important;
+  }
   .night-sky-star,
   .night-sky-shooting-star {
     animation: none !important;

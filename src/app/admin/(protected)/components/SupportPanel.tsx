@@ -14,7 +14,7 @@ export default function SupportPanel() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-full border border-transparent px-3 text-sm font-medium text-[#aebfce] backdrop-blur-md transition-all hover:border-white/20 hover:bg-white/10 hover:text-white hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
+        className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-full border border-white/12 bg-white/5 px-3 text-sm font-medium text-[#aebfce] shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] backdrop-blur-md transition-all hover:border-white/25 hover:bg-white/12 hover:text-white hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]"
       >
         <Question size={18} aria-hidden="true" />
         Support
