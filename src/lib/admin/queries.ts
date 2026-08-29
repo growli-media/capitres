@@ -38,7 +38,7 @@ export interface AbandonedOrder {
   createdAt: string;
   minutesAgo: number;
   customerName: string;
-  phone: string;
+  phone: string | null;
   email: string;
   total: number;
   itemCount: number;
@@ -59,7 +59,7 @@ export async function listAbandonedOrders(): Promise<AbandonedOrder[]> {
       first_name: string | null;
       last_name: string | null;
       legacy_full_name: string | null;
-      phone: string;
+      phone: string | null;
       email: string;
       total: string;
       item_count: string;

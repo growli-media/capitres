@@ -58,9 +58,11 @@ export default async function AbandonedCartsPage() {
                 <tr key={c.ref}>
                   <td className="px-4 py-3">
                     <div className="font-medium text-slate-900">{c.customerName}</div>
-                    <div className="text-xs text-slate-400" dir="ltr">
-                      {c.phone}
-                    </div>
+                    {c.phone && (
+                      <div className="text-xs text-slate-400" dir="ltr">
+                        {c.phone}
+                      </div>
+                    )}
                   </td>
                   <td className="max-w-56 px-4 py-3 text-slate-600">
                     <p className="truncate">
@@ -76,25 +78,31 @@ export default async function AbandonedCartsPage() {
                   <td className="px-4 py-3 text-slate-500">{timeAgo(c.minutesAgo)}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1.5">
-                      <a
-                        href={toWhatsAppLink(
-                          c.phone,
-                          `Hi ${c.customerName}, this is Capitres — noticed you didn't finish your order. Can I help with anything?`,
-                        )}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex h-9 items-center gap-1.5 rounded-lg bg-emerald-50 px-3 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100"
-                      >
-                        <WhatsappLogo size={15} weight="fill" />
-                        WhatsApp
-                      </a>
-                      <a
-                        href={`tel:${c.phone}`}
-                        aria-label="Call customer"
-                        className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
-                      >
-                        <Phone size={16} />
-                      </a>
+                      {c.phone ? (
+                        <>
+                          <a
+                            href={toWhatsAppLink(
+                              c.phone,
+                              `Hi ${c.customerName}, this is Capitres — noticed you didn't finish your order. Can I help with anything?`,
+                            )}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex h-9 items-center gap-1.5 rounded-lg bg-emerald-50 px-3 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100"
+                          >
+                            <WhatsappLogo size={15} weight="fill" />
+                            WhatsApp
+                          </a>
+                          <a
+                            href={`tel:${c.phone}`}
+                            aria-label="Call customer"
+                            className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                          >
+                            <Phone size={16} />
+                          </a>
+                        </>
+                      ) : (
+                        <span className="text-xs text-slate-400">No phone</span>
+                      )}
                     </div>
                   </td>
                 </tr>

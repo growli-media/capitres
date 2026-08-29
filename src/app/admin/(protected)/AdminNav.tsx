@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -37,15 +38,17 @@ export default function AdminNav({
 
   return (
     <nav className="flex h-full flex-col">
-      <Link
-        href="/admin"
-        onClick={onNavigate}
-        className="flex items-center gap-2 px-6 pt-5 pb-1"
-      >
-        <span className="flex h-7 w-7 items-center justify-center rounded-md bg-slate-900 text-xs font-black text-white">
-          C
+      <Link href="/admin" onClick={onNavigate} className="block px-6 pt-6 pb-2">
+        <Image
+          src="/brand/logo-black.svg"
+          alt="Capitres"
+          width={867}
+          height={99}
+          className="h-4 w-auto"
+        />
+        <span className="mt-1 block text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+          Admin
         </span>
-        <span className="text-sm font-bold tracking-tight">Capitres Admin</span>
       </Link>
 
       <ul className="mt-6 flex-1 space-y-1 overflow-y-auto px-4">
@@ -95,20 +98,24 @@ export default function AdminNav({
             Log out
           </button>
         </form>
-        <div className="mt-3 px-3 text-[11px] leading-relaxed text-slate-400">
-          <p>
-            Made by{" "}
-            <a
-              href="https://growli.media"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-bold text-slate-600 transition-colors hover:text-slate-900"
-            >
-              Growli Media
-            </a>{" "}
-            in Germany
-          </p>
-          <p className="font-light italic">Growth through creativity</p>
+        <div className="mt-3 flex items-start gap-1.5 px-3 text-[11px] leading-relaxed text-slate-400">
+          {/* eslint-disable-next-line @next/next/no-img-element -- tiny footer mark, next/image is overkill */}
+          <img src="/brand/growli-icon.png" alt="" className="mt-0.5 h-3.5 w-3.5 shrink-0 opacity-70" />
+          <div>
+            <p>
+              Made by{" "}
+              <a
+                href="https://growli.media"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-bold text-slate-600 transition-colors hover:text-slate-900"
+              >
+                Growli Media
+              </a>{" "}
+              in Germany
+            </p>
+            <p className="font-light italic">Growth through creativity</p>
+          </div>
         </div>
       </div>
     </nav>
