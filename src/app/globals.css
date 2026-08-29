@@ -178,23 +178,22 @@ body.admin-font-inter {
 /* Slow-moving ambient gradient wash for the admin dashboard + auth pages'
    background — a large multi-stop gradient with its position animated
    over the better part of a minute, so the color wash drifts almost
-   imperceptibly rather than reading as a moving shape. Built from Growli's
-   own palette (Growli-Brand-Guidelines.html §03: White Core #FFFFFF, plus
-   the l3/l2/l1 light-navy-tinted greys #dbe4ee/#cdd9e3/#aebfce) so the
-   main content area reads as the same brand surface as the sidebar,
-   just white-dominant instead of navy-dominant — it still needs to stay
-   light enough for dark body text to read on top of the glass cards.
-   Dark mode's stop set applies via the .admin-dark combinator —
-   AdminShell's root div carries both classes at once, see AdminShell.tsx;
-   auth pages never carry .admin-dark so they always get the light
-   stops. */
+   imperceptibly rather than reading as a moving shape. Deliberately its
+   own blue/slate/amber palette, distinct from the sidebar's navy — a
+   brief detour recolored this to match the sidebar, but that made the
+   whole dashboard look like one undifferentiated surface; reverted so
+   the main content area and the sidebar read as two clearly separate
+   sections. Dark mode's stop set applies via the .admin-dark combinator
+   — AdminShell's root div carries both classes at once, see
+   AdminShell.tsx; auth pages never carry .admin-dark so they always get
+   the light stops. */
 .admin-gradient-bg {
-  background-image: linear-gradient(135deg, #ffffff 0%, #dbe4ee 40%, #cdd9e3 70%, #aebfce 100%);
+  background-image: linear-gradient(135deg, #dbeafe 0%, #f8fafc 45%, #fef3c7 100%);
   background-size: 200% 200%;
   animation: admin-gradient-drift 48s ease-in-out infinite;
 }
 .admin-gradient-bg.admin-dark {
-  background-image: linear-gradient(135deg, #111827 0%, #1b3445 55%, #2a4a61 100%);
+  background-image: linear-gradient(135deg, #0f172a 0%, #020617 45%, #1e293b 100%);
 }
 @keyframes admin-gradient-drift {
   0%,
@@ -313,17 +312,18 @@ body.admin-font-inter {
 }
 /* The moon + star layer drifts as one unit along a 30° diagonal (not a
    flat left-right pan) — cos30°≈0.87, sin30°≈0.5, scaled up so the drift
-   is visible without the stars ever leaving the banner. Very slow
-   (90s half-cycle) and ease-in-out so it reads as gentle rather than
-   mechanical. Shooting stars stay outside this wrapper — their own
-   streak animation already provides motion. */
+   is visible without the stars ever leaving the banner. Top-right toward
+   bottom-left (negative X, positive Y) — flipped from an earlier
+   bottom-right direction. Very slow (90s half-cycle) and ease-in-out so
+   it reads as gentle rather than mechanical. Shooting stars stay outside
+   this wrapper — their own streak animation already provides motion. */
 @keyframes starfield-drift-30 {
   0%,
   100% {
-    transform: translate(0, 0);
+    transform: translate(17px, -10px);
   }
   50% {
-    transform: translate(35px, 20px);
+    transform: translate(-17px, 10px);
   }
 }
 @media (prefers-reduced-motion: reduce) {

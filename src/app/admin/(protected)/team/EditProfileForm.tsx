@@ -91,7 +91,7 @@ export default function EditProfileForm({
               id="company"
               name="company"
               defaultValue={company ?? ""}
-              placeholder="e.g. Acme Studio — leave blank if you're Growli Media"
+              placeholder="e.g. Acme Studio — leave blank if you're part of our Capitres team"
               className={inputClass}
             />
           </div>

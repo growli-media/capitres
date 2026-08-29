@@ -72,14 +72,13 @@ export default function AdminShell({
       {/* Large, heavily-blurred light sources drifting slowly across the
           background — layered on top of admin-gradient-bg's subtle
           position shift so there's a visible moving light, not just an
-          almost-imperceptible color wash. Growli's Sky (#8FC7EF) and Navy
-          (#2A4A61) instead of generic blue/amber, so the main content
-          area reads as the same brand surface as the sidebar. Fixed +
-          overflow-hidden on the wrapper so the blobs never introduce page
-          scroll. */}
+          almost-imperceptible color wash. Blue/amber, matching
+          admin-gradient-bg's own palette (kept deliberately distinct from
+          the sidebar's navy — see globals.css). Fixed + overflow-hidden
+          on the wrapper so the blobs never introduce page scroll. */}
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
-        <div className="motion-safe:animate-glow-drift-a absolute -left-1/4 top-1/4 h-[36rem] w-[36rem] rounded-full bg-[#8FC7EF]/35 blur-3xl dark:bg-[#8FC7EF]/10" />
-        <div className="motion-safe:animate-glow-drift-b absolute -right-1/4 bottom-1/4 h-[32rem] w-[32rem] rounded-full bg-[#2A4A61]/25 blur-3xl dark:bg-[#2A4A61]/15" />
+        <div className="motion-safe:animate-glow-drift-a absolute -left-1/4 top-1/4 h-[36rem] w-[36rem] rounded-full bg-blue-300/35 blur-3xl dark:bg-blue-500/10" />
+        <div className="motion-safe:animate-glow-drift-b absolute -right-1/4 bottom-1/4 h-[32rem] w-[32rem] rounded-full bg-amber-200/30 blur-3xl dark:bg-amber-500/5" />
       </div>
 
       {/* Desktop sidebar — sticky, full viewport height */}
