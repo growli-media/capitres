@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Check, Plus } from "@phosphor-icons/react/dist/ssr";
 import { listAdminCategories, isReservedCategory } from "@/lib/admin/categories";
 import CategoryRowActions from "./CategoryRowActions";
+import { glassCard, glassButtonPrimary, glassTone } from "../../glass";
 
 export const metadata: Metadata = { title: "Categories" };
 
@@ -29,7 +30,7 @@ export default async function AdminCategoriesPage({
         </div>
         <Link
           href="/admin/categories/new"
-          className="flex h-10 shrink-0 cursor-pointer items-center gap-2 rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white transition-colors hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
+          className={`flex h-10 shrink-0 cursor-pointer items-center gap-2 px-4 text-sm font-semibold ${glassButtonPrimary}`}
         >
           <Plus size={16} aria-hidden="true" />
           New category
@@ -37,13 +38,13 @@ export default async function AdminCategoriesPage({
       </div>
 
       {created === "1" && (
-        <div className="mb-6 flex items-center gap-2 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+        <div className={`mb-6 flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium ${glassTone.success}`}>
           <Check size={16} aria-hidden="true" />
           Category created and live on the site.
         </div>
       )}
 
-      <div className="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+      <div className={glassCard}>
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400 dark:border-slate-800 dark:text-slate-500">
@@ -70,11 +71,11 @@ export default async function AdminCategoriesPage({
                 <td className={`px-4 py-3 text-slate-600 dark:text-slate-400 ${c.archived ? "opacity-50" : ""}`}>{c.sortOrder}</td>
                 <td className={`px-4 py-3 ${c.archived ? "opacity-50" : ""}`}>
                   {c.archived ? (
-                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${glassTone.neutral}`}>
                       Archived
                     </span>
                   ) : (
-                    <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${glassTone.info}`}>
                       Live
                     </span>
                   )}

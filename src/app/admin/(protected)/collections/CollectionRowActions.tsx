@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { DotsThreeVertical, PencilSimple, Trash } from "@phosphor-icons/react";
 import { deleteCollectionAction, toggleCollectionArchivedAction } from "./actions";
+import { glassIconButton } from "../../glass";
 
 export default function CollectionRowActions({
   slug,
@@ -21,7 +22,7 @@ export default function CollectionRowActions({
       <Link
         href={`/admin/collections/${slug}/edit`}
         aria-label="Edit collection"
-        className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+        className={`h-9 w-9 ${glassIconButton}`}
       >
         <PencilSimple size={16} />
       </Link>
@@ -31,13 +32,13 @@ export default function CollectionRowActions({
           onClick={() => setOpen((v) => !v)}
           aria-label="More actions"
           aria-expanded={open}
-          className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+          className={`h-9 w-9 ${glassIconButton}`}
         >
           <DotsThreeVertical size={18} />
         </button>
         {open && (
           <div
-            className="absolute end-0 top-10 z-10 w-48 rounded-lg border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-800"
+            className="absolute end-0 top-10 z-10 w-48 rounded-lg border border-white/40 bg-white/90 py-1 shadow-lg backdrop-blur-xl dark:border-white/10 dark:bg-slate-800/90"
             onMouseLeave={() => setOpen(false)}
           >
             <button

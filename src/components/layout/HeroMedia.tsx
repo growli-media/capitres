@@ -1,25 +1,9 @@
 "use client";
 
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useRef, useState } from "react";
 import Image, { type StaticImageData } from "next/image";
 import { Pause, Play } from "@phosphor-icons/react";
-
-const QUERY = "(prefers-reduced-motion: reduce)";
-
-/** Subscribes to prefers-reduced-motion. On the server it reports
- * "reduced" so the video never lands in the SSR HTML — the poster carries
- * LCP, and the video mounts client-side only when motion is allowed. */
-function usePrefersReducedMotion(): boolean {
-  return useSyncExternalStore(
-    (onChange) => {
-      const mq = window.matchMedia(QUERY);
-      mq.addEventListener("change", onChange);
-      return () => mq.removeEventListener("change", onChange);
-    },
-    () => window.matchMedia(QUERY).matches,
-    () => true,
-  );
-}
+import { usePrefersReducedMotion } from "@/components/motion/usePrefersReducedMotion";
 
 /**
  * Full-screen hero media, Saint-Laurent style: a muted, looped, autoplaying

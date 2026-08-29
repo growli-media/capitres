@@ -8,6 +8,7 @@ import {
   deleteCollectionPermanently,
   setCollectionArchived,
   updateCollection,
+  type AdminCollectionImage,
   type CollectionInput,
 } from "@/lib/admin/collections";
 
@@ -22,6 +23,26 @@ function slugify(value: string): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 80);
+}
+
+function allOf(formData: FormData, key: string): string[] {
+  return formData.getAll(key).map(String);
+}
+
+/** Repeated same-named inputs (one row per photo) arrive in DOM order via
+ * FormData.getAll — zip the parallel field lists back into one row per
+ * index. Mirrors products/actions.ts's imagesOf() exactly. */
+function heroImagesOf(formData: FormData): AdminCollectionImage[] {
+  const urls = allOf(formData, "heroImageUrl");
+  const altEn = allOf(formData, "heroImageAltEn");
+  const altAr = allOf(formData, "heroImageAltAr");
+  const altKu = allOf(formData, "heroImageAltKu");
+  return urls.map((url, i) => ({
+    url: url.trim(),
+    altEn: (altEn[i] ?? "").trim(),
+    altAr: (altAr[i] ?? "").trim(),
+    altKu: (altKu[i] ?? "").trim(),
+  }));
 }
 
 function parseInput(formData: FormData, fallbackSlug: string): CollectionInput | { error: string } {
@@ -49,13 +70,26 @@ function parseInput(formData: FormData, fallbackSlug: string): CollectionInput |
   const slug = slugify(String(formData.get("slug") ?? "") || fallbackSlug || titleEn);
   if (!slug) return { error: "Couldn't derive a URL slug — please set one." };
 
-  const heroImageUrl = String(formData.get("heroImageUrl") ?? "").trim();
-  if (!heroImageUrl) return { error: "Add a cover photo (upload or paste a URL)." };
+  const heroImages = heroImagesOf(formData).filter((img) => img.url);
+  if (heroImages.length === 0) {
+    return { error: "Add at least one photo (upload or paste a URL)." };
+  }
+  // An untitled photo falls back to the collection's own title, same
+  // convention as the old single-photo field used.
+  for (const img of heroImages) {
+    if (!img.altEn) img.altEn = titleEn;
+    if (!img.altAr) img.altAr = titleAr;
+    if (!img.altKu) img.altKu = titleKu;
+  }
 
   const theme = String(formData.get("theme") ?? "light");
   if (theme !== "light" && theme !== "dark") return { error: "Choose a valid theme." };
 
   const sortOrder = Number(formData.get("sortOrder") ?? 0);
+
+  const videoUrl = String(formData.get("videoUrl") ?? "").trim();
+  const publishedDate = String(formData.get("publishedDate") ?? "").trim();
+  const publishedWhere = String(formData.get("publishedWhere") ?? "").trim();
 
   return {
     slug,
@@ -68,10 +102,10 @@ function parseInput(formData: FormData, fallbackSlug: string): CollectionInput |
     descriptionEn,
     descriptionAr,
     descriptionKu,
-    heroImageUrl,
-    heroImageAltEn: String(formData.get("heroImageAltEn") ?? "").trim() || titleEn,
-    heroImageAltAr: String(formData.get("heroImageAltAr") ?? "").trim() || titleAr,
-    heroImageAltKu: String(formData.get("heroImageAltKu") ?? "").trim() || titleKu,
+    heroImages,
+    videoUrl: videoUrl || null,
+    publishedDate: publishedDate || null,
+    publishedWhere: publishedWhere || null,
     theme,
     sortOrder: Number.isFinite(sortOrder) ? Math.trunc(sortOrder) : 0,
   };

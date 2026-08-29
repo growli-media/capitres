@@ -79,6 +79,33 @@ html[lang="ku"] {
       transform: translateX(-50%);
     }
   }
+
+  /* Slow ambient drift for the admin login logo's aurora glow — see
+     AuthLogoMark.tsx. Two different periods/paths so the blobs don't
+     move in lockstep. Applied via motion-safe: so it's inert under
+     prefers-reduced-motion. */
+  --animate-aurora-a: aurora-drift-a 11s ease-in-out infinite;
+  --animate-aurora-b: aurora-drift-b 14s ease-in-out infinite;
+
+  @keyframes aurora-drift-a {
+    0%,
+    100% {
+      transform: translate(-10%, -8%) scale(1);
+    }
+    50% {
+      transform: translate(8%, 10%) scale(1.15);
+    }
+  }
+
+  @keyframes aurora-drift-b {
+    0%,
+    100% {
+      transform: translate(8%, 6%) scale(1.1);
+    }
+    50% {
+      transform: translate(-8%, -10%) scale(0.9);
+    }
+  }
 }
 
 @theme inline {
@@ -107,6 +134,30 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   min-height: 100dvh;
+}
+
+/* Admin-only font override. Deliberately unlayered (like the rule above)
+   so it beats Tailwind's layered utilities regardless of source order —
+   per the CSS Cascade Layers spec, unlayered rules always win over
+   layered ones. The class selector also beats the bare `body{}` rule
+   above via specificity. Fully isolated from the storefront: admin has
+   its own root layout (src/app/admin/layout.tsx) that never renders
+   this class's sibling storefront tree. */
+body.admin-font-inter {
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Collection story-banner progress segments — see CollectionHero.tsx.
+   A plain global keyframe (not a Tailwind --animate-* token) since it's
+   referenced via an inline `animation` style with a duration that's a JS
+   constant, not a fixed utility class. */
+@keyframes collection-hero-progress {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
 }
 
 ::selection {

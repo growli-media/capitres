@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Star } from "@phosphor-icons/react/dist/ssr";
 import { listAdminReviews } from "@/lib/admin/reviews";
 import ReviewRowActions from "./ReviewRowActions";
+import { glassCard, glassTone } from "../../glass";
 
 export const metadata: Metadata = { title: "Reviews" };
 
@@ -34,7 +35,7 @@ export default async function AdminReviewsPage() {
           <p className="text-sm text-slate-500 dark:text-slate-400">No reviews yet.</p>
         </div>
       ) : (
-        <div className="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+        <div className={`mt-6 overflow-hidden ${glassCard}`}>
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400 dark:border-slate-800 dark:text-slate-500">
@@ -61,11 +62,11 @@ export default async function AdminReviewsPage() {
                   </td>
                   <td className="px-4 py-3">
                     {r.approved ? (
-                      <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                      <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${glassTone.info}`}>
                         Published
                       </span>
                     ) : (
-                      <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+                      <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${glassTone.warning}`}>
                         Pending
                       </span>
                     )}

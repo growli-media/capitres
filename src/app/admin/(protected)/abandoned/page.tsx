@@ -5,6 +5,7 @@ import { toWhatsAppLink } from "@/lib/admin/whatsapp";
 import { formatIQD } from "@/lib/money";
 import CancelOrderButton from "../orders/CancelOrderButton";
 import NoteButton from "../orders/NoteButton";
+import { glassCard, glassTone, glassIconButton } from "../../glass";
 
 export const metadata: Metadata = { title: "Abandoned carts" };
 
@@ -31,7 +32,7 @@ export default async function AbandonedCartsPage() {
       </p>
 
       {carts.length > 0 && (
-        <div className="mt-4 flex items-center gap-2 rounded-lg bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+        <div className={`mt-4 flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium ${glassTone.warning}`}>
           {carts.length} {carts.length === 1 ? "customer" : "customers"} to follow up
           with — {formatIQD(totalValue, "en")} in unpaid carts.
         </div>
@@ -44,7 +45,7 @@ export default async function AbandonedCartsPage() {
           </p>
         </div>
       ) : (
-        <div className="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+        <div className={`mt-6 overflow-hidden ${glassCard}`}>
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400 dark:border-slate-800 dark:text-slate-500">
@@ -90,7 +91,7 @@ export default async function AbandonedCartsPage() {
                             )}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex h-9 items-center gap-1.5 rounded-lg bg-emerald-50 px-3 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-950/70"
+                            className={`flex h-9 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-colors hover:bg-emerald-100 dark:hover:bg-emerald-950/70 ${glassTone.success}`}
                           >
                             <WhatsappLogo size={15} weight="fill" />
                             WhatsApp
@@ -98,7 +99,7 @@ export default async function AbandonedCartsPage() {
                           <a
                             href={`tel:${c.phone}`}
                             aria-label="Call customer"
-                            className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                            className={`h-9 w-9 ${glassIconButton}`}
                           >
                             <Phone size={16} />
                           </a>

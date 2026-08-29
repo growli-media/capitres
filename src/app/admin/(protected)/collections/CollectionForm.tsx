@@ -2,10 +2,34 @@
 
 import { useActionState, useRef, useState } from "react";
 import Image from "next/image";
-import { UploadSimple } from "@phosphor-icons/react";
+import { upload } from "@vercel/blob/client";
+import {
+  CaretDown,
+  CaretUp,
+  DotsSixVertical,
+  Plus,
+  Trash,
+  UploadSimple,
+  VideoCamera,
+} from "@phosphor-icons/react";
 import type { AdminCollectionRow } from "@/lib/admin/collections";
 import { createCollectionAction, updateCollectionAction, type FormState } from "./actions";
-import { uploadProductImage } from "../products/upload-action";
+import { uploadProductImage } from "../../upload-image-action";
+import { glassInput, glassTextarea, glassButtonPrimary, glassButtonSecondary, glassTone } from "../../glass";
+
+interface ImageRow {
+  id: number;
+  url: string;
+  altEn: string;
+  altAr: string;
+  altKu: string;
+}
+
+let rowIdSeq = 0;
+function nextRowId() {
+  rowIdSeq += 1;
+  return rowIdSeq;
+}
 
 function Field({
   label,
@@ -25,10 +49,8 @@ function Field({
   );
 }
 
-const inputClass =
-  "h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none transition-colors focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-slate-400 dark:focus:ring-slate-400/10 dark:disabled:bg-slate-800 dark:disabled:text-slate-400";
-const textareaClass =
-  "w-full rounded-lg border border-slate-300 bg-white p-3 text-sm outline-none transition-colors focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-slate-400 dark:focus:ring-slate-400/10";
+const inputClass = `h-10 w-full px-3 ${glassInput}`;
+const textareaClass = glassTextarea;
 
 export default function CollectionForm({
   mode,
@@ -43,96 +65,350 @@ export default function CollectionForm({
       : createCollectionAction;
   const [state, formAction, pending] = useActionState<FormState, FormData>(boundAction, {});
 
-  const [heroUrl, setHeroUrl] = useState(collection?.heroImageUrl ?? "");
-  const [uploading, setUploading] = useState(false);
+  const [images, setImages] = useState<ImageRow[]>(() =>
+    collection && collection.heroImages.length > 0
+      ? collection.heroImages.map((img) => ({
+          id: nextRowId(),
+          url: img.url,
+          altEn: img.altEn,
+          altAr: img.altAr,
+          altKu: img.altKu,
+        }))
+      : [{ id: nextRowId(), url: "", altEn: "", altAr: "", altKu: "" }],
+  );
+  const [uploadingId, setUploadingId] = useState<number | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dropIndex, setDropIndex] = useState<number | null>(null);
+  const [addDragOver, setAddDragOver] = useState(false);
+  const fileInputRefs = useRef<Map<number, HTMLInputElement>>(new Map());
 
-  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
+  const [videoUrl, setVideoUrl] = useState(collection?.videoUrl ?? "");
+  const [videoUploading, setVideoUploading] = useState(false);
+  const [videoError, setVideoError] = useState<string | null>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
+
+  function updateImage(id: number, patch: Partial<ImageRow>) {
+    setImages((rows) => rows.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+  }
+  function addImage() {
+    setImages((rows) => [...rows, { id: nextRowId(), url: "", altEn: "", altAr: "", altKu: "" }]);
+  }
+  function removeImage(id: number) {
+    setImages((rows) => rows.filter((r) => r.id !== id));
+  }
+  function moveImage(from: number, to: number) {
+    setImages((rows) => {
+      if (to < 0 || to >= rows.length || from === to) return rows;
+      const next = [...rows];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+  }
+
+  async function uploadFile(id: number, file: File) {
+    if (!file.type.startsWith("image/")) {
+      setUploadError("That doesn't look like an image file.");
+      return;
+    }
+    setUploadingId(id);
     setUploadError(null);
     const fd = new FormData();
     fd.set("file", file);
     const result = await uploadProductImage(fd);
-    setUploading(false);
+    setUploadingId(null);
     if (result.error) {
       setUploadError(result.error);
       return;
     }
-    if (result.url) setHeroUrl(result.url);
+    if (result.url) updateImage(id, { url: result.url });
+  }
+
+  function handleFileChange(id: number, e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) uploadFile(id, file);
+  }
+
+  /** A drop on a photo row: an external image file uploads into that row;
+   * an internal drag (a row being reordered) drops it into this slot. */
+  function handleRowDrop(e: React.DragEvent, id: number, index: number) {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      uploadFile(id, file);
+    } else if (dragIndex !== null) {
+      moveImage(dragIndex, index);
+    }
+    setDragIndex(null);
+    setDropIndex(null);
+  }
+
+  /** Dropping image files onto the "add" zone appends them as new photos. */
+  function handleAddDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setAddDragOver(false);
+    const files = Array.from(e.dataTransfer.files ?? []).filter((f) =>
+      f.type.startsWith("image/"),
+    );
+    for (const file of files) {
+      const id = nextRowId();
+      setImages((rows) => [...rows, { id, url: "", altEn: "", altAr: "", altKu: "" }]);
+      uploadFile(id, file);
+    }
+  }
+
+  /**
+   * Video goes straight from the browser to Blob storage via the client-
+   * upload flow (upload() + /api/admin/blob-upload issuing a short-lived
+   * token) — NOT the same Server Action used for photos. Vercel Serverless
+   * Functions cap request bodies around 4.5MB regardless of Next.js
+   * config, so a real video clip has to bypass this app's server
+   * entirely, not just raise a body-size limit that wouldn't help anyway.
+   */
+  async function handleVideoFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setVideoUploading(true);
+    setVideoError(null);
+    try {
+      const blob = await upload(file.name, file, {
+        access: "public",
+        handleUploadUrl: "/api/admin/blob-upload",
+      });
+      setVideoUrl(blob.url);
+    } catch (err) {
+      setVideoError(err instanceof Error ? err.message : "Video upload failed.");
+    } finally {
+      setVideoUploading(false);
+    }
   }
 
   return (
     <form action={formAction} className="space-y-8">
-      {/* Cover photo */}
+      {/* Photos */}
       <section>
-        <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Cover photo</h2>
-        <div className="flex items-start gap-5">
-          <div className="relative h-32 w-52 shrink-0 overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800">
-            {heroUrl && (
-              <Image src={heroUrl} alt="" fill sizes="208px" className="object-cover" unoptimized />
-            )}
-          </div>
-          <div className="flex-1 space-y-3">
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                className="flex h-10 cursor-pointer items-center gap-2 rounded-lg border border-slate-300 bg-white px-3.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-              >
-                <UploadSimple size={16} aria-hidden="true" />
-                {uploading ? "Uploading…" : "Upload photo"}
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp,image/avif"
-                className="hidden"
-                onChange={handleFileChange}
-              />
+        <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Photos</h2>
+        <p className="mb-3 text-xs text-slate-400 dark:text-slate-500">
+          The first photo (marked <span className="font-semibold text-slate-500 dark:text-slate-400">Main</span>)
+          is the one shown in listings elsewhere on the site. Add more than one and they&rsquo;ll
+          auto-rotate on the collection page. Drag the handle{" "}
+          <DotsSixVertical size={12} className="inline align-middle" aria-hidden="true" /> or
+          use the arrows to reorder, and drop an image onto a photo to replace it.
+        </p>
+        <div className="space-y-4">
+          {images.map((row, i) => (
+            <div
+              key={row.id}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDropIndex(i);
+              }}
+              onDragLeave={() => setDropIndex((d) => (d === i ? null : d))}
+              onDrop={(e) => handleRowDrop(e, row.id, i)}
+              className={`flex items-start gap-3 rounded-lg border p-4 transition-colors ${
+                dragIndex === i ? "opacity-40" : ""
+              } ${
+                dropIndex === i && dragIndex !== null && dragIndex !== i
+                  ? "border-slate-900 bg-slate-50 dark:border-slate-400 dark:bg-slate-900"
+                  : "border-slate-200 dark:border-slate-800"
+              }`}
+            >
+              {/* Reorder controls */}
+              <div className="flex flex-col items-center gap-0.5 pt-1 text-slate-300">
+                <button
+                  type="button"
+                  onClick={() => moveImage(i, i - 1)}
+                  disabled={i === 0}
+                  aria-label="Move photo up"
+                  className="flex h-6 w-6 cursor-pointer items-center justify-center rounded transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-slate-800 dark:hover:text-slate-400"
+                >
+                  <CaretUp size={14} />
+                </button>
+                <span
+                  draggable
+                  onDragStart={() => setDragIndex(i)}
+                  onDragEnd={() => {
+                    setDragIndex(null);
+                    setDropIndex(null);
+                  }}
+                  aria-label="Drag to reorder"
+                  className="cursor-grab text-slate-400 transition-colors hover:text-slate-600 active:cursor-grabbing dark:text-slate-500 dark:hover:text-slate-400"
+                >
+                  <DotsSixVertical size={18} />
+                </span>
+                <button
+                  type="button"
+                  onClick={() => moveImage(i, i + 1)}
+                  disabled={i === images.length - 1}
+                  aria-label="Move photo down"
+                  className="flex h-6 w-6 cursor-pointer items-center justify-center rounded transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-slate-800 dark:hover:text-slate-400"
+                >
+                  <CaretDown size={14} />
+                </button>
+              </div>
+
+              {/* Thumbnail (also a drop target for a replacement image) */}
+              <div className="relative h-32 w-52 shrink-0 overflow-hidden rounded-lg border border-slate-100 bg-slate-100 dark:border-slate-800 dark:bg-slate-800">
+                {row.url ? (
+                  <Image src={row.url} alt="" fill sizes="208px" className="object-cover" unoptimized />
+                ) : (
+                  <div className="flex h-full items-center justify-center px-2 text-center text-[11px] leading-tight text-slate-400 dark:text-slate-500">
+                    Drop image here or upload
+                  </div>
+                )}
+                {i === 0 && (
+                  <span className="absolute start-1 top-1 rounded bg-slate-900/80 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                    Main
+                  </span>
+                )}
+              </div>
+
+              <div className="flex-1 space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRefs.current.get(row.id)?.click()}
+                    disabled={uploadingId === row.id}
+                    className={`flex h-10 cursor-pointer items-center gap-2 px-3.5 text-sm font-medium text-slate-700 disabled:opacity-60 dark:text-slate-300 ${glassButtonSecondary}`}
+                  >
+                    <UploadSimple size={16} aria-hidden="true" />
+                    {uploadingId === row.id ? "Uploading…" : "Upload photo"}
+                  </button>
+                  <input
+                    ref={(el) => {
+                      if (el) fileInputRefs.current.set(row.id, el);
+                      else fileInputRefs.current.delete(row.id);
+                    }}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/avif"
+                    className="hidden"
+                    onChange={(e) => handleFileChange(row.id, e)}
+                  />
+                  {images.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeImage(row.id)}
+                      aria-label="Remove photo"
+                      className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-slate-500 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+                    >
+                      <Trash size={15} />
+                    </button>
+                  )}
+                </div>
+                <Field label="Or paste an image URL">
+                  <input
+                    type="text"
+                    name="heroImageUrl"
+                    value={row.url}
+                    onChange={(e) => updateImage(row.id, { url: e.target.value })}
+                    className={inputClass}
+                  />
+                </Field>
+                <div className="grid grid-cols-3 gap-3">
+                  <Field label="Alt text (EN)">
+                    <input
+                      type="text"
+                      name="heroImageAltEn"
+                      value={row.altEn}
+                      onChange={(e) => updateImage(row.id, { altEn: e.target.value })}
+                      className={inputClass}
+                    />
+                  </Field>
+                  <Field label="Alt text (AR)">
+                    <input
+                      type="text"
+                      name="heroImageAltAr"
+                      dir="rtl"
+                      value={row.altAr}
+                      onChange={(e) => updateImage(row.id, { altAr: e.target.value })}
+                      className={inputClass}
+                    />
+                  </Field>
+                  <Field label="Alt text (KU)">
+                    <input
+                      type="text"
+                      name="heroImageAltKu"
+                      dir="rtl"
+                      value={row.altKu}
+                      onChange={(e) => updateImage(row.id, { altKu: e.target.value })}
+                      className={inputClass}
+                    />
+                  </Field>
+                </div>
+              </div>
             </div>
-            {uploadError && <p className="text-xs text-amber-700 dark:text-amber-300">{uploadError}</p>}
-            <Field label="Or paste an image URL">
-              <input
-                type="text"
-                name="heroImageUrl"
-                value={heroUrl}
-                onChange={(e) => setHeroUrl(e.target.value)}
-                className={inputClass}
-              />
-            </Field>
-            <div className="grid grid-cols-3 gap-3">
-              <Field label="Alt text (EN)">
-                <input
-                  type="text"
-                  name="heroImageAltEn"
-                  defaultValue={collection?.heroImageAltEn}
-                  className={inputClass}
-                />
-              </Field>
-              <Field label="Alt text (AR)">
-                <input
-                  type="text"
-                  name="heroImageAltAr"
-                  dir="rtl"
-                  defaultValue={collection?.heroImageAltAr}
-                  className={inputClass}
-                />
-              </Field>
-              <Field label="Alt text (KU)">
-                <input
-                  type="text"
-                  name="heroImageAltKu"
-                  dir="rtl"
-                  defaultValue={collection?.heroImageAltKu}
-                  className={inputClass}
-                />
-              </Field>
-            </div>
+          ))}
+          {uploadError && <p className="text-xs text-amber-700 dark:text-amber-300">{uploadError}</p>}
+          <div
+            onDragOver={(e) => {
+              e.preventDefault();
+              setAddDragOver(true);
+            }}
+            onDragLeave={() => setAddDragOver(false)}
+            onDrop={handleAddDrop}
+            className={`flex items-center gap-2 rounded-lg border border-dashed px-3.5 py-2.5 transition-colors ${
+              addDragOver ? "border-slate-900 bg-slate-50 dark:border-slate-400 dark:bg-slate-900" : "border-slate-300 dark:border-slate-700"
+            }`}
+          >
+            <button
+              type="button"
+              onClick={addImage}
+              className="flex h-8 cursor-pointer items-center gap-1.5 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+            >
+              <Plus size={14} aria-hidden="true" />
+              Add another photo
+            </button>
+            <span className="text-xs text-slate-400 dark:text-slate-500">or drag images here</span>
           </div>
+        </div>
+      </section>
+
+      {/* Video */}
+      <section>
+        <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Video</h2>
+        <p className="mb-3 text-xs text-slate-400 dark:text-slate-500">
+          Optional. When set, the video replaces the photo rotation on the collection page —
+          customers can play or pause it. Max 20MB; compress longer clips first.
+        </p>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => videoInputRef.current?.click()}
+            disabled={videoUploading}
+            className={`flex h-10 cursor-pointer items-center gap-2 px-3.5 text-sm font-medium text-slate-700 disabled:opacity-60 dark:text-slate-300 ${glassButtonSecondary}`}
+          >
+            <VideoCamera size={16} aria-hidden="true" />
+            {videoUploading ? "Uploading…" : "Upload video"}
+          </button>
+          <input
+            ref={videoInputRef}
+            type="file"
+            accept="video/mp4,video/webm,video/quicktime"
+            className="hidden"
+            onChange={handleVideoFileChange}
+          />
+          {videoUrl && (
+            <button
+              type="button"
+              onClick={() => setVideoUrl("")}
+              className="text-xs font-medium text-slate-500 underline decoration-dotted hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400"
+            >
+              Remove video
+            </button>
+          )}
+        </div>
+        {videoError && <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">{videoError}</p>}
+        <div className="mt-3">
+          <Field label="Or paste a video URL">
+            <input
+              type="text"
+              name="videoUrl"
+              value={videoUrl}
+              onChange={(e) => setVideoUrl(e.target.value)}
+              className={inputClass}
+            />
+          </Field>
         </div>
       </section>
 
@@ -257,6 +533,32 @@ export default function CollectionForm({
         </div>
       </section>
 
+      {/* Story credit */}
+      <section>
+        <h2 className="mb-1 text-sm font-semibold text-slate-900 dark:text-slate-100">Story credit</h2>
+        <p className="mb-3 text-xs text-slate-400 dark:text-slate-500">
+          Both optional, independent of each other — set either, both, or neither.
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Published date" hint="Leave blank to not show a date.">
+            <input
+              type="date"
+              name="publishedDate"
+              defaultValue={collection?.publishedDate ?? ""}
+              className={inputClass}
+            />
+          </Field>
+          <Field label="Published where" hint="e.g. a magazine or event name — leave blank to skip.">
+            <input
+              type="text"
+              name="publishedWhere"
+              defaultValue={collection?.publishedWhere ?? ""}
+              className={inputClass}
+            />
+          </Field>
+        </div>
+      </section>
+
       {/* Theme / order */}
       <section className="grid grid-cols-2 gap-3">
         <Field label="Theme" hint="Controls text/badge contrast over the cover photo.">
@@ -282,7 +584,7 @@ export default function CollectionForm({
 
       <div aria-live="polite">
         {state.error && (
-          <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:bg-red-950/40 dark:text-red-300">
+          <p role="alert" className={`rounded-lg px-4 py-3 text-sm font-medium ${glassTone.danger}`}>
             {state.error}
           </p>
         )}
@@ -292,7 +594,7 @@ export default function CollectionForm({
         <button
           type="submit"
           disabled={pending}
-          className="flex h-11 cursor-pointer items-center rounded-lg bg-slate-900 px-6 text-sm font-semibold text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
+          className={`flex h-11 cursor-pointer items-center px-6 text-sm font-semibold disabled:cursor-not-allowed ${glassButtonPrimary}`}
         >
           {pending ? "Saving…" : mode === "create" ? "Create collection" : "Save changes"}
         </button>

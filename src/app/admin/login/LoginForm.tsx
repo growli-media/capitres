@@ -3,9 +3,9 @@
 import { useActionState, useState } from "react";
 import Link from "next/link";
 import { loginLegacy, loginWithEmail } from "./actions";
+import { glassInput, glassButtonPrimary, glassButtonSecondary } from "../glass";
 
-const inputClass =
-  "h-11 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm outline-none transition-colors focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10";
+const inputClass = `h-11 w-full px-3.5 ${glassInput}`;
 const labelClass = "mb-2 block text-sm font-medium text-slate-700";
 
 export default function LoginForm({ legacyAvailable }: { legacyAvailable: boolean }) {
@@ -61,7 +61,7 @@ export default function LoginForm({ legacyAvailable }: { legacyAvailable: boolea
         <button
           type="submit"
           disabled={pending}
-          className="flex h-11 w-full cursor-pointer items-center justify-center rounded-lg bg-slate-900 text-sm font-semibold text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className={`flex h-11 w-full cursor-pointer items-center justify-center text-sm font-semibold disabled:cursor-not-allowed ${glassButtonPrimary}`}
         >
           {pending ? "Signing in…" : "Sign in"}
         </button>
@@ -75,7 +75,7 @@ export default function LoginForm({ legacyAvailable }: { legacyAvailable: boolea
       </form>
 
       {legacyAvailable && (
-        <div className="border-t border-slate-100 pt-5">
+        <div className="border-t border-slate-200/60 pt-5">
           {!showLegacy ? (
             <button
               type="button"
@@ -126,7 +126,7 @@ export default function LoginForm({ legacyAvailable }: { legacyAvailable: boolea
               <button
                 type="submit"
                 disabled={legacyPending}
-                className="flex h-10 w-full cursor-pointer items-center justify-center rounded-lg border border-slate-300 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className={`flex h-10 w-full cursor-pointer items-center justify-center text-sm font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-60 ${glassButtonSecondary}`}
               >
                 {legacyPending ? "Signing in…" : "Sign in with legacy password"}
               </button>

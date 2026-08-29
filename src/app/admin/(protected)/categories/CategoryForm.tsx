@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import type { AdminCategoryRow } from "@/lib/admin/categories";
 import { createCategoryAction, updateCategoryAction, type FormState } from "./actions";
+import { glassInput, glassButtonPrimary, glassTone } from "../../glass";
 
 function Field({
   label,
@@ -22,8 +23,7 @@ function Field({
   );
 }
 
-const inputClass =
-  "h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none transition-colors focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-slate-400 dark:focus:ring-slate-400/10 dark:disabled:bg-slate-800 dark:disabled:text-slate-400";
+const inputClass = `h-10 w-full px-3 ${glassInput}`;
 
 export default function CategoryForm({
   mode,
@@ -106,7 +106,7 @@ export default function CategoryForm({
 
       <div aria-live="polite">
         {state.error && (
-          <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:bg-red-950/40 dark:text-red-300">
+          <p role="alert" className={`rounded-lg px-4 py-3 text-sm font-medium ${glassTone.danger}`}>
             {state.error}
           </p>
         )}
@@ -116,7 +116,7 @@ export default function CategoryForm({
         <button
           type="submit"
           disabled={pending}
-          className="flex h-11 cursor-pointer items-center rounded-lg bg-slate-900 px-6 text-sm font-semibold text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
+          className={`flex h-11 cursor-pointer items-center px-6 text-sm font-semibold disabled:cursor-not-allowed ${glassButtonPrimary}`}
         >
           {pending ? "Saving…" : mode === "create" ? "Create category" : "Save changes"}
         </button>

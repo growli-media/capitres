@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { verifyEnrollment } from "./actions";
+import { glassCard, glassInput, glassButtonPrimary } from "../glass";
 
 export default function EnrollForm({
   qrDataUrl,
@@ -15,7 +16,7 @@ export default function EnrollForm({
   return (
     <form action={formAction} className="space-y-5">
       <div className="flex justify-center">
-        <div className="rounded-xl border border-slate-200 bg-white p-3">
+        <div className={`p-3 ${glassCard}`}>
           {/* eslint-disable-next-line @next/next/no-img-element -- data URI, next/image can't optimize it */}
           <img src={qrDataUrl} alt="Scan with your authenticator app" width={200} height={200} />
         </div>
@@ -45,7 +46,7 @@ export default function EnrollForm({
           required
           autoFocus
           autoComplete="one-time-code"
-          className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-center text-lg tracking-[0.4em] outline-none transition-colors focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10"
+          className={`h-11 w-full px-3.5 text-center text-lg tracking-[0.4em] ${glassInput}`}
         />
       </div>
 
@@ -60,7 +61,7 @@ export default function EnrollForm({
       <button
         type="submit"
         disabled={pending}
-        className="flex h-11 w-full cursor-pointer items-center justify-center rounded-lg bg-slate-900 text-sm font-semibold text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+        className={`flex h-11 w-full cursor-pointer items-center justify-center text-sm font-semibold disabled:cursor-not-allowed ${glassButtonPrimary}`}
       >
         {pending ? "Verifying…" : "Confirm and finish setup"}
       </button>

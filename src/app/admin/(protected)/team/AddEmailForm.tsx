@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { addEmailAction } from "./actions";
+import { glassInput, glassButtonPrimary } from "../../glass";
 
 export default function AddEmailForm() {
   const [state, formAction, pending] = useActionState(addEmailAction, undefined);
@@ -18,13 +19,13 @@ export default function AddEmailForm() {
           type="email"
           required
           placeholder="name@example.com"
-          className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none transition-colors focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-slate-400 dark:focus:ring-slate-400/10"
+          className={`h-10 w-full px-3 ${glassInput}`}
         />
       </div>
       <button
         type="submit"
         disabled={pending}
-        className="h-10 shrink-0 cursor-pointer rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-slate-100 dark:text-slate-900"
+        className={`h-10 shrink-0 cursor-pointer px-4 text-sm font-semibold disabled:cursor-not-allowed ${glassButtonPrimary}`}
       >
         {pending ? "Adding…" : "Approve"}
       </button>

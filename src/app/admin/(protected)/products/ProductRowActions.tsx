@@ -8,6 +8,7 @@ import {
   markSoldOutAction,
   toggleArchivedAction,
 } from "./actions";
+import { glassIconButton } from "../../glass";
 
 export default function ProductRowActions({
   id,
@@ -25,7 +26,7 @@ export default function ProductRowActions({
       <Link
         href={`/admin/products/${id}/edit`}
         aria-label="Edit product"
-        className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+        className={`h-9 w-9 ${glassIconButton}`}
       >
         <PencilSimple size={16} />
       </Link>
@@ -33,7 +34,7 @@ export default function ProductRowActions({
         type="button"
         onClick={() => startTransition(() => markSoldOutAction(id))}
         disabled={pending}
-        className="hidden h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 disabled:opacity-50 sm:flex"
+        className="hidden h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-slate-500 transition-colors hover:bg-white/60 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-100 disabled:opacity-50 sm:flex"
         title="Set every size's stock to 0"
       >
         <TagSimple size={14} />
@@ -45,13 +46,13 @@ export default function ProductRowActions({
           onClick={() => setOpen((v) => !v)}
           aria-label="More actions"
           aria-expanded={open}
-          className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+          className={`h-9 w-9 ${glassIconButton}`}
         >
           <DotsThreeVertical size={18} />
         </button>
         {open && (
           <div
-            className="absolute end-0 top-10 z-10 w-48 rounded-lg border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-800"
+            className="absolute end-0 top-10 z-10 w-48 rounded-lg border border-white/40 bg-white/90 py-1 shadow-lg backdrop-blur-xl dark:border-white/10 dark:bg-slate-800/90"
             onMouseLeave={() => setOpen(false)}
           >
             <button

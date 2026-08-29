@@ -82,6 +82,10 @@ interface CollectionRow {
   description_ar: string;
   description_ku: string;
   hero_image: { url: string; alt: LocalizedString };
+  hero_images: { url: string; alt: LocalizedString }[] | null;
+  video_url: string | null;
+  published_date: string | Date | null;
+  published_where: string | null;
   theme: "dark" | "light";
   archived: boolean;
   sort_order: number;
@@ -207,6 +211,10 @@ function toCollection(row: CollectionRow): Collection {
     tagline: loc(row.tagline_en, row.tagline_ar, row.tagline_ku),
     description: loc(row.description_en, row.description_ar, row.description_ku),
     heroImage: toImage(row.hero_image),
+    heroImages: (row.hero_images ?? []).map(toImage),
+    videoUrl: row.video_url ?? undefined,
+    publishedDate: row.published_date ? dateOnly(row.published_date) : undefined,
+    publishedWhere: row.published_where ?? undefined,
     theme: row.theme,
     archived: row.archived,
     order: row.sort_order,

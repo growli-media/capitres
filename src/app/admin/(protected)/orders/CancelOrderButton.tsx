@@ -36,7 +36,7 @@ export default function CancelOrderButton({
     <button
       type="button"
       onClick={() => setConfirming(true)}
-      className="rounded-full border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-500 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600 dark:border-slate-700 dark:text-slate-400 dark:hover:border-red-900 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+      className="rounded-full border border-slate-300/70 bg-white/50 px-3 py-1.5 text-xs font-semibold text-slate-500 backdrop-blur-md transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600 dark:border-slate-700/70 dark:bg-slate-900/40 dark:text-slate-400 dark:hover:border-red-900 dark:hover:bg-red-950/40 dark:hover:text-red-400"
     >
       Cancel order
     </button>

@@ -73,10 +73,10 @@ export default function AdminNav({
                 href={item.href}
                 onClick={onNavigate}
                 aria-current={active ? "page" : undefined}
-                className={`flex min-h-11 items-center justify-between gap-3 rounded-lg px-3 text-sm font-medium transition-colors ${
+                className={`flex min-h-11 items-center justify-between gap-3 rounded-lg px-3 text-sm font-medium backdrop-blur-sm transition-colors ${
                   active
-                    ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
-                    : "text-slate-600 hover:bg-slate-200/70 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                    ? "bg-slate-900/90 text-white shadow-sm dark:bg-white/90 dark:text-slate-900"
+                    : "text-slate-600 hover:bg-white/50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-100"
                 }`}
               >
                 <span className="flex items-center gap-3">
@@ -94,12 +94,12 @@ export default function AdminNav({
         })}
       </ul>
 
-      <div className="border-t border-slate-100 px-4 pt-3 pb-4 dark:border-slate-800">
+      <div className="border-t border-white/40 px-4 pt-3 pb-4 dark:border-white/10">
         <SupportPanel />
         <form action={logout}>
           <button
             type="submit"
-            className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-lg px-3 text-sm font-medium text-slate-500 transition-colors hover:bg-slate-200/70 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+            className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-lg px-3 text-sm font-medium text-slate-500 backdrop-blur-sm transition-colors hover:bg-white/50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-100"
           >
             <SignOut size={18} aria-hidden="true" />
             Log out

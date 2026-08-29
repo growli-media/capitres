@@ -7,6 +7,16 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
+  // Local-dev parity with the client-upload flow used for collection
+  // videos (src/app/api/admin/blob-upload/route.ts) — raising this alone
+  // does NOT make large uploads work in production, since Vercel
+  // Serverless Functions enforce their own ~4.5MB platform-level request
+  // cap that no Next.js config can raise. Real video uploads go through
+  // @vercel/blob/client instead, bypassing this limit entirely; this
+  // setting only matters for anyone testing against a raw Server Action.
+  experimental: {
+    serverActions: { bodySizeLimit: "20mb" },
+  },
   images: {
     formats: ["image/avif", "image/webp"],
     qualities: [45, 60, 75],

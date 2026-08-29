@@ -101,7 +101,21 @@ export interface Collection {
   title: LocalizedString;
   tagline: LocalizedString;
   description: LocalizedString;
+  /** Single thumbnail — still what homepage cards, nav, and the
+   * collections grid use. Kept in sync as heroImages[0] on every admin
+   * save; unrelated code doesn't need to know heroImages exists. */
   heroImage: ProductImage;
+  /** Story banner (optional) — multiple photos auto-rotate on the
+   * collection page. Undefined/empty on rows that predate this field or
+   * were never given more than one photo; the storefront falls back to
+   * a static single-image render in that case. */
+  heroImages?: ProductImage[];
+  /** Optional customer-controlled video for the story banner — takes
+   * priority over heroImages rotation when present. */
+  videoUrl?: string;
+  /** Optional publication credit, both independently optional. */
+  publishedDate?: string;
+  publishedWhere?: string;
   theme: "dark" | "light";
   /** Archived drops render a story page with a waitlist instead of a grid. */
   archived?: boolean;

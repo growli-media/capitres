@@ -5,6 +5,7 @@ import { CaretLeft, Check } from "@phosphor-icons/react/dist/ssr";
 import { catalog } from "@/lib/catalog";
 import { getAdminProduct } from "@/lib/admin/products";
 import ProductForm from "../../ProductForm";
+import { glassTone } from "../../../../glass";
 
 export const metadata: Metadata = { title: "Edit product" };
 
@@ -36,7 +37,7 @@ export default async function EditProductPage({
       </Link>
 
       {created === "1" && (
-        <div className="mb-6 flex items-center gap-2 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+        <div className={`mb-6 flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium ${glassTone.success}`}>
           <Check size={16} aria-hidden="true" />
           Product created and live on the site.
         </div>

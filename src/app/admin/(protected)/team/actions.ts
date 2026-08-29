@@ -71,6 +71,7 @@ export async function updateOwnProfileAction(
   const lastName = String(formData.get("lastName") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
   const role = String(formData.get("role") ?? "").trim();
+  const company = String(formData.get("company") ?? "").trim();
 
   if (!isValidEmail(email)) return { error: "Enter a valid email address." };
 
@@ -88,7 +89,7 @@ export async function updateOwnProfileAction(
     }
   }
 
-  await updateOwnProfile(session.id, { firstName, lastName, phone, role, email });
+  await updateOwnProfile(session.id, { firstName, lastName, phone, role, company, email });
   revalidatePath("/admin/team");
   return {};
 }

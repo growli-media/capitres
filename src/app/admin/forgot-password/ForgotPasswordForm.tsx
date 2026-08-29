@@ -3,9 +3,9 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { requestReset } from "./actions";
+import { glassInput, glassButtonPrimary } from "../glass";
 
-const inputClass =
-  "h-11 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm outline-none transition-colors focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10";
+const inputClass = `h-11 w-full px-3.5 ${glassInput}`;
 
 export default function ForgotPasswordForm() {
   const [state, formAction, pending] = useActionState(requestReset, undefined);
@@ -19,7 +19,7 @@ export default function ForgotPasswordForm() {
         </p>
         <Link
           href="/admin/reset-password"
-          className="flex h-11 w-full cursor-pointer items-center justify-center rounded-lg bg-slate-900 text-sm font-semibold text-white transition-colors hover:bg-slate-700"
+          className={`flex h-11 w-full cursor-pointer items-center justify-center text-sm font-semibold ${glassButtonPrimary}`}
         >
           I have my code
         </Link>
@@ -55,7 +55,7 @@ export default function ForgotPasswordForm() {
       <button
         type="submit"
         disabled={pending}
-        className="flex h-11 w-full cursor-pointer items-center justify-center rounded-lg bg-slate-900 text-sm font-semibold text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+        className={`flex h-11 w-full cursor-pointer items-center justify-center text-sm font-semibold disabled:cursor-not-allowed ${glassButtonPrimary}`}
       >
         {pending ? "Sending…" : "Send reset code"}
       </button>

@@ -11,6 +11,7 @@ import { getDashboardKpis, getTopProducts } from "@/lib/admin/dashboard";
 import { getAbandonedCount } from "@/lib/admin/queries";
 import { orderStore, customerName } from "@/lib/orders/store";
 import { formatIQD } from "@/lib/money";
+import { glassCard } from "../glass";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -29,10 +30,10 @@ function KpiCard({
 }) {
   const content = (
     <div
-      className={`rounded-xl border p-5 ${
+      className={`p-5 ${
         tone === "alert"
-          ? "border-amber-200 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-950/40"
-          : "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
+          ? "rounded-2xl border border-amber-200/60 bg-amber-50/70 shadow-[0_8px_30px_rgb(0,0,0,0.08)] backdrop-blur-xl dark:border-amber-900/40 dark:bg-amber-950/30"
+          : glassCard
       }`}
     >
       <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
@@ -109,7 +110,7 @@ export default async function AdminDashboardPage() {
               <p className="text-sm text-slate-500 dark:text-slate-400">No orders yet.</p>
             </div>
           ) : (
-            <div className="mt-3 overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+            <div className={`mt-3 overflow-hidden ${glassCard}`}>
               <table className="w-full text-sm">
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {recentOrders.slice(0, 6).map((o) => (
@@ -145,7 +146,7 @@ export default async function AdminDashboardPage() {
               {topProducts.map((p, i) => (
                 <div
                   key={p.title}
-                  className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900"
+                  className={`flex items-center justify-between px-4 py-3 ${glassCard}`}
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-500 dark:bg-slate-800 dark:text-slate-400">

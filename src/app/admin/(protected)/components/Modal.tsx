@@ -1,16 +1,27 @@
 "use client";
 
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X } from "@phosphor-icons/react";
+import { glassPanel, glassIconButton } from "../../glass";
 
 /**
- * Shared overlay primitive — deliberately not a React portal. Once dark
- * mode lands it's scoped to a `.admin-dark` wrapper via a DOM-descendant
- * CSS selector; a document.body-portaled modal would sit outside that
- * wrapper (portals preserve React-tree context, not DOM ancestry) and its
- * dark: classes would never activate. `fixed` positioning inline in the
- * tree gets the same visual result without that trap, matching the
- * technique AdminShell.tsx already uses for its mobile drawer.
+ * Shared overlay primitive. Portals to #admin-shell (the dark-mode root),
+ * NOT document.body — a body portal would sit outside the `.admin-dark`
+ * DOM-descendant CSS selector (portals preserve React-tree context, not
+ * DOM ancestry) and dark: classes would silently never activate.
+ *
+ * Portaling at all (rather than rendering inline, as this component used
+ * to) turned out to be necessary, not optional: when Modal is used from
+ * SupportPanel, its React-tree ancestor chain runs through AdminNav →
+ * the sidebar <aside>, which has overflow-hidden (needed for its
+ * collapse-width animation). Chromium clips fixed-position descendants
+ * to an overflow-hidden ancestor's own box in practice, even though the
+ * CSS spec doesn't require it — confirmed by inspecting the rendered
+ * modal's bounding rect, which was constrained to the sidebar's ~256px
+ * width instead of the viewport. Portaling to #admin-shell (a sibling of
+ * the sidebar, not a descendant) escapes that clip while still landing
+ * inside .admin-dark.
  */
 export default function Modal({
   open,
@@ -34,7 +45,7 @@ export default function Modal({
 
   if (!open) return null;
 
-  return (
+  const modal = (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4"
       role="dialog"
@@ -42,18 +53,18 @@ export default function Modal({
       aria-label={title}
     >
       <div
-        className="absolute inset-0 bg-slate-900/40 dark:bg-black/60"
+        className="absolute inset-0 bg-slate-950/60 backdrop-blur-2xl dark:bg-black/75"
         onClick={onClose}
         aria-hidden="true"
       />
-      <div className="relative w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900">
+      <div className={`relative w-full max-w-md rounded-2xl border p-6 ${glassPanel}`}>
         <div className="mb-4 flex items-center justify-between gap-4">
           <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">{title}</h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+            className={`h-8 w-8 shrink-0 ${glassIconButton}`}
           >
             <X size={16} />
           </button>
@@ -62,4 +73,7 @@ export default function Modal({
       </div>
     </div>
   );
+
+  const portalTarget = document.getElementById("admin-shell") ?? document.body;
+  return createPortal(modal, portalTarget);
 }

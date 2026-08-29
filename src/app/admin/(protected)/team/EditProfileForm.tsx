@@ -4,9 +4,9 @@ import { useState, useTransition } from "react";
 import { PencilSimple } from "@phosphor-icons/react";
 import Modal from "../components/Modal";
 import { updateOwnProfileAction } from "./actions";
+import { glassInput, glassButtonPrimary } from "../../glass";
 
-const inputClass =
-  "h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none transition-colors focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-slate-400 dark:focus:ring-slate-400/10";
+const inputClass = `h-10 w-full px-3 ${glassInput}`;
 const labelClass = "mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400";
 
 export default function EditProfileForm({
@@ -14,12 +14,14 @@ export default function EditProfileForm({
   lastName,
   phone,
   role,
+  company,
   email,
 }: {
   firstName: string | null;
   lastName: string | null;
   phone: string | null;
   role: string | null;
+  company: string | null;
   email: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -48,7 +50,7 @@ export default function EditProfileForm({
           setOpen(true);
           setError(undefined);
         }}
-        className="flex items-center gap-1.5 rounded-full border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+        className="flex items-center gap-1.5 rounded-full border border-slate-300/70 bg-white/50 px-3 py-1.5 text-xs font-semibold text-slate-700 backdrop-blur-md transition-colors hover:bg-white/80 dark:border-slate-700/70 dark:bg-slate-900/40 dark:text-slate-300 dark:hover:bg-slate-800/70"
       >
         <PencilSimple size={13} />
         Edit profile
@@ -82,6 +84,18 @@ export default function EditProfileForm({
             />
           </div>
           <div>
+            <label htmlFor="company" className={labelClass}>
+              Company
+            </label>
+            <input
+              id="company"
+              name="company"
+              defaultValue={company ?? ""}
+              placeholder="e.g. Acme Studio — leave blank if you're Growli Media"
+              className={inputClass}
+            />
+          </div>
+          <div>
             <label htmlFor="phone" className={labelClass}>
               Phone
             </label>
@@ -104,14 +118,14 @@ export default function EditProfileForm({
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="rounded-lg px-3 py-2 text-sm font-medium text-slate-500 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-slate-500 transition-colors hover:bg-white/60 dark:text-slate-400 dark:hover:bg-white/10"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={pending}
-              className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-700 disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
+              className={`px-4 py-2 text-sm font-semibold ${glassButtonPrimary}`}
             >
               {pending ? "Saving…" : "Save"}
             </button>

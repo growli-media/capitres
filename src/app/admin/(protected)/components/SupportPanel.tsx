@@ -14,7 +14,7 @@ export default function SupportPanel() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-lg px-3 text-sm font-medium text-slate-500 transition-colors hover:bg-slate-200/70 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+        className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-lg px-3 text-sm font-medium text-slate-500 backdrop-blur-sm transition-colors hover:bg-white/50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-100"
       >
         <Question size={18} aria-hidden="true" />
         Support
@@ -22,9 +22,8 @@ export default function SupportPanel() {
       <Modal open={open} onClose={() => setOpen(false)} title="Support">
         <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">{SUPPORT_CONTACT.description}</p>
 
-        <div className="mt-4 space-y-1 text-sm">
+        <div className="mt-4 text-sm">
           <p className="font-medium text-slate-900 dark:text-slate-100">{SUPPORT_CONTACT.contactPerson}</p>
-          <p className="text-slate-500 dark:text-slate-400">Speaks {SUPPORT_CONTACT.languages.join(", ")}</p>
         </div>
 
         <div className="mt-5 space-y-2">
@@ -39,7 +38,7 @@ export default function SupportPanel() {
           </a>
           <a
             href={`mailto:${SUPPORT_CONTACT.email}`}
-            className="flex h-11 items-center gap-3 rounded-lg border border-slate-200 px-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+            className="flex h-11 items-center gap-3 rounded-lg border border-slate-300/70 bg-white/40 px-3 text-sm font-medium text-slate-700 backdrop-blur-sm transition-colors hover:bg-white/80 dark:border-slate-700/70 dark:bg-slate-900/30 dark:text-slate-300 dark:hover:bg-slate-800/70"
           >
             <EnvelopeSimple size={18} />
             {SUPPORT_CONTACT.email}
@@ -48,7 +47,7 @@ export default function SupportPanel() {
             href={SUPPORT_CONTACT.instagram}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex h-11 items-center gap-3 rounded-lg border border-slate-200 px-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+            className="flex h-11 items-center gap-3 rounded-lg border border-slate-300/70 bg-white/40 px-3 text-sm font-medium text-slate-700 backdrop-blur-sm transition-colors hover:bg-white/80 dark:border-slate-700/70 dark:bg-slate-900/30 dark:text-slate-300 dark:hover:bg-slate-800/70"
           >
             <InstagramLogo size={18} />
             Instagram

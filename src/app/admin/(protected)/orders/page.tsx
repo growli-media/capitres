@@ -5,17 +5,14 @@ import { formatIQD } from "@/lib/money";
 import { markOrderDeliveredAction } from "./actions";
 import CancelOrderButton from "./CancelOrderButton";
 import NoteButton from "./NoteButton";
+import { glassCard, glassTone } from "../../glass";
 
 export const metadata: Metadata = { title: "Orders" };
 
 function StatusBadge({ status }: { status: string }) {
   const isPaid = (PAID_STATUSES as readonly string[]).includes(status);
   const isFailed = (FAILED_STATUSES as readonly string[]).includes(status);
-  const cls = isPaid
-    ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
-    : isFailed
-      ? "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300"
-      : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300";
+  const cls = isPaid ? glassTone.success : isFailed ? glassTone.danger : glassTone.warning;
   return (
     <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${cls}`}>
       {status}
@@ -46,7 +43,7 @@ export default async function AdminOrdersPage() {
           <p className="text-sm text-slate-500 dark:text-slate-400">No orders yet.</p>
         </div>
       ) : (
-        <div className="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+        <div className={`mt-6 overflow-hidden ${glassCard}`}>
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400 dark:border-slate-800 dark:text-slate-500">
@@ -95,7 +92,7 @@ export default async function AdminOrdersPage() {
                         <form action={markOrderDeliveredAction.bind(null, o.ref)}>
                           <button
                             type="submit"
-                            className="rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white transition-opacity hover:opacity-80 dark:bg-slate-100 dark:text-slate-900"
+                            className="rounded-full bg-slate-900/90 px-3 py-1.5 text-xs font-semibold text-white shadow-sm backdrop-blur-md transition-colors hover:bg-slate-800 dark:bg-white/90 dark:text-slate-900 dark:hover:bg-white"
                           >
                             Mark as delivered
                           </button>

@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "../globals.css";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 
 /**
  * /admin lives outside the [locale] segment (see proxy.ts's matcher) —
@@ -19,8 +22,8 @@ export default function AdminRootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" dir="ltr">
-      <body className="bg-slate-50 font-sans text-slate-900 antialiased">
+    <html lang="en" dir="ltr" className={inter.variable}>
+      <body className="admin-font-inter bg-slate-50 text-slate-900 antialiased">
         {children}
       </body>
     </html>

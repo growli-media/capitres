@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { redirect } from "next/navigation";
 import { isAuthenticated } from "@/lib/admin/auth";
+import { glassCard } from "../glass";
+import AuthLogoMark from "../components/AuthLogoMark";
 import ForgotPasswordForm from "./ForgotPasswordForm";
 
 export const metadata: Metadata = { title: "Forgot password" };
@@ -10,16 +11,15 @@ export default async function ForgotPasswordPage() {
   if (await isAuthenticated()) redirect("/admin");
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-gradient-to-b from-slate-100 to-slate-50 px-4">
-      <div className="w-full max-w-sm">
+    <div className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-gradient-to-br from-slate-100 via-slate-50 to-white px-4">
+      <div className="pointer-events-none fixed inset-0" aria-hidden="true">
+        <div className="absolute -left-24 -top-24 h-96 w-96 rounded-full bg-slate-300/30 blur-3xl" />
+        <div className="absolute -right-24 top-1/3 h-[28rem] w-[28rem] rounded-full bg-blue-200/20 blur-3xl" />
+        <div className="absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-amber-100/20 blur-3xl" />
+      </div>
+      <div className="relative w-full max-w-sm">
         <div className="mb-8 text-center">
-          <Image
-            src="/brand/logo-black.svg"
-            alt="Capitres"
-            width={867}
-            height={99}
-            className="mx-auto mb-4 h-4 w-auto"
-          />
+          <AuthLogoMark />
           <p className="text-2xl font-black tracking-tight text-slate-900">
             Reset your password
           </p>
@@ -27,7 +27,7 @@ export default async function ForgotPasswordPage() {
             We&rsquo;ll email you a code to reset it.
           </p>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-7 shadow-sm">
+        <div className={`rounded-3xl p-7 ${glassCard}`}>
           <ForgotPasswordForm />
         </div>
       </div>

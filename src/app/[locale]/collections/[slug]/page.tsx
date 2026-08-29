@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { catalog } from "@/lib/catalog";
 import { pick } from "@/lib/content";
+import { formatDateNumeric } from "@/lib/dates";
 import ProductCard from "@/components/product/ProductCard";
 import NewsletterForm from "@/components/layout/NewsletterForm";
+import CollectionHero from "@/components/collection/CollectionHero";
 import { ParallaxScale, Reveal } from "@/components/motion/Reveal";
 
 export async function generateStaticParams() {
@@ -52,14 +53,7 @@ export default async function CollectionPage({
       {/* Collection hero */}
       <section className="relative overflow-hidden bg-ink text-paper">
         <ParallaxScale className="absolute inset-0">
-          <Image
-            src={collection.heroImage.src}
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover opacity-55"
-          />
+          <CollectionHero collection={collection} locale={locale} />
         </ParallaxScale>
         <div
           aria-hidden="true"
@@ -82,6 +76,17 @@ export default async function CollectionPage({
               {pick(collection.tagline, locale)}
             </p>
           </Reveal>
+          {(collection.publishedDate || collection.publishedWhere) && (
+            <Reveal delay={0.2}>
+              <p className="mt-4 text-xs tracking-wide text-paper/50 uppercase">
+                {collection.publishedDate && collection.publishedWhere
+                  ? `Published ${formatDateNumeric(collection.publishedDate, locale)} · ${collection.publishedWhere}`
+                  : collection.publishedDate
+                    ? `Published ${formatDateNumeric(collection.publishedDate, locale)}`
+                    : collection.publishedWhere}
+              </p>
+            </Reveal>
+          )}
         </div>
       </section>
 

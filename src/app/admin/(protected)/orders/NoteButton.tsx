@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { Note } from "@phosphor-icons/react";
 import Modal from "../components/Modal";
 import { updateOrderNoteAction } from "./actions";
+import { glassTextarea, glassButtonPrimary } from "../../glass";
 
 export default function NoteButton({
   orderRef,
@@ -31,7 +32,7 @@ export default function NoteButton({
         onClick={() => setOpen(true)}
         aria-label={hasNote ? "View or edit note" : "Add note"}
         title={hasNote ? "View or edit note" : "Add note"}
-        className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100 ${
+        className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-white/60 hover:text-slate-900 dark:hover:bg-white/10 dark:hover:text-slate-100 ${
           hasNote ? "text-slate-900 dark:text-slate-100" : "text-slate-400 dark:text-slate-500"
         }`}
       >
@@ -45,13 +46,13 @@ export default function NoteButton({
           maxLength={2000}
           autoFocus
           placeholder="Write a note for the team about this order…"
-          className="w-full resize-none rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-slate-400 dark:focus:ring-slate-400/10"
+          className={glassTextarea}
         />
         <div className="mt-4 flex justify-end gap-2">
           <button
             type="button"
             onClick={() => setOpen(false)}
-            className="rounded-lg px-3 py-2 text-sm font-medium text-slate-500 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+            className="rounded-lg px-3 py-2 text-sm font-medium text-slate-500 transition-colors hover:bg-white/60 dark:text-slate-400 dark:hover:bg-white/10"
           >
             Cancel
           </button>
@@ -59,7 +60,7 @@ export default function NoteButton({
             type="button"
             onClick={save}
             disabled={pending}
-            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-700 disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
+            className={`px-4 py-2 text-sm font-semibold ${glassButtonPrimary}`}
           >
             {pending ? "Saving…" : "Save"}
           </button>

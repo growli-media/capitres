@@ -180,3 +180,24 @@ ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS first_name text;
 ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS last_name text;
 ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS phone text;
 ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS role text;
+
+-- Free-text — for team members who aren't Growli Media staff (e.g. an
+-- outside marketing agency) to identify who they're with. Mirrors `role`:
+-- no validation, no RBAC implication.
+ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS company text;
+
+-- Story banner: multiple hero photos (auto-rotating on the storefront), an
+-- optional customer-controlled video, and optional publication credit
+-- fields. Additive only — hero_image (singular) stays and still powers
+-- every consumer that only ever wants one thumbnail; see
+-- src/lib/catalog/types.ts for how the two fields coexist. hero_image is
+-- kept in sync as "whatever hero_images[0] currently is" on every save.
+ALTER TABLE collections ADD COLUMN IF NOT EXISTS hero_images jsonb;
+ALTER TABLE collections ADD COLUMN IF NOT EXISTS video_url text;
+ALTER TABLE collections ADD COLUMN IF NOT EXISTS published_date date;
+ALTER TABLE collections ADD COLUMN IF NOT EXISTS published_where text;
+
+-- Backfill: existing rows get their current hero_image as the sole
+-- element of hero_images, so nothing regresses until an admin adds more
+-- photos. Guarded by IS NULL so it's safe to re-run.
+UPDATE collections SET hero_images = jsonb_build_array(hero_image) WHERE hero_images IS NULL;

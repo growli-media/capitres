@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { Check, Trash, X } from "@phosphor-icons/react";
 import { approveReviewAction, deleteReviewAction, unapproveReviewAction } from "./actions";
+import { glassTone } from "../../glass";
 
 export default function ReviewRowActions({
   id,
@@ -20,7 +21,7 @@ export default function ReviewRowActions({
           type="button"
           onClick={() => startTransition(() => unapproveReviewAction(id))}
           disabled={pending}
-          className="flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+          className="flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-slate-500 transition-colors hover:bg-white/60 hover:text-slate-900 disabled:opacity-50 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-100"
         >
           <X size={14} />
           Unpublish
@@ -30,7 +31,7 @@ export default function ReviewRowActions({
           type="button"
           onClick={() => startTransition(() => approveReviewAction(id))}
           disabled={pending}
-          className="flex h-9 items-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100 disabled:opacity-50 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-950/70"
+          className={`flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold transition-colors hover:bg-emerald-100 disabled:opacity-50 dark:hover:bg-emerald-950/70 ${glassTone.success}`}
         >
           <Check size={14} />
           Approve

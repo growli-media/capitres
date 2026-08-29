@@ -1,6 +1,7 @@
 "use server";
 
 import { put } from "@vercel/blob";
+import { findBlobToken } from "@/lib/admin/blob-token";
 
 export interface UploadResult {
   url?: string;
@@ -10,25 +11,11 @@ export interface UploadResult {
 const MAX_BYTES = 8 * 1024 * 1024; // 8MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
 
-/**
- * Finds the Vercel Blob read-write token. The standard name is
- * BLOB_READ_WRITE_TOKEN, but when a project has more than one Blob store
- * connected, Vercel can only give that exact name to one of them and
- * prefixes the others (e.g. CAPITRES_BLOB_READ_WRITE_TOKEN). Any env var
- * ending in READ_WRITE_TOKEN is a Blob token, so fall back to the first
- * one we find — either store accepts the upload.
- */
-function findBlobToken(): string | undefined {
-  if (process.env.BLOB_READ_WRITE_TOKEN) return process.env.BLOB_READ_WRITE_TOKEN;
-  for (const [key, value] of Object.entries(process.env)) {
-    if (key.endsWith("READ_WRITE_TOKEN") && value) return value;
-  }
-  return undefined;
-}
-
-/** Uploads a product photo to Vercel Blob. Requires a Blob store connected
- * in Vercel — the form falls back to a manual "paste an image URL" field
- * when none is configured. */
+/** Uploads a product or collection photo to Vercel Blob. Requires a Blob
+ * store connected in Vercel — the form falls back to a manual "paste an
+ * image URL" field when none is configured. Shared by ProductForm.tsx and
+ * CollectionForm.tsx — lives here (not under products/) since it was
+ * already being used cross-purpose by both before this rename. */
 export async function uploadProductImage(formData: FormData): Promise<UploadResult> {
   const token = findBlobToken();
   if (!token) {

@@ -24,6 +24,9 @@ export interface AdminUser {
   /** Free-text display label (e.g. "Store Manager") — not a permissions
    * system, every admin_users account has identical capabilities. */
   role: string | null;
+  /** Free-text — for team members who aren't Growli Media staff (e.g. an
+   * outside marketing agency) to identify who they're with. */
+  company: string | null;
 }
 
 interface AdminUserRow {
@@ -41,6 +44,7 @@ interface AdminUserRow {
   last_name: string | null;
   phone: string | null;
   role: string | null;
+  company: string | null;
 }
 
 function toUser(row: AdminUserRow): AdminUser {
@@ -59,6 +63,7 @@ function toUser(row: AdminUserRow): AdminUser {
     lastName: row.last_name,
     phone: row.phone,
     role: row.role,
+    company: row.company,
   };
 }
 
@@ -91,7 +96,7 @@ export async function getUserByEmail(email: string): Promise<AdminUser | undefin
   const rows = await sql<AdminUserRow[]>`
     select id, email, password_hash, totp_secret, totp_enabled, disabled,
            failed_attempts, locked_until::text, token_version, created_at::text,
-           first_name, last_name, phone, role
+           first_name, last_name, phone, role, company
     from admin_users where email = ${normalizeEmail(email)} limit 1
   `;
   return rows[0] ? toUser(rows[0]) : undefined;
@@ -101,7 +106,7 @@ export async function getUserById(id: string): Promise<AdminUser | undefined> {
   const rows = await sql<AdminUserRow[]>`
     select id, email, password_hash, totp_secret, totp_enabled, disabled,
            failed_attempts, locked_until::text, token_version, created_at::text,
-           first_name, last_name, phone, role
+           first_name, last_name, phone, role, company
     from admin_users where id = ${id} limit 1
   `;
   return rows[0] ? toUser(rows[0]) : undefined;
@@ -114,7 +119,7 @@ export async function createUser(email: string, passwordHash: string): Promise<A
     values (${id}, ${normalizeEmail(email)}, ${passwordHash})
     returning id, email, password_hash, totp_secret, totp_enabled, disabled,
               failed_attempts, locked_until::text, token_version, created_at::text,
-              first_name, last_name, phone, role
+              first_name, last_name, phone, role, company
   `;
   return toUser(rows[0]);
 }
@@ -204,7 +209,14 @@ export async function countEnabledAdmins(excludingId?: string): Promise<number> 
  */
 export async function updateOwnProfile(
   id: string,
-  patch: { firstName: string; lastName: string; phone: string; role: string; email: string },
+  patch: {
+    firstName: string;
+    lastName: string;
+    phone: string;
+    role: string;
+    company: string;
+    email: string;
+  },
 ): Promise<void> {
   const current = await getUserById(id);
   if (!current) return;
@@ -213,11 +225,13 @@ export async function updateOwnProfile(
   const lastName = patch.lastName.trim() || null;
   const phone = patch.phone.trim() || null;
   const role = patch.role.trim() || null;
+  const company = patch.company.trim() || null;
 
   if (newEmail === current.email) {
     await sql`
       update admin_users
-      set first_name = ${firstName}, last_name = ${lastName}, phone = ${phone}, role = ${role}
+      set first_name = ${firstName}, last_name = ${lastName}, phone = ${phone},
+          role = ${role}, company = ${company}
       where id = ${id}
     `;
     return;
@@ -227,7 +241,7 @@ export async function updateOwnProfile(
     await tx`
       update admin_users
       set email = ${newEmail}, first_name = ${firstName}, last_name = ${lastName},
-          phone = ${phone}, role = ${role}
+          phone = ${phone}, role = ${role}, company = ${company}
       where id = ${id}
     `;
     await tx`delete from admin_allowlist where email = ${current.email}`;
@@ -239,7 +253,7 @@ export async function listUsers(): Promise<AdminUser[]> {
   const rows = await sql<AdminUserRow[]>`
     select id, email, password_hash, totp_secret, totp_enabled, disabled,
            failed_attempts, locked_until::text, token_version, created_at::text,
-           first_name, last_name, phone, role
+           first_name, last_name, phone, role, company
     from admin_users order by created_at asc
   `;
   return rows.map(toUser);
