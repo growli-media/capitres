@@ -5,10 +5,12 @@ import { Plus } from "@phosphor-icons/react/dist/ssr";
 import { listAdminCollections } from "@/lib/admin/collections";
 import CollectionRowActions from "./CollectionRowActions";
 import { glassCard, glassButtonPrimary, glassTone } from "../../glass";
+import { requirePermission } from "@/lib/admin/permissions";
 
 export const metadata: Metadata = { title: "Collections" };
 
 export default async function AdminCollectionsPage() {
+  await requirePermission("collections");
   const collections = await listAdminCollections();
 
   return (

@@ -5,6 +5,7 @@ import { List, SidebarSimple } from "@phosphor-icons/react";
 import AdminNav from "./AdminNav";
 import ThemeToggle from "./ThemeToggle";
 import { glassPanel, glassIconButton, sidebarGlass } from "../glass";
+import type { AccessLevel } from "@/lib/admin/permissions";
 
 const THEME_KEY = "capitres-admin-theme";
 
@@ -27,9 +28,11 @@ const THEME_KEY = "capitres-admin-theme";
  */
 export default function AdminShell({
   badgeCounts,
+  access,
   children,
 }: {
   badgeCounts: Partial<Record<string, number>>;
+  access: AccessLevel;
   children: React.ReactNode;
 }) {
   const [collapsed, setCollapsed] = useState(false);
@@ -88,7 +91,7 @@ export default function AdminShell({
         }`}
       >
         <div className="h-full w-64">
-          <AdminNav badgeCounts={badgeCounts} />
+          <AdminNav badgeCounts={badgeCounts} access={access} />
         </div>
       </aside>
 
@@ -105,6 +108,7 @@ export default function AdminShell({
           <aside className={`absolute inset-y-0 start-0 h-dvh w-64 border-e shadow-xl ${sidebarGlass}`}>
             <AdminNav
               badgeCounts={badgeCounts}
+              access={access}
               onNavigate={() => setMobileOpen(false)}
             />
           </aside>

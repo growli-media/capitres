@@ -15,6 +15,7 @@ import {
   type ImageInput,
   type ProductInput,
 } from "@/lib/admin/products";
+import { requirePermission } from "@/lib/admin/permissions";
 
 export interface FormState {
   error?: string;
@@ -238,6 +239,7 @@ export async function createProductAction(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
+  await requirePermission("products");
   const parsed = parseInput(formData, "", await validCategorySlugs());
   if ("error" in parsed) return parsed;
 
@@ -256,6 +258,7 @@ export async function updateProductAction(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
+  await requirePermission("products");
   const parsed = parseInput(formData, currentSlug, await validCategorySlugs());
   if ("error" in parsed) return parsed;
 
@@ -269,16 +272,19 @@ export async function updateProductAction(
 }
 
 export async function toggleArchivedAction(id: string, archived: boolean): Promise<void> {
+  await requirePermission("products");
   await setProductArchived(id, archived);
   revalidateStorefront();
 }
 
 export async function markSoldOutAction(id: string): Promise<void> {
+  await requirePermission("products");
   await markAllVariantsSoldOut(id);
   revalidateStorefront();
 }
 
 export async function deleteProductAction(id: string): Promise<void> {
+  await requirePermission("products");
   await deleteProductPermanently(id);
   revalidateStorefront();
   redirect("/admin/products");

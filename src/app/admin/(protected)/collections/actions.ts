@@ -11,6 +11,7 @@ import {
   type AdminCollectionImage,
   type CollectionInput,
 } from "@/lib/admin/collections";
+import { requirePermission } from "@/lib/admin/permissions";
 
 export interface FormState {
   error?: string;
@@ -119,6 +120,7 @@ export async function createCollectionAction(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
+  await requirePermission("collections");
   const parsed = parseInput(formData, "");
   if ("error" in parsed) return parsed;
 
@@ -136,6 +138,7 @@ export async function updateCollectionAction(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
+  await requirePermission("collections");
   const parsed = parseInput(formData, slug);
   if ("error" in parsed) return parsed;
 
@@ -149,11 +152,13 @@ export async function updateCollectionAction(
 }
 
 export async function toggleCollectionArchivedAction(slug: string, archived: boolean): Promise<void> {
+  await requirePermission("collections");
   await setCollectionArchived(slug, archived);
   revalidateStorefront();
 }
 
 export async function deleteCollectionAction(slug: string): Promise<void> {
+  await requirePermission("collections");
   await deleteCollectionPermanently(slug);
   revalidateStorefront();
   redirect("/admin/collections");

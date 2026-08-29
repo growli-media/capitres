@@ -16,26 +16,37 @@ import {
 } from "@phosphor-icons/react";
 import { logout } from "../logout-action";
 import SupportPanel from "./components/SupportPanel";
+import type { AccessLevel } from "@/lib/admin/permissions";
 
+/** `permission: null` means always visible (Dashboard); `"owner"` is a
+ * sentinel for Team, which is owner-only by construction rather than a
+ * grantable permission — see src/lib/admin/permissions.ts. */
 const NAV_ITEMS = [
-  { href: "/admin", label: "Dashboard", icon: ChartLineUp, exact: true },
-  { href: "/admin/products", label: "Products", icon: TShirt, exact: false },
-  { href: "/admin/collections", label: "Collections", icon: Stack, exact: false },
-  { href: "/admin/categories", label: "Categories", icon: Tag, exact: false },
-  { href: "/admin/abandoned", label: "Abandoned carts", icon: ShoppingCartSimple, exact: false },
-  { href: "/admin/orders", label: "Orders", icon: Receipt, exact: false },
-  { href: "/admin/reviews", label: "Reviews", icon: Star, exact: false },
-  { href: "/admin/team", label: "Team", icon: UsersThree, exact: false },
+  { href: "/admin", label: "Dashboard", icon: ChartLineUp, exact: true, permission: null },
+  { href: "/admin/products", label: "Products", icon: TShirt, exact: false, permission: "products" },
+  { href: "/admin/collections", label: "Collections", icon: Stack, exact: false, permission: "collections" },
+  { href: "/admin/categories", label: "Categories", icon: Tag, exact: false, permission: "categories" },
+  { href: "/admin/abandoned", label: "Abandoned carts", icon: ShoppingCartSimple, exact: false, permission: "abandoned_carts" },
+  { href: "/admin/orders", label: "Orders", icon: Receipt, exact: false, permission: "orders" },
+  { href: "/admin/reviews", label: "Reviews", icon: Star, exact: false, permission: "reviews" },
+  { href: "/admin/team", label: "Team", icon: UsersThree, exact: false, permission: "owner" },
 ] as const;
 
 export default function AdminNav({
   badgeCounts,
+  access,
   onNavigate,
 }: {
   badgeCounts: Partial<Record<string, number>>;
+  access: AccessLevel;
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
+  const visibleItems = NAV_ITEMS.filter((item) => {
+    if (item.permission === null) return true;
+    if (item.permission === "owner") return access.isOwner;
+    return access.isOwner || (access.permissions as readonly string[]).includes(item.permission);
+  });
 
   return (
     <nav className="flex h-full flex-col">
@@ -65,7 +76,7 @@ export default function AdminNav({
       </Link>
 
       <ul className="mt-6 flex-1 space-y-2 overflow-y-auto px-4">
-        {NAV_ITEMS.map((item) => {
+        {visibleItems.map((item) => {
           const active = item.exact
             ? pathname === item.href
             : pathname.startsWith(item.href);

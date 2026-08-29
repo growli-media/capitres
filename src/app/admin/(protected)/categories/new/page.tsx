@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CaretLeft } from "@phosphor-icons/react/dist/ssr";
 import CategoryForm from "../CategoryForm";
+import { requirePermission } from "@/lib/admin/permissions";
 
 export const metadata: Metadata = { title: "New category" };
 
-export default function NewCategoryPage() {
+export default async function NewCategoryPage() {
+  await requirePermission("categories");
   return (
     <div className="max-w-3xl">
       <Link

@@ -3,10 +3,12 @@ import Link from "next/link";
 import { CaretLeft } from "@phosphor-icons/react/dist/ssr";
 import { catalog } from "@/lib/catalog";
 import ProductForm from "../ProductForm";
+import { requirePermission } from "@/lib/admin/permissions";
 
 export const metadata: Metadata = { title: "New product" };
 
 export default async function NewProductPage() {
+  await requirePermission("products");
   const [collections, categories] = await Promise.all([
     catalog.getCollections(),
     catalog.getCategories(),

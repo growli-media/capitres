@@ -6,6 +6,7 @@ import { markOrderDeliveredAction } from "./actions";
 import CancelOrderButton from "./CancelOrderButton";
 import NoteButton from "./NoteButton";
 import { glassCard, glassTone } from "../../glass";
+import { requirePermission } from "@/lib/admin/permissions";
 
 export const metadata: Metadata = { title: "Orders" };
 
@@ -31,6 +32,7 @@ function formatDate(iso: string): string {
 }
 
 export default async function AdminOrdersPage() {
+  await requirePermission("orders");
   const orders = await orderStore.list();
 
   return (

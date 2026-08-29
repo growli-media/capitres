@@ -7,11 +7,13 @@ import { addToAllowlist, removeFromAllowlist, isAllowed } from "@/lib/admin/allo
 import {
   countEnabledAdmins,
   setDisabled,
+  setUserPermissions,
   getUserById,
   getUserByEmail,
   updateOwnProfile,
   normalizeEmail,
 } from "@/lib/admin/users";
+import { isPermission, type Permission } from "@/lib/admin/permissions";
 
 /**
  * Every action here checks the caller's session itself — the legacy
@@ -53,6 +55,29 @@ export async function setUserDisabledAction(userId: string, disabled: boolean): 
   }
 
   await setDisabled(userId, disabled);
+  revalidatePath("/admin/team");
+}
+
+/** Owner-only — checks the caller's own is_owner, not just "any real
+ * account" (requireUserSession() alone). Can't touch owners: an owner's
+ * access always comes from is_owner, never from this array, so there's
+ * nothing meaningful to set for one, and it keeps a non-owner from being
+ * granted "team" (there is no such permission — see permissions.ts) or
+ * from this action being used to edit another owner's access. */
+export async function updateUserPermissionsAction(
+  userId: string,
+  formData: FormData,
+): Promise<void> {
+  const session = await requireUserSession();
+  if (!session) return;
+  const caller = await getUserById(session.id);
+  if (!caller?.isOwner) return;
+
+  const target = await getUserById(userId);
+  if (!target || target.isOwner) return;
+
+  const permissions = formData.getAll("permissions").map(String).filter(isPermission) as Permission[];
+  await setUserPermissions(userId, permissions);
   revalidatePath("/admin/team");
 }
 

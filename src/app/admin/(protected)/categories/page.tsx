@@ -4,6 +4,7 @@ import { Check, Plus } from "@phosphor-icons/react/dist/ssr";
 import { listAdminCategories, isReservedCategory } from "@/lib/admin/categories";
 import CategoryRowActions from "./CategoryRowActions";
 import { glassCard, glassButtonPrimary, glassTone } from "../../glass";
+import { requirePermission } from "@/lib/admin/permissions";
 
 export const metadata: Metadata = { title: "Categories" };
 
@@ -12,6 +13,7 @@ export default async function AdminCategoriesPage({
 }: {
   searchParams: Promise<{ created?: string }>;
 }) {
+  await requirePermission("categories");
   const [{ created }, categories] = await Promise.all([
     searchParams,
     listAdminCategories(),

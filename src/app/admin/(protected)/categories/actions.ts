@@ -10,6 +10,7 @@ import {
   updateCategory,
   type CategoryInput,
 } from "@/lib/admin/categories";
+import { requirePermission } from "@/lib/admin/permissions";
 
 export interface FormState {
   error?: string;
@@ -54,6 +55,7 @@ export async function createCategoryAction(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
+  await requirePermission("categories");
   const parsed = parseInput(formData, "");
   if ("error" in parsed) return parsed;
 
@@ -71,6 +73,7 @@ export async function updateCategoryAction(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
+  await requirePermission("categories");
   const parsed = parseInput(formData, slug);
   if ("error" in parsed) return parsed;
 
@@ -81,11 +84,13 @@ export async function updateCategoryAction(
 }
 
 export async function toggleCategoryArchivedAction(slug: string, archived: boolean): Promise<void> {
+  await requirePermission("categories");
   await setCategoryArchived(slug, archived);
   revalidateStorefront();
 }
 
 export async function deleteCategoryAction(slug: string): Promise<{ error?: string }> {
+  await requirePermission("categories");
   const result = await deleteCategory(slug);
   if (result.error) return result;
   revalidateStorefront();

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { CaretLeft } from "@phosphor-icons/react/dist/ssr";
 import { getAdminCategory } from "@/lib/admin/categories";
 import CategoryForm from "../../CategoryForm";
+import { requirePermission } from "@/lib/admin/permissions";
 
 export const metadata: Metadata = { title: "Edit category" };
 
@@ -12,6 +13,7 @@ export default async function EditCategoryPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
+  await requirePermission("categories");
   const { slug } = await params;
   const category = await getAdminCategory(slug);
   if (!category) notFound();

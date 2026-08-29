@@ -201,3 +201,17 @@ ALTER TABLE collections ADD COLUMN IF NOT EXISTS published_where text;
 -- element of hero_images, so nothing regresses until an admin adds more
 -- photos. Guarded by IS NULL so it's safe to re-run.
 UPDATE collections SET hero_images = jsonb_build_array(hero_image) WHERE hero_images IS NULL;
+
+-- Team permissions — see src/lib/admin/permissions.ts for the grantable
+-- keys and how these are enforced. Owners bypass `permissions` entirely;
+-- everyone else needs the specific section granted explicitly (default
+-- deny). is_owner is not editable through the UI in this pass — only set
+-- here (existing accounts) or left false (new signups).
+ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS is_owner boolean NOT NULL DEFAULT false;
+ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS permissions jsonb NOT NULL DEFAULT '[]';
+
+-- Every account created before this feature existed already had full,
+-- unrestricted access (that was the only mode that existed) — grandfather
+-- all of them as owners so nobody currently using the dashboard loses
+-- access. Safe to re-run: once true, this WHERE clause excludes them.
+UPDATE admin_users SET is_owner = true WHERE is_owner = false;

@@ -6,6 +6,7 @@ import { formatIQD } from "@/lib/money";
 import CancelOrderButton from "../orders/CancelOrderButton";
 import NoteButton from "../orders/NoteButton";
 import { glassCard, glassTone, glassIconButton } from "../../glass";
+import { requirePermission } from "@/lib/admin/permissions";
 
 export const metadata: Metadata = { title: "Abandoned carts" };
 
@@ -18,6 +19,7 @@ function timeAgo(minutes: number): string {
 }
 
 export default async function AbandonedCartsPage() {
+  await requirePermission("abandoned_carts");
   const carts = await listAbandonedOrders();
   const totalValue = carts.reduce((sum, c) => sum + c.total, 0);
 

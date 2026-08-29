@@ -6,6 +6,7 @@ import { listAdminProducts } from "@/lib/admin/products";
 import { formatIQD } from "@/lib/money";
 import ProductRowActions from "./ProductRowActions";
 import { glassCard, glassButtonPrimary, glassTone } from "../../glass";
+import { requirePermission } from "@/lib/admin/permissions";
 
 export const metadata: Metadata = { title: "Products" };
 
@@ -45,6 +46,7 @@ function StockBadge({
 }
 
 export default async function AdminProductsPage() {
+  await requirePermission("products");
   const products = await listAdminProducts();
 
   return (

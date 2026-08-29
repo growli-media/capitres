@@ -6,6 +6,7 @@ import { catalog } from "@/lib/catalog";
 import { getAdminProduct } from "@/lib/admin/products";
 import ProductForm from "../../ProductForm";
 import { glassTone } from "../../../../glass";
+import { requirePermission } from "@/lib/admin/permissions";
 
 export const metadata: Metadata = { title: "Edit product" };
 
@@ -16,6 +17,7 @@ export default async function EditProductPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ created?: string }>;
 }) {
+  await requirePermission("products");
   const { id } = await params;
   const { created } = await searchParams;
 

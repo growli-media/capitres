@@ -3,6 +3,7 @@ import { Star } from "@phosphor-icons/react/dist/ssr";
 import { listAdminReviews } from "@/lib/admin/reviews";
 import ReviewRowActions from "./ReviewRowActions";
 import { glassCard, glassTone } from "../../glass";
+import { requirePermission } from "@/lib/admin/permissions";
 
 export const metadata: Metadata = { title: "Reviews" };
 
@@ -17,6 +18,7 @@ function Stars({ rating }: { rating: number }) {
 }
 
 export default async function AdminReviewsPage() {
+  await requirePermission("reviews");
   const reviews = await listAdminReviews();
   const pending = reviews.filter((r) => !r.approved);
   const approved = reviews.filter((r) => r.approved);

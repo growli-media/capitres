@@ -1,7 +1,8 @@
 import "server-only";
 import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
-import { sql } from "@/lib/db/client";
+import { sql, jsonb } from "@/lib/db/client";
+import type { Permission } from "./permissions";
 
 const BCRYPT_COST = 12;
 const MAX_ATTEMPTS = 5;
@@ -27,6 +28,11 @@ export interface AdminUser {
   /** Free-text — for team members who aren't Growli Media staff (e.g. an
    * outside marketing agency) to identify who they're with. */
   company: string | null;
+  /** Bypasses `permissions` entirely — see src/lib/admin/permissions.ts. */
+  isOwner: boolean;
+  /** Ignored when isOwner is true. Default-deny: a non-owner sees nothing
+   * until the owner grants specific sections. */
+  permissions: Permission[];
 }
 
 interface AdminUserRow {
@@ -45,6 +51,8 @@ interface AdminUserRow {
   phone: string | null;
   role: string | null;
   company: string | null;
+  is_owner: boolean;
+  permissions: string[];
 }
 
 function toUser(row: AdminUserRow): AdminUser {
@@ -64,6 +72,8 @@ function toUser(row: AdminUserRow): AdminUser {
     phone: row.phone,
     role: row.role,
     company: row.company,
+    isOwner: row.is_owner,
+    permissions: row.permissions as Permission[],
   };
 }
 
@@ -96,7 +106,7 @@ export async function getUserByEmail(email: string): Promise<AdminUser | undefin
   const rows = await sql<AdminUserRow[]>`
     select id, email, password_hash, totp_secret, totp_enabled, disabled,
            failed_attempts, locked_until::text, token_version, created_at::text,
-           first_name, last_name, phone, role, company
+           first_name, last_name, phone, role, company, is_owner, permissions
     from admin_users where email = ${normalizeEmail(email)} limit 1
   `;
   return rows[0] ? toUser(rows[0]) : undefined;
@@ -106,7 +116,7 @@ export async function getUserById(id: string): Promise<AdminUser | undefined> {
   const rows = await sql<AdminUserRow[]>`
     select id, email, password_hash, totp_secret, totp_enabled, disabled,
            failed_attempts, locked_until::text, token_version, created_at::text,
-           first_name, last_name, phone, role, company
+           first_name, last_name, phone, role, company, is_owner, permissions
     from admin_users where id = ${id} limit 1
   `;
   return rows[0] ? toUser(rows[0]) : undefined;
@@ -119,7 +129,7 @@ export async function createUser(email: string, passwordHash: string): Promise<A
     values (${id}, ${normalizeEmail(email)}, ${passwordHash})
     returning id, email, password_hash, totp_secret, totp_enabled, disabled,
               failed_attempts, locked_until::text, token_version, created_at::text,
-              first_name, last_name, phone, role, company
+              first_name, last_name, phone, role, company, is_owner, permissions
   `;
   return toUser(rows[0]);
 }
@@ -180,6 +190,13 @@ export async function setDisabled(id: string, disabled: boolean): Promise<void> 
   } else {
     await sql`update admin_users set disabled = false where id = ${id}`;
   }
+}
+
+/** Owner-only, enforced by the caller (updateUserPermissionsAction in
+ * team/actions.ts) — this function itself trusts its input. Never touches
+ * is_owner: there's no UI path to promote/demote an owner in this pass. */
+export async function setUserPermissions(id: string, permissions: Permission[]): Promise<void> {
+  await sql`update admin_users set permissions = ${jsonb(permissions)} where id = ${id}`;
 }
 
 export async function countEnabledAdmins(excludingId?: string): Promise<number> {
@@ -253,7 +270,7 @@ export async function listUsers(): Promise<AdminUser[]> {
   const rows = await sql<AdminUserRow[]>`
     select id, email, password_hash, totp_secret, totp_enabled, disabled,
            failed_attempts, locked_until::text, token_version, created_at::text,
-           first_name, last_name, phone, role, company
+           first_name, last_name, phone, role, company, is_owner, permissions
     from admin_users order by created_at asc
   `;
   return rows.map(toUser);

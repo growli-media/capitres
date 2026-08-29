@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CaretLeft } from "@phosphor-icons/react/dist/ssr";
 import CollectionForm from "../CollectionForm";
+import { requirePermission } from "@/lib/admin/permissions";
 
 export const metadata: Metadata = { title: "New collection" };
 
-export default function NewCollectionPage() {
+export default async function NewCollectionPage() {
+  await requirePermission("collections");
   return (
     <div className="max-w-3xl">
       <Link
