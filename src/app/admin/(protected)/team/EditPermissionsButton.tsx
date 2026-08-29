@@ -28,9 +28,9 @@ export default function EditPermissionsButton({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${glassButtonSecondary}`}
+        className={`flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold whitespace-nowrap ${glassButtonSecondary}`}
       >
-        <LockKey size={14} aria-hidden="true" />
+        <LockKey size={12} aria-hidden="true" />
         Edit access
       </button>
       <Modal open={open} onClose={() => setOpen(false)} title={`${name}'s access`}>

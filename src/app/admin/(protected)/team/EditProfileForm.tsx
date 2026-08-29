@@ -50,9 +50,9 @@ export default function EditProfileForm({
           setOpen(true);
           setError(undefined);
         }}
-        className="flex items-center gap-1.5 rounded-full border border-slate-300/70 bg-white/50 px-3 py-1.5 text-xs font-semibold text-slate-700 backdrop-blur-md transition-colors hover:bg-white/80 dark:border-slate-700/70 dark:bg-slate-900/40 dark:text-slate-300 dark:hover:bg-slate-800/70"
+        className="flex items-center gap-1 rounded-full border border-slate-300/70 bg-white/50 px-2 py-1 text-[11px] font-semibold whitespace-nowrap text-slate-700 backdrop-blur-md transition-colors hover:bg-white/80 dark:border-slate-700/70 dark:bg-slate-900/40 dark:text-slate-300 dark:hover:bg-slate-800/70"
       >
-        <PencilSimple size={13} />
+        <PencilSimple size={12} />
         Edit profile
       </button>
       <Modal open={open} onClose={() => setOpen(false)} title="Edit your profile">

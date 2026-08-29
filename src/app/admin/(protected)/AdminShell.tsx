@@ -139,7 +139,7 @@ export default function AdminShell({
           </div>
         </div>
 
-        <div className="mx-auto w-full max-w-6xl px-5 py-8 md:px-10 md:py-10">
+        <div className="mx-auto w-full max-w-[1600px] px-5 py-8 md:px-10 md:py-10">
           {children}
         </div>
       </main>
