@@ -46,67 +46,69 @@ export default async function AdminOrdersPage() {
         </div>
       ) : (
         <div className={`mt-6 overflow-hidden ${glassCard}`}>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400 dark:border-slate-800 dark:text-slate-500">
-                <th className="px-4 py-3 text-start font-medium">Order</th>
-                <th className="px-4 py-3 text-start font-medium">Date</th>
-                <th className="px-4 py-3 text-start font-medium">Customer</th>
-                <th className="px-4 py-3 text-start font-medium">Items</th>
-                <th className="px-4 py-3 text-start font-medium">Total</th>
-                <th className="px-4 py-3 text-start font-medium">Status</th>
-                <th className="px-4 py-3 text-start font-medium" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {orders.map((o) => (
-                <tr key={o.ref}>
-                  <td className="px-4 py-3 font-mono text-xs font-medium text-slate-900 dark:text-slate-100">
-                    {o.ref}
-                  </td>
-                  <td className="px-4 py-3 text-slate-500 dark:text-slate-400">{formatDate(o.createdAt)}</td>
-                  <td className="px-4 py-3">
-                    <div className="font-medium text-slate-900 dark:text-slate-100">{customerName(o.customer)}</div>
-                    <div className="text-xs text-slate-400 dark:text-slate-500" dir="ltr">
-                      {o.customer.phone}
-                    </div>
-                    {customerAddress(o.customer) && (
-                      <div className="text-xs text-slate-400 dark:text-slate-500">
-                        {customerAddress(o.customer)}
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
-                    {o.lines.reduce((n, l) => n + l.qty, 0)}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="price font-medium text-slate-900 dark:text-slate-100">
-                      {formatIQD(o.totals.total, "en")}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={o.status} />
-                  </td>
-                  <td className="px-4 py-3 text-end">
-                    <div className="flex items-center justify-end gap-1.5">
-                      <NoteButton orderRef={o.ref} initialNote={o.adminNote ?? null} />
-                      {o.status === "CashOnDelivery" && (
-                        <form action={markOrderDeliveredAction.bind(null, o.ref)}>
-                          <button
-                            type="submit"
-                            className="rounded-full bg-slate-900/90 px-3 py-1.5 text-xs font-semibold text-white shadow-sm backdrop-blur-md transition-colors hover:bg-slate-800 dark:bg-white/90 dark:text-slate-900 dark:hover:bg-white"
-                          >
-                            Mark as delivered
-                          </button>
-                        </form>
-                      )}
-                      <CancelOrderButton orderRef={o.ref} status={o.status} />
-                    </div>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400 dark:border-slate-800 dark:text-slate-500">
+                  <th className="px-4 py-3 text-start font-medium whitespace-nowrap">Order</th>
+                  <th className="px-4 py-3 text-start font-medium whitespace-nowrap">Date</th>
+                  <th className="px-4 py-3 text-start font-medium whitespace-nowrap">Customer</th>
+                  <th className="px-4 py-3 text-start font-medium whitespace-nowrap">Items</th>
+                  <th className="px-4 py-3 text-start font-medium whitespace-nowrap">Total</th>
+                  <th className="px-4 py-3 text-start font-medium whitespace-nowrap">Status</th>
+                  <th className="px-4 py-3 text-start font-medium" />
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {orders.map((o) => (
+                  <tr key={o.ref}>
+                    <td className="px-4 py-3 font-mono text-xs font-medium whitespace-nowrap text-slate-900 dark:text-slate-100">
+                      {o.ref}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-slate-500 dark:text-slate-400">{formatDate(o.createdAt)}</td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <div className="font-medium text-slate-900 dark:text-slate-100">{customerName(o.customer)}</div>
+                      <div className="text-xs text-slate-400 dark:text-slate-500" dir="ltr">
+                        {o.customer.phone}
+                      </div>
+                      {customerAddress(o.customer) && (
+                        <div className="text-xs text-slate-400 dark:text-slate-500">
+                          {customerAddress(o.customer)}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-slate-600 dark:text-slate-400">
+                      {o.lines.reduce((n, l) => n + l.qty, 0)}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <span className="price font-medium text-slate-900 dark:text-slate-100">
+                        {formatIQD(o.totals.total, "en")}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <StatusBadge status={o.status} />
+                    </td>
+                    <td className="px-4 py-3 text-end whitespace-nowrap">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <NoteButton orderRef={o.ref} initialNote={o.adminNote ?? null} />
+                        {o.status === "CashOnDelivery" && (
+                          <form action={markOrderDeliveredAction.bind(null, o.ref)}>
+                            <button
+                              type="submit"
+                              className="rounded-full bg-slate-900/90 px-3 py-1.5 text-xs font-semibold text-white shadow-sm backdrop-blur-md transition-colors hover:bg-slate-800 dark:bg-white/90 dark:text-slate-900 dark:hover:bg-white"
+                            >
+                              Mark as delivered
+                            </button>
+                          </form>
+                        )}
+                        <CancelOrderButton orderRef={o.ref} status={o.status} />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>

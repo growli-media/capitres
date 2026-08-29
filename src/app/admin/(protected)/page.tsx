@@ -116,26 +116,28 @@ export default async function AdminDashboardPage() {
             </div>
           ) : (
             <div className={`mt-3 overflow-hidden ${glassCard}`}>
-              <table className="w-full text-sm">
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {recentOrders.slice(0, 6).map((o) => (
-                    <tr key={o.ref}>
-                      <td className="px-4 py-3 font-mono text-xs text-slate-500 dark:text-slate-400">
-                        {o.ref}
-                      </td>
-                      <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">
-                        {customerName(o.customer)}
-                      </td>
-                      <td className="px-4 py-3 text-slate-500 dark:text-slate-400">
-                        {formatDate(o.createdAt)}
-                      </td>
-                      <td className="px-4 py-3 text-end font-medium text-slate-900 dark:text-slate-100">
-                        {formatIQD(o.totals.total, "en")}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {recentOrders.slice(0, 6).map((o) => (
+                      <tr key={o.ref}>
+                        <td className="px-4 py-3 font-mono text-xs whitespace-nowrap text-slate-500 dark:text-slate-400">
+                          {o.ref}
+                        </td>
+                        <td className="px-4 py-3 font-medium whitespace-nowrap text-slate-900 dark:text-slate-100">
+                          {customerName(o.customer)}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-slate-500 dark:text-slate-400">
+                          {formatDate(o.createdAt)}
+                        </td>
+                        <td className="px-4 py-3 text-end font-medium whitespace-nowrap text-slate-900 dark:text-slate-100">
+                          {formatIQD(o.totals.total, "en")}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>

@@ -48,42 +48,43 @@ export default async function AbandonedCartsPage() {
         </div>
       ) : (
         <div className={`mt-6 overflow-hidden ${glassCard}`}>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400 dark:border-slate-800 dark:text-slate-500">
-                <th className="px-4 py-3 text-start font-medium">Customer</th>
-                <th className="px-4 py-3 text-start font-medium">Cart</th>
-                <th className="px-4 py-3 text-start font-medium">Value</th>
-                <th className="px-4 py-3 text-start font-medium">Abandoned</th>
-                <th className="px-4 py-3" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {carts.map((c) => (
-                <tr key={c.ref}>
-                  <td className="px-4 py-3">
-                    <div className="font-medium text-slate-900 dark:text-slate-100">{c.customerName}</div>
-                    {c.phone && (
-                      <div className="text-xs text-slate-400 dark:text-slate-500" dir="ltr">
-                        {c.phone}
-                      </div>
-                    )}
-                  </td>
-                  <td className="max-w-56 px-4 py-3 text-slate-600 dark:text-slate-400">
-                    <p className="truncate">
-                      {c.itemCount} item{c.itemCount === 1 ? "" : "s"} —{" "}
-                      {c.itemTitles.join(", ")}
-                    </p>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="price font-medium text-slate-900 dark:text-slate-100">
-                      {formatIQD(c.total, "en")}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-slate-500 dark:text-slate-400">{timeAgo(c.minutesAgo)}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-1.5">
-                      <NoteButton orderRef={c.ref} initialNote={c.adminNote} />
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400 dark:border-slate-800 dark:text-slate-500">
+                  <th className="px-4 py-3 text-start font-medium whitespace-nowrap">Customer</th>
+                  <th className="px-4 py-3 text-start font-medium whitespace-nowrap">Cart</th>
+                  <th className="px-4 py-3 text-start font-medium whitespace-nowrap">Value</th>
+                  <th className="px-4 py-3 text-start font-medium whitespace-nowrap">Abandoned</th>
+                  <th className="px-4 py-3" />
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {carts.map((c) => (
+                  <tr key={c.ref}>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <div className="font-medium text-slate-900 dark:text-slate-100">{c.customerName}</div>
+                      {c.phone && (
+                        <div className="text-xs text-slate-400 dark:text-slate-500" dir="ltr">
+                          {c.phone}
+                        </div>
+                      )}
+                    </td>
+                    <td className="max-w-56 px-4 py-3 text-slate-600 dark:text-slate-400">
+                      <p className="truncate">
+                        {c.itemCount} item{c.itemCount === 1 ? "" : "s"} —{" "}
+                        {c.itemTitles.join(", ")}
+                      </p>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <span className="price font-medium text-slate-900 dark:text-slate-100">
+                        {formatIQD(c.total, "en")}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-slate-500 dark:text-slate-400">{timeAgo(c.minutesAgo)}</td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <NoteButton orderRef={c.ref} initialNote={c.adminNote} />
                       {c.phone && (
                         <>
                           <a
@@ -129,7 +130,8 @@ export default async function AbandonedCartsPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+            </table>
+          </div>
         </div>
       )}
     </div>
