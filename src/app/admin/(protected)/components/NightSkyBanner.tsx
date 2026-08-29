@@ -2,12 +2,14 @@
  * Decorative banner at the top of the dashboard home — the slot that used
  * to hold a rotating quote-of-the-day card (removed in an earlier redesign
  * pass). Replaced with a piece of Growli-branded art instead: a dark navy
- * night sky (reusing sidebar-glass-bg's gradient/drift so it ties into the
- * same brand surface as the sidebar), twinkling stars, two shooting stars
- * on independent cycles, a moon, and — this is the store owner's own
- * dashboard, not Growli's — the Capitres wordmark centered small, not
- * Growli's mark (that lives in the sidebar as the "built by" signature).
- * Purely decorative — aria-hidden, no data or interaction here.
+ * night sky (night-sky-bg in globals.css — always navy, unlike the
+ * sidebar's theme-aware background, since a starry sky shouldn't turn
+ * white just because the admin theme toggle does), twinkling stars, two
+ * shooting stars on independent cycles, a moon, and — this is the store
+ * owner's own dashboard, not Growli's — the Capitres wordmark and tagline
+ * centered small, not Growli's mark (that lives in the sidebar as the
+ * "built by" signature). Purely decorative — aria-hidden, no data or
+ * interaction here.
  */
 
 const STARS: { top: string; left: string; size: number; delay: string; duration: string }[] = [
@@ -36,7 +38,7 @@ const STARS: { top: string; left: string; size: number; delay: string; duration:
 export default function NightSkyBanner() {
   return (
     <div
-      className="sidebar-glass-bg relative mb-6 overflow-hidden rounded-2xl border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_8px_30px_rgba(0,0,0,0.35)]"
+      className="night-sky-bg relative mb-6 overflow-hidden rounded-2xl border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_8px_30px_rgba(0,0,0,0.35)]"
       aria-hidden="true"
     >
       <div className="relative flex h-36 items-center justify-center md:h-44">
@@ -72,12 +74,17 @@ export default function NightSkyBanner() {
           style={{ animation: "shooting-star-b 11s linear infinite" }}
         />
 
-        {/* eslint-disable-next-line @next/next/no-img-element -- next/image needs a fixed size, this scales with the banner */}
-        <img
-          src="/brand/logo-white.svg"
-          alt="Capitres"
-          className="relative z-10 h-7 w-auto opacity-95 drop-shadow-[0_0_14px_rgba(143,199,239,0.4)] md:h-8"
-        />
+        <div className="relative z-10 flex flex-col items-center gap-1.5">
+          {/* eslint-disable-next-line @next/next/no-img-element -- next/image needs a fixed size, this scales with the banner */}
+          <img
+            src="/brand/logo-white.svg"
+            alt="Capitres"
+            className="h-7 w-auto opacity-95 drop-shadow-[0_0_14px_rgba(143,199,239,0.4)] md:h-8"
+          />
+          <p className="text-[10px] font-medium tracking-[0.25em] text-white/60 uppercase md:text-[11px]">
+            Declare Your Passion
+          </p>
+        </div>
       </div>
     </div>
   );
