@@ -110,7 +110,7 @@ export default function AdminNav({
 
       <div className="border-t border-[#1B3445]/10 px-4 pt-3 pb-4 dark:border-white/15">
         <SupportPanel />
-        <form action={logout}>
+        <form action={logout} className="mt-2">
           <button
             type="submit"
             className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-full border border-[#1B3445]/10 bg-[#1B3445]/[0.03] px-3 text-sm font-medium text-[#5A7387] shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] backdrop-blur-md transition-all hover:border-[#1B3445]/20 hover:bg-[#1B3445]/[0.06] hover:text-[#1B3445] dark:border-white/12 dark:bg-white/5 dark:text-[#aebfce] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] dark:hover:border-white/25 dark:hover:bg-white/12 dark:hover:text-white dark:hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]"
