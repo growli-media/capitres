@@ -5,26 +5,47 @@
  * slider itself, not just server queries.
  *
  * Stops are spaced evenly BY INDEX along the slider, not by their actual
- * day-count — otherwise "Today" through "Last 7 days" would be an
+ * day-count — otherwise "Today" through "Last week" would be an
  * invisible sliver next to a track dominated by "Last year"/"All time".
  * Dragging dead left is always Today, dead right is always All time,
  * regardless of how many days that actually spans.
+ *
+ * Deliberately many stops (day-by-day near "Today", widening further out)
+ * rather than the usual handful of presets — the user wants to be able to
+ * dial in "any kind" of range by dragging alone; anything the stops still
+ * can't hit exactly is what the From/To calendar next to the slider is
+ * for.
  */
 export const TIME_RANGE_STOPS = [
   { key: "today", label: "Today", days: 0 },
+  { key: "1d", label: "Last day", days: 1 },
+  { key: "2d", label: "Last 2 days", days: 2 },
   { key: "3d", label: "Last 3 days", days: 3 },
-  { key: "7d", label: "Last 7 days", days: 7 },
-  { key: "14d", label: "Last 14 days", days: 14 },
-  { key: "30d", label: "Last 30 days", days: 30 },
-  { key: "90d", label: "Last 90 days", days: 90 },
-  { key: "6m", label: "Last 6 months", days: 182 },
+  { key: "4d", label: "Last 4 days", days: 4 },
+  { key: "5d", label: "Last 5 days", days: 5 },
+  { key: "6d", label: "Last 6 days", days: 6 },
+  { key: "1w", label: "Last week", days: 7 },
+  { key: "2w", label: "Last 2 weeks", days: 14 },
+  { key: "3w", label: "Last 3 weeks", days: 21 },
+  { key: "1m", label: "Last month", days: 30 },
+  { key: "6w", label: "Last 6 weeks", days: 45 },
+  { key: "2mo", label: "Last 2 months", days: 60 },
+  { key: "3mo", label: "Last 3 months", days: 90 },
+  { key: "4mo", label: "Last 4 months", days: 120 },
+  { key: "5mo", label: "Last 5 months", days: 150 },
+  { key: "6mo", label: "Last 6 months", days: 182 },
+  { key: "9mo", label: "Last 9 months", days: 270 },
   { key: "1y", label: "Last year", days: 365 },
+  { key: "18mo", label: "Last 18 months", days: 547 },
+  { key: "2y", label: "Last 2 years", days: 730 },
+  { key: "3y", label: "Last 3 years", days: 1095 },
+  { key: "5y", label: "Last 5 years", days: 1825 },
   { key: "all", label: "All time", days: null },
 ] as const;
 
 export type TimeRangeKey = (typeof TIME_RANGE_STOPS)[number]["key"];
 
-export const DEFAULT_TIME_RANGE: TimeRangeKey = "30d";
+export const DEFAULT_TIME_RANGE: TimeRangeKey = "1m";
 
 export function timeRangeIndex(key: TimeRangeKey): number {
   return TIME_RANGE_STOPS.findIndex((s) => s.key === key);
@@ -44,7 +65,7 @@ export function timeRangeLabel(key: TimeRangeKey): string {
  * for "all time". `end` is always "now", so every range includes
  * whatever has happened today so far. */
 export function rangeToDates(key: TimeRangeKey): { start: Date | null; end: Date } {
-  const stop = TIME_RANGE_STOPS.find((s) => s.key === key) ?? TIME_RANGE_STOPS[4];
+  const stop = TIME_RANGE_STOPS.find((s) => s.key === key) ?? TIME_RANGE_STOPS[timeRangeIndex(DEFAULT_TIME_RANGE)];
   const end = new Date();
   if (stop.days === null) return { start: null, end };
   const start = new Date();
@@ -81,4 +102,16 @@ export function resolveTimeRange(value: TimeRangeValue): { start: Date | null; e
     };
   }
   return rangeToDates(value.key);
+}
+
+/** Formats a Date as a plain `yyyy-mm-dd` key using its LOCAL date parts —
+ * deliberately not `toISOString().slice(0, 10)`, which reads UTC fields
+ * and silently rolls back to the previous calendar day for anyone in a
+ * timezone ahead of UTC (Iraq is UTC+3), since local midnight is still
+ * "yesterday, late evening" in UTC. */
+export function toDateKey(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }

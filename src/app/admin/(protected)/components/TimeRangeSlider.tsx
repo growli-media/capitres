@@ -5,9 +5,10 @@ import {
   timeRangeIndex,
   timeRangeAtIndex,
   rangeToDates,
+  toDateKey,
   type TimeRangeValue,
 } from "@/lib/admin/time-range";
-import { glassInput } from "../../glass";
+import DateRangeCalendar from "./DateRangeCalendar";
 
 const LAST_INDEX = TIME_RANGE_STOPS.length - 1;
 /** Purely decorative ruler ticks drawn across the track — more of them
@@ -15,10 +16,6 @@ const LAST_INDEX = TIME_RANGE_STOPS.length - 1;
  * (per the user's "make it like a linear... vertical lines" direction)
  * even though only 9 positions actually snap. */
 const TICK_COUNT = 40;
-
-function toDateInputValue(d: Date): string {
-  return d.toISOString().slice(0, 10);
-}
 
 function formatCustomLabel(start: string, end: string): string {
   const thisYear = new Date().getFullYear();
@@ -41,11 +38,11 @@ function formatCustomLabel(start: string, end: string): string {
  * kill pointer interaction) and layered on top of the custom-drawn glass
  * track so every native interaction still works.
  *
- * Two native <input type="date"> pickers sit below it for dialing in an
- * exact From/To — picking either one switches the value into "custom"
- * mode (the slider itself has no representation for an arbitrary date,
- * so it just shows full and stops tracking a stop index until the user
- * drags it again, which switches back to a preset).
+ * A DateRangeCalendar sits below it for dialing in an exact From/To —
+ * picking a day switches the value into "custom" mode (the slider itself
+ * has no representation for an arbitrary date, so it just shows full and
+ * stops tracking a stop index until the user drags it again, which
+ * switches back to a preset).
  */
 export default function TimeRangeSlider({
   value,
@@ -64,19 +61,8 @@ export default function TimeRangeSlider({
   const resolved = isCustom
     ? { start: new Date(`${value.start}T00:00:00`), end: new Date(`${value.end}T00:00:00`) }
     : rangeToDates(value.key);
-  const fromValue = isCustom ? value.start : resolved.start ? toDateInputValue(resolved.start) : "";
-  const toValue = isCustom ? value.end : toDateInputValue(resolved.end);
-  const today = toDateInputValue(new Date());
-
-  function handleFrom(next: string) {
-    if (!next) return;
-    onChange({ mode: "custom", start: next, end: toValue && toValue >= next ? toValue : next });
-  }
-
-  function handleTo(next: string) {
-    if (!next) return;
-    onChange({ mode: "custom", start: fromValue && fromValue <= next ? fromValue : next, end: next });
-  }
+  const fromValue = isCustom ? value.start : resolved.start ? toDateKey(resolved.start) : "";
+  const toValue = isCustom ? value.end : toDateKey(resolved.end);
 
   return (
     <div className={`transition-opacity ${pending ? "opacity-60" : ""}`}>
@@ -127,28 +113,12 @@ export default function TimeRangeSlider({
 
       {/* Exact dates — pick a starting and ending day directly instead of
           (or in addition to) dragging the slider. */}
-      <div className="mt-2 flex items-center justify-end gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-        <label className="flex items-center gap-1.5">
-          From
-          <input
-            type="date"
-            value={fromValue}
-            max={toValue || today}
-            onChange={(e) => handleFrom(e.target.value)}
-            className={`h-8 px-2 text-xs ${glassInput}`}
-          />
-        </label>
-        <label className="flex items-center gap-1.5">
-          to
-          <input
-            type="date"
-            value={toValue}
-            min={fromValue || undefined}
-            max={today}
-            onChange={(e) => handleTo(e.target.value)}
-            className={`h-8 px-2 text-xs ${glassInput}`}
-          />
-        </label>
+      <div className="mt-2 flex justify-end">
+        <DateRangeCalendar
+          start={fromValue || null}
+          end={toValue}
+          onChange={(start, end) => onChange({ mode: "custom", start, end })}
+        />
       </div>
     </div>
   );

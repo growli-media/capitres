@@ -101,16 +101,16 @@ export default function AdminShell({
         <div className="motion-safe:animate-glow-drift-b absolute -right-1/4 bottom-1/4 h-[32rem] w-[32rem] rounded-full bg-[#5A7387]/25 blur-3xl dark:bg-[#5A7387]/10" />
       </div>
 
-      {/* Desktop reopen handle — vertically centered right next to where
-          the sidebar itself sits, not pinned in a separate corner above
-          it. Only rendered while collapsed; once the sidebar is showing,
-          its own header has this same control (see AdminNav). */}
+      {/* Desktop reopen handle — pinned top-start, same corner the sidebar
+          itself starts from. Only rendered while collapsed; once the
+          sidebar is showing, its own header has this same control (see
+          AdminNav). */}
       {collapsed && (
         <button
           type="button"
           onClick={toggleSidebar}
           aria-label="Show sidebar"
-          className={`fixed top-1/2 start-4 z-30 hidden h-11 w-11 -translate-y-1/2 cursor-pointer md:flex ${glassIconButton}`}
+          className={`fixed top-4 start-4 z-30 hidden h-11 w-11 cursor-pointer md:flex ${glassIconButton}`}
         >
           <SidebarSimple size={19} />
         </button>
