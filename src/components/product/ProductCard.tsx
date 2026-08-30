@@ -61,7 +61,7 @@ export default function ProductCard({
             </span>
           )}
           {onSale && (
-            <span className="text-eyebrow bg-paper px-2.5 py-1.5 text-ink">
+            <span className="text-eyebrow bg-red-700 px-2.5 py-1.5 text-white">
               {t("sale")}
             </span>
           )}

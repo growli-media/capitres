@@ -25,7 +25,7 @@ export default function Price({
         {formatCurrency(amount, currency, locale)}
       </span>
       {onSale && (
-        <s className="text-ink/60 text-[0.85em] no-underline line-through">
+        <s className="text-ink/60 text-[0.85em] line-through">
           {formatCurrency(compareAt, currency, locale)}
         </s>
       )}
