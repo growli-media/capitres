@@ -232,3 +232,11 @@ ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS full_access boolean NOT NULL DE
 -- days; "delete forever" is a real DELETE FROM, not a further column.
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS deleted_at timestamptz;
 CREATE INDEX IF NOT EXISTS idx_orders_deleted_at ON orders(deleted_at) WHERE deleted_at IS NOT NULL;
+
+-- Admin-curated "frequently bought together" — a jsonb array of other
+-- products' slugs, same shape as posts.related_product_slugs above and
+-- products.collection_slugs (an array of foreign slugs hung off a row,
+-- not a join table — matches how every other product-to-X link in this
+-- schema is stored). Empty array = feature off for that product; the
+-- storefront PDP only shows the section when it's non-empty.
+ALTER TABLE products ADD COLUMN IF NOT EXISTS related_product_slugs jsonb NOT NULL DEFAULT '[]';

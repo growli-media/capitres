@@ -157,6 +157,8 @@
     "submittingReview": "جارٍ الإرسال…",
     "reviewThanks": "شكراً — وصل تقييمك.",
     "related": "قد يعجبك أيضاً",
+    "frequentlyBoughtTogether": "غالباً ما تُشترى معاً",
+    "addSelectedToCart": "{count, plural, =1 {أضف عنصراً واحداً إلى السلة} other {أضف # عناصر إلى السلة}}",
     "share": "مشاركة",
     "heritage": "الحكاية",
     "approxUsd": "≈ {usd} دولار",

@@ -66,12 +66,17 @@ export default function ProductForm({
   variants,
   collections,
   categories,
+  otherProducts,
 }: {
   mode: "create" | "edit";
   product?: AdminProductRow;
   variants?: AdminVariant[];
   collections: { slug: string; titleEn: string }[];
   categories: { slug: string; titleEn: string }[];
+  /** Every other product, for the "Frequently bought together" picker
+   * below — already excludes this product itself (edit mode) since the
+   * caller filters it out before passing it down. */
+  otherProducts: { slug: string; titleEn: string }[];
 }) {
   const boundAction =
     mode === "edit" && product
@@ -105,6 +110,7 @@ export default function ProductForm({
       nameKu: c.name.ku,
     })),
   );
+  const [relatedSearch, setRelatedSearch] = useState("");
   const [uploadingId, setUploadingId] = useState<number | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
@@ -772,6 +778,52 @@ export default function ProductForm({
                 {c.titleEn}
               </label>
             ))}
+          </div>
+        </section>
+      )}
+
+      {/* Frequently bought together */}
+      {otherProducts.length > 0 && (
+        <section>
+          <h2 className="mb-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
+            Frequently bought together
+          </h2>
+          <p className="mb-3 text-xs text-slate-400 dark:text-slate-500">
+            Pick other products to suggest alongside this one on its product page — &ldquo;you
+            may also like&rdquo; / bundle suggestions. Nothing picked means nothing shows.
+          </p>
+          {otherProducts.length > 8 && (
+            <input
+              type="text"
+              value={relatedSearch}
+              onChange={(e) => setRelatedSearch(e.target.value)}
+              placeholder="Search products…"
+              className={`${inputClass} mb-3`}
+            />
+          )}
+          <div className="flex flex-wrap gap-2">
+            {otherProducts
+              .filter(
+                (p) =>
+                  !relatedSearch ||
+                  p.titleEn.toLowerCase().includes(relatedSearch.toLowerCase()) ||
+                  product?.relatedProductSlugs.includes(p.slug),
+              )
+              .map((p) => (
+                <label
+                  key={p.slug}
+                  className="flex min-h-10 cursor-pointer items-center gap-2 rounded-lg border border-slate-300 px-3 text-sm has-[:checked]:border-slate-900 has-[:checked]:bg-slate-900 has-[:checked]:text-white dark:border-slate-700 dark:has-[:checked]:border-slate-100 dark:has-[:checked]:bg-slate-100 dark:has-[:checked]:text-slate-900"
+                >
+                  <input
+                    type="checkbox"
+                    name="relatedProductSlugs"
+                    value={p.slug}
+                    defaultChecked={product?.relatedProductSlugs.includes(p.slug)}
+                    className="sr-only"
+                  />
+                  {p.titleEn}
+                </label>
+              ))}
           </div>
         </section>
       )}

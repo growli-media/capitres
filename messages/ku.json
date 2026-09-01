@@ -157,6 +157,8 @@
     "submittingReview": "خەریکی ناردنە…",
     "reviewThanks": "سوپاس — هەڵسەنگاندنەکەت گەیشت.",
     "related": "لەوانەیە ئەمانەشت پێ خۆش بێت",
+    "frequentlyBoughtTogether": "زۆرجار پێکەوە دەکڕدرێن",
+    "addSelectedToCart": "{count, plural, =1 {یەک دانە زیادبکە بۆ سەبەتە} other {# دانە زیادبکە بۆ سەبەتە}}",
     "share": "بڵاوکردنەوە",
     "heritage": "چیرۆکەکە",
     "approxUsd": "≈ {usd} دۆلار",

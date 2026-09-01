@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CaretLeft } from "@phosphor-icons/react/dist/ssr";
 import { catalog } from "@/lib/catalog";
+import { listAdminProducts } from "@/lib/admin/products";
 import ProductForm from "../ProductForm";
 import { requirePermission } from "@/lib/admin/permissions";
 
@@ -9,9 +10,10 @@ export const metadata: Metadata = { title: "New product" };
 
 export default async function NewProductPage() {
   await requirePermission("products");
-  const [collections, categories] = await Promise.all([
+  const [collections, categories, products] = await Promise.all([
     catalog.getCollections(),
     catalog.getCategories(),
+    listAdminProducts(),
   ]);
 
   return (
@@ -30,6 +32,7 @@ export default async function NewProductPage() {
         mode="create"
         collections={collections.map((c) => ({ slug: c.slug, titleEn: c.title.en }))}
         categories={categories.map((c) => ({ slug: c.slug, titleEn: c.title.en }))}
+        otherProducts={products.map((p) => ({ slug: p.slug, titleEn: p.titleEn }))}
       />
     </div>
   );

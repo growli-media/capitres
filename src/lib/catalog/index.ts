@@ -25,6 +25,9 @@ import { isInStock, isOnSale } from "./predicates";
 export interface CatalogProvider {
   getProducts(filter?: ProductFilter, sort?: ProductSort): Promise<Product[]>;
   getProduct(slug: string): Promise<Product | undefined>;
+  /** Resolves a list of slugs into full Products, in that same order —
+   * the "frequently bought together" widget's data source. */
+  getProductsBySlugs(slugs: string[]): Promise<Product[]>;
   getCollections(): Promise<Collection[]>;
   getCollection(slug: string): Promise<Collection | undefined>;
   getCategories(): Promise<CategoryOption[]>;
@@ -40,6 +43,11 @@ const localProvider: CatalogProvider = {
   },
   async getProduct(slug) {
     return products.find((p) => p.slug === slug);
+  },
+  async getProductsBySlugs(slugs) {
+    return slugs
+      .map((s) => products.find((p) => p.slug === s))
+      .filter((p): p is (typeof products)[number] => !!p);
   },
   async getCollections() {
     return [...collections].sort((a, b) => a.order - b.order);

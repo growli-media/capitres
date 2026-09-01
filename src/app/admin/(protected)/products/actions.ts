@@ -224,6 +224,7 @@ function parseInput(
       altKu: img.altKu || titleKu,
     })),
     collectionSlugs: formData.getAll("collectionSlugs").map(String),
+    relatedProductSlugs: formData.getAll("relatedProductSlugs").map(String),
     isNew: formData.get("isNew") === "on",
     featured: formData.get("featured") === "on",
     giftcardDenominations: isGiftCard ? giftcardDenominations : null,

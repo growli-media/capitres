@@ -86,6 +86,11 @@ export interface Product {
   variants: ProductVariant[];
   images: ProductImage[];
   collectionSlugs: string[];
+  /** Admin-curated "frequently bought together" — other products' slugs,
+   * in the order the admin picked them. Optional/defaults to empty so
+   * the static local-provider seed data (src/lib/catalog/data/products.ts)
+   * doesn't need every entry touched. */
+  relatedProductSlugs?: string[];
   isNew?: boolean;
   featured?: boolean;
   releaseDate: string;

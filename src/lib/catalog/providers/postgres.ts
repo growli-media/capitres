@@ -47,6 +47,7 @@ interface ProductRow {
   colors: ProductColor[];
   images: { url: string; alt: LocalizedString }[];
   collection_slugs: string[];
+  related_product_slugs: string[];
   is_new: boolean;
   featured: boolean;
   release_date: string | Date;
@@ -184,6 +185,7 @@ function toProduct(
       .map((v): ProductVariant => ({ id: v.id, size: v.size, stock: v.stock })),
     images: (row.images ?? []).map(toImage),
     collectionSlugs: row.collection_slugs ?? [],
+    relatedProductSlugs: row.related_product_slugs ?? [],
     isNew: row.is_new,
     featured: row.featured,
     releaseDate: dateOnly(row.release_date),
@@ -268,6 +270,27 @@ export const postgresProvider: CatalogProvider = {
     ]);
     const row = rows[0];
     return row ? toProduct(row, variants, reviews) : undefined;
+  },
+
+  /** Resolves admin-picked "frequently bought together" slugs into full
+   * Product objects, in the same order they were picked (the `= any()`
+   * query doesn't preserve input order, so re-sort against `slugs`
+   * afterward) — excludes archived products, unlike getProduct's direct
+   * single-slug lookup above, since this is a "show these as
+   * suggestions" listing, not a shared-link lookup that must keep
+   * working regardless of archived status. */
+  async getProductsBySlugs(slugs: string[]) {
+    if (slugs.length === 0) return [];
+    const [rows, variants, reviews] = await Promise.all([
+      sql<ProductRow[]>`select * from products where slug = any(${slugs}) and archived = false`,
+      fetchAllVariants(),
+      fetchApprovedReviews(),
+    ]);
+    const bySlug = new Map(rows.map((r) => [r.slug, r]));
+    return slugs
+      .map((s) => bySlug.get(s))
+      .filter((r): r is ProductRow => !!r)
+      .map((r) => toProduct(r, variants, reviews));
   },
 
   async getCollections() {

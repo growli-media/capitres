@@ -157,6 +157,8 @@
     "submittingReview": "Submitting…",
     "reviewThanks": "Shukran — your review is in.",
     "related": "You may also like",
+    "frequentlyBoughtTogether": "Frequently bought together",
+    "addSelectedToCart": "{count, plural, =1 {Add 1 item to cart} other {Add # items to cart}}",
     "share": "Share",
     "heritage": "The story",
     "approxUsd": "≈ {usd} USD",

@@ -26,6 +26,9 @@ export interface AdminProductRow {
   images: { url: string; alt: { en: string; ar: string; ku: string } }[];
   colors: { key: string; hex: string; name: { en: string; ar: string; ku: string } }[];
   collectionSlugs: string[];
+  /** Admin-curated "frequently bought together" — other products' slugs,
+   * in picked order. */
+  relatedProductSlugs: string[];
   details: { en: string; ar: string; ku: string }[];
   isNew: boolean;
   featured: boolean;
@@ -61,6 +64,7 @@ interface ProductListRow {
   images: AdminProductRow["images"];
   colors: AdminProductRow["colors"];
   collection_slugs: string[];
+  related_product_slugs: string[];
   details: AdminProductRow["details"];
   is_new: boolean;
   featured: boolean;
@@ -99,6 +103,7 @@ export async function listAdminProducts(): Promise<AdminProductRow[]> {
     images: r.images ?? [],
     colors: r.colors ?? [],
     collectionSlugs: r.collection_slugs ?? [],
+    relatedProductSlugs: r.related_product_slugs ?? [],
     details: r.details ?? [],
     isNew: r.is_new,
     featured: r.featured,
@@ -138,6 +143,7 @@ export async function getAdminProduct(
         images: AdminProductRow["images"];
         colors: AdminProductRow["colors"];
         collection_slugs: string[];
+        related_product_slugs: string[];
         details: AdminProductRow["details"];
         is_new: boolean;
         featured: boolean;
@@ -173,6 +179,7 @@ export async function getAdminProduct(
       images: row.images ?? [],
       colors: row.colors ?? [],
       collectionSlugs: row.collection_slugs ?? [],
+      relatedProductSlugs: row.related_product_slugs ?? [],
       details: row.details ?? [],
       isNew: row.is_new,
       featured: row.featured,
@@ -230,6 +237,7 @@ export interface ProductInput {
   colors: ColorInput[];
   images: ImageInput[];
   collectionSlugs: string[];
+  relatedProductSlugs: string[];
   isNew: boolean;
   featured: boolean;
   giftcardDenominations: number[] | null;
@@ -284,7 +292,7 @@ export async function createProduct(input: ProductInput): Promise<string> {
       details, category, gender, price_amount, compare_at_amount,
       price_amount_usd_cents, compare_at_amount_usd_cents,
       price_amount_eur_cents, compare_at_amount_eur_cents,
-      colors, images, collection_slugs, is_new, featured, giftcard_denominations
+      colors, images, collection_slugs, related_product_slugs, is_new, featured, giftcard_denominations
     ) values (
       ${id}, ${input.slug}, ${input.titleEn}, ${input.titleAr}, ${input.titleKu},
       ${input.descriptionEn}, ${input.descriptionAr}, ${input.descriptionKu},
@@ -293,7 +301,8 @@ export async function createProduct(input: ProductInput): Promise<string> {
       ${input.priceAmountUsdCents}, ${input.compareAtAmountUsdCents},
       ${input.priceAmountEurCents}, ${input.compareAtAmountEurCents},
       ${jsonb(buildColors(input))}, ${jsonb(buildImages(input))},
-      ${jsonb(input.collectionSlugs)}, ${input.isNew}, ${input.featured},
+      ${jsonb(input.collectionSlugs)}, ${jsonb(input.relatedProductSlugs)},
+      ${input.isNew}, ${input.featured},
       ${input.giftcardDenominations ? jsonb(input.giftcardDenominations) : null}
     )
   `;
@@ -321,6 +330,7 @@ export async function updateProduct(id: string, input: ProductInput): Promise<vo
       compare_at_amount_eur_cents = ${input.compareAtAmountEurCents},
       colors = ${jsonb(buildColors(input))}, images = ${jsonb(buildImages(input))},
       collection_slugs = ${jsonb(input.collectionSlugs)},
+      related_product_slugs = ${jsonb(input.relatedProductSlugs)},
       is_new = ${input.isNew}, featured = ${input.featured},
       giftcard_denominations = ${input.giftcardDenominations ? jsonb(input.giftcardDenominations) : null},
       updated_at = now()

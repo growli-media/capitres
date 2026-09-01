@@ -11,6 +11,7 @@ import { FREE_SHIPPING_THRESHOLD, GIFT_CARDS_ENABLED } from "@/lib/commerce/conf
 import ProductCard from "@/components/product/ProductCard";
 import ProductGallery from "@/components/product/ProductGallery";
 import AddToCart from "@/components/product/AddToCart";
+import FrequentlyBoughtTogether from "@/components/product/FrequentlyBoughtTogether";
 import ProductReviews from "@/components/product/ProductReviews";
 import { Reveal } from "@/components/motion/Reveal";
 
@@ -50,7 +51,7 @@ export default async function ProductPage({
   if (!product) notFound();
   if (product.giftCard && !GIFT_CARDS_ENABLED) notFound();
 
-  const [t, tNav, tBadges, tA11y, related, primaryCollection] =
+  const [t, tNav, tBadges, tA11y, related, primaryCollection, boughtTogether] =
     await Promise.all([
       getTranslations({ locale, namespace: "product" }),
       getTranslations({ locale, namespace: "nav" }),
@@ -64,6 +65,7 @@ export default async function ProductPage({
       product.collectionSlugs.length
         ? catalog.getCollection(product.collectionSlugs[0])
         : Promise.resolve(undefined),
+      catalog.getProductsBySlugs(product.relatedProductSlugs ?? []),
     ]);
 
   const relatedProducts = related.filter((p) => p.id !== product.id).slice(0, 4);
@@ -147,6 +149,10 @@ export default async function ProductPage({
             is exactly what a stray transform here would have broken). */}
         <div className="order-3 lg:sticky lg:top-0 lg:flex lg:h-[100svh] lg:flex-col lg:justify-center lg:overflow-y-auto">
           <AddToCart product={product} />
+
+          {boughtTogether.length > 0 && (
+            <FrequentlyBoughtTogether current={product} linked={boughtTogether} />
+          )}
 
           {/* Accordions — size chart lives inside AddToCart; details/care and
               shipping/returns cover the rest */}

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CaretLeft, Check } from "@phosphor-icons/react/dist/ssr";
 import { catalog } from "@/lib/catalog";
-import { getAdminProduct } from "@/lib/admin/products";
+import { getAdminProduct, listAdminProducts } from "@/lib/admin/products";
 import ProductForm from "../../ProductForm";
 import { glassTone } from "../../../../glass";
 import { requirePermission } from "@/lib/admin/permissions";
@@ -21,10 +21,11 @@ export default async function EditProductPage({
   const { id } = await params;
   const { created } = await searchParams;
 
-  const [result, collections, categories] = await Promise.all([
+  const [result, collections, categories, products] = await Promise.all([
     getAdminProduct(id),
     catalog.getCollections(),
     catalog.getCategories(),
+    listAdminProducts(),
   ]);
   if (!result) notFound();
 
@@ -54,6 +55,9 @@ export default async function EditProductPage({
         variants={result.variants}
         collections={collections.map((c) => ({ slug: c.slug, titleEn: c.title.en }))}
         categories={categories.map((c) => ({ slug: c.slug, titleEn: c.title.en }))}
+        otherProducts={products
+          .filter((p) => p.id !== result.product.id)
+          .map((p) => ({ slug: p.slug, titleEn: p.titleEn }))}
       />
     </div>
   );
