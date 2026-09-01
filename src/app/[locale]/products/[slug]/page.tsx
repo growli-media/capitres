@@ -150,10 +150,6 @@ export default async function ProductPage({
         <div className="order-3 lg:sticky lg:top-0 lg:flex lg:h-[100svh] lg:flex-col lg:justify-center lg:overflow-y-auto">
           <AddToCart product={product} />
 
-          {boughtTogether.length > 0 && (
-            <FrequentlyBoughtTogether current={product} linked={boughtTogether} />
-          )}
-
           {/* Accordions — size chart lives inside AddToCart; details/care and
               shipping/returns cover the rest */}
           <div className="mt-9 divide-y divide-line border-y border-line">
@@ -206,6 +202,22 @@ export default async function ProductPage({
           </div>
         </div>
       </section>
+
+      {/* Frequently bought together — its own full-width section, styled
+          like "You may also like" below, sitting right before it (not
+          crammed into the narrow sticky buy-box column above). */}
+      {boughtTogether.length > 0 && (
+        <section className="border-t border-line py-16 md:py-24">
+          <div className="container-x">
+            <Reveal>
+              <h2 className="text-display mb-10 text-3xl md:text-4xl">
+                {t("frequentlyBoughtTogether")}
+              </h2>
+            </Reveal>
+            <FrequentlyBoughtTogether current={product} linked={boughtTogether} />
+          </div>
+        </section>
+      )}
 
       {/* Related */}
       {relatedProducts.length > 0 && (

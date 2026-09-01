@@ -81,25 +81,23 @@ export default function FrequentlyBoughtTogether({
   }
 
   return (
-    <div className="mt-9 border-t border-line pt-6">
-      <p className="text-eyebrow text-ink/55">{t("frequentlyBoughtTogether")}</p>
-
+    <div className="lg:flex lg:items-start lg:gap-16">
       {/* Thumbnails with + separators */}
-      <div className="mt-4 flex items-center gap-2 overflow-x-auto pb-1">
+      <div className="flex flex-wrap items-center gap-3 lg:flex-1">
         {items.map((p, i) => (
-          <div key={p.id} className="flex shrink-0 items-center gap-2">
+          <div key={p.id} className="flex shrink-0 items-center gap-3">
             {i > 0 && (
-              <Plus size={14} weight="bold" className="shrink-0 text-ink/35" aria-hidden="true" />
+              <Plus size={18} weight="bold" className="shrink-0 text-ink/35" aria-hidden="true" />
             )}
             <Link
               href={`/products/${p.slug}`}
-              className="relative block h-16 w-16 shrink-0 overflow-hidden bg-paper"
+              className="relative block h-24 w-24 shrink-0 overflow-hidden bg-paper sm:h-28 sm:w-28"
             >
               <Image
                 src={p.images[0].src}
                 alt={pick(p.images[0].alt, locale)}
                 fill
-                sizes="64px"
+                sizes="(min-width: 640px) 112px, 96px"
                 className="object-cover"
               />
             </Link>
@@ -107,42 +105,44 @@ export default function FrequentlyBoughtTogether({
         ))}
       </div>
 
-      {/* Checklist */}
-      <ul className="mt-4 space-y-2.5">
-        {items.map((p) => {
-          const variant = defaultVariant(p);
-          return (
-            <li key={p.id} className="flex items-center gap-3 text-sm">
-              <input
-                type="checkbox"
-                checked={selected.has(p.id)}
-                onChange={() => toggle(p.id)}
-                disabled={!variant}
-                className="h-4 w-4 shrink-0 cursor-pointer accent-ink disabled:cursor-not-allowed disabled:opacity-40"
-              />
-              <Link href={`/products/${p.slug}`} className="link-underline min-w-0 flex-1 truncate">
-                {pick(p.title, locale)}
-              </Link>
-              <span className="price shrink-0 font-medium text-ink">
-                {formatCurrency(p.priceByCurrency[currency], currency, locale)}
-              </span>
-            </li>
-          );
-        })}
-      </ul>
+      {/* Checklist + total + add */}
+      <div className="mt-8 max-w-md lg:mt-0 lg:w-[380px] lg:shrink-0">
+        <ul className="space-y-2.5">
+          {items.map((p) => {
+            const variant = defaultVariant(p);
+            return (
+              <li key={p.id} className="flex items-center gap-3 text-sm">
+                <input
+                  type="checkbox"
+                  checked={selected.has(p.id)}
+                  onChange={() => toggle(p.id)}
+                  disabled={!variant}
+                  className="h-4 w-4 shrink-0 cursor-pointer accent-ink disabled:cursor-not-allowed disabled:opacity-40"
+                />
+                <Link href={`/products/${p.slug}`} className="link-underline min-w-0 flex-1 truncate">
+                  {pick(p.title, locale)}
+                </Link>
+                <span className="price shrink-0 font-medium text-ink">
+                  {formatCurrency(p.priceByCurrency[currency], currency, locale)}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
 
-      <div className="mt-5 flex items-center justify-between gap-4 border-t border-line pt-4">
-        <p className="price text-base font-semibold">
-          {formatCurrency(total, currency, locale)}
-        </p>
-        <button
-          type="button"
-          onClick={handleAdd}
-          disabled={selectedItems.length === 0}
-          className="btn btn-ink h-11 px-6 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          {t("addSelectedToCart", { count: selectedItems.length })}
-        </button>
+        <div className="mt-5 flex items-center justify-between gap-4 border-t border-line pt-4">
+          <p className="price text-base font-semibold">
+            {formatCurrency(total, currency, locale)}
+          </p>
+          <button
+            type="button"
+            onClick={handleAdd}
+            disabled={selectedItems.length === 0}
+            className="btn btn-ink h-11 px-6 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {t("addSelectedToCart", { count: selectedItems.length })}
+          </button>
+        </div>
       </div>
     </div>
   );
