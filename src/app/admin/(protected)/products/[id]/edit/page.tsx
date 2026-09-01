@@ -57,7 +57,13 @@ export default async function EditProductPage({
         categories={categories.map((c) => ({ slug: c.slug, titleEn: c.title.en }))}
         otherProducts={products
           .filter((p) => p.id !== result.product.id)
-          .map((p) => ({ slug: p.slug, titleEn: p.titleEn }))}
+          .map((p) => ({
+            slug: p.slug,
+            titleEn: p.titleEn,
+            image: p.images[0]?.url ?? null,
+            priceAmount: p.priceAmount,
+            compareAtAmount: p.compareAtAmount,
+          }))}
       />
     </div>
   );

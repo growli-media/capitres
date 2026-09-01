@@ -32,7 +32,13 @@ export default async function NewProductPage() {
         mode="create"
         collections={collections.map((c) => ({ slug: c.slug, titleEn: c.title.en }))}
         categories={categories.map((c) => ({ slug: c.slug, titleEn: c.title.en }))}
-        otherProducts={products.map((p) => ({ slug: p.slug, titleEn: p.titleEn }))}
+        otherProducts={products.map((p) => ({
+          slug: p.slug,
+          titleEn: p.titleEn,
+          image: p.images[0]?.url ?? null,
+          priceAmount: p.priceAmount,
+          compareAtAmount: p.compareAtAmount,
+        }))}
       />
     </div>
   );
