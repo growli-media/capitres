@@ -1,4 +1,4 @@
-import { setUserFullAccessAction } from "./actions";
+import GrowliAccessToggle from "./GrowliAccessToggle";
 
 /** Single source of truth for the two accounts that get an identity
  * badge next to their name in the team roster — DB emails are always
@@ -19,8 +19,10 @@ const chipBase = "inline-flex h-7 w-7 shrink-0 items-center justify-center round
  *   on a red chip when off, green when on, so the state reads at a
  *   glance without needing to hover for the tooltip. That chip IS this
  *   account's full-access toggle when `canToggle` (a strict-owner
- *   viewer): clicking it flips full_access. For anyone else it renders
- *   the same visual as a static, non-interactive badge.
+ *   viewer) — GrowliAccessToggle (a client component, since it also
+ *   drives a toast that needs to react to the action completing) handles
+ *   the click + toast; clicking flips full_access. For anyone else it
+ *   renders the same visual as a static, non-interactive badge.
  * - Capitres' own email gets their actual mark
  *   (public/brand/capitres-c-mark.svg) on a solid black chip, matching
  *   their storefront's stark black/white brand — only one color variant
@@ -29,11 +31,13 @@ const chipBase = "inline-flex h-7 w-7 shrink-0 items-center justify-center round
 export default function TeamIdentityBadge({
   email,
   userId,
+  name,
   fullAccess,
   canToggle,
 }: {
   email: string;
   userId: string;
+  name: string;
   fullAccess: boolean;
   canToggle: boolean;
 }) {
@@ -48,18 +52,7 @@ export default function TeamIdentityBadge({
       </span>
     );
     if (!canToggle) return visual;
-    return (
-      <form action={setUserFullAccessAction.bind(null, userId, !fullAccess)}>
-        <button
-          type="submit"
-          className="cursor-pointer rounded-full"
-          aria-label={fullAccess ? "Turn off Growli full access" : "Turn on Growli full access"}
-          aria-pressed={fullAccess}
-        >
-          {visual}
-        </button>
-      </form>
-    );
+    return <GrowliAccessToggle userId={userId} name={name} fullAccess={fullAccess} visual={visual} />;
   }
 
   if (email === CAPITRES_OFFICIAL_EMAIL) {

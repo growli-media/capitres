@@ -130,6 +130,7 @@ function TeamTable({
                     <TeamIdentityBadge
                       email={user.email}
                       userId={user.id}
+                      name={fullName || user.email}
                       fullAccess={user.fullAccess}
                       canToggle={viewerIsOwner}
                     />
@@ -258,6 +259,7 @@ function TeamTable({
                       <TeamIdentityBadge
                         email={user.email}
                         userId={user.id}
+                        name={fullName || user.email}
                         fullAccess={user.fullAccess}
                         canToggle={viewerIsOwner}
                       />
