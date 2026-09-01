@@ -14,6 +14,7 @@ import type { AdminProductRow, AdminVariant } from "@/lib/admin/products";
 import { createProductAction, updateProductAction, type FormState } from "./actions";
 import { uploadProductImage } from "../../upload-image-action";
 import RelatedProductsPicker, { type PickableProduct } from "./RelatedProductsPicker";
+import { useActionToast } from "../components/useActionToast";
 import { glassInput, glassTextarea, glassButtonSecondary, glassButtonPrimary, glassTone } from "../../glass";
 
 interface ImageRow {
@@ -87,6 +88,7 @@ export default function ProductForm({
     boundAction,
     {},
   );
+  useActionToast(pending, state.error, "Product saved");
 
   const [category, setCategory] = useState(
     product?.category ?? categories[0]?.slug ?? "tees",

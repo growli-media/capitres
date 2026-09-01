@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { Note } from "@phosphor-icons/react";
 import Modal from "../components/Modal";
 import { updateOrderNoteAction } from "./actions";
+import { useAdminToast } from "../components/AdminToastProvider";
 import { glassTextarea, glassButtonPrimary } from "../../glass";
 
 export default function NoteButton({
@@ -16,12 +17,14 @@ export default function NoteButton({
   const [open, setOpen] = useState(false);
   const [note, setNote] = useState(initialNote ?? "");
   const [pending, startTransition] = useTransition();
+  const showToast = useAdminToast();
   const hasNote = !!initialNote;
 
   function save() {
     startTransition(async () => {
       await updateOrderNoteAction(orderRef, note);
       setOpen(false);
+      showToast("Note saved");
     });
   }
 

@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import type { AdminCategoryRow } from "@/lib/admin/categories";
 import { createCategoryAction, updateCategoryAction, type FormState } from "./actions";
+import { useActionToast } from "../components/useActionToast";
 import { glassInput, glassButtonPrimary, glassTone } from "../../glass";
 
 function Field({
@@ -37,6 +38,7 @@ export default function CategoryForm({
       ? updateCategoryAction.bind(null, category.slug)
       : createCategoryAction;
   const [state, formAction, pending] = useActionState<FormState, FormData>(boundAction, {});
+  useActionToast(pending, state.error, "Category saved");
 
   return (
     <form action={formAction} className="space-y-8">

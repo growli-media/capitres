@@ -161,5 +161,5 @@ export async function deleteCollectionAction(slug: string): Promise<void> {
   await requirePermission("collections");
   await deleteCollectionPermanently(slug);
   revalidateStorefront();
-  redirect("/admin/collections");
+  redirect("/admin/collections?deleted=1");
 }

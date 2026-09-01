@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { CaretLeft, Check } from "@phosphor-icons/react/dist/ssr";
 import { getAdminCollection } from "@/lib/admin/collections";
 import CollectionForm from "../../CollectionForm";
+import { CreatedToast } from "../../../components/CreatedToast";
 import { glassTone } from "../../../../glass";
 import { requirePermission } from "@/lib/admin/permissions";
 
@@ -25,6 +26,7 @@ export default async function EditCollectionPage({
 
   return (
     <div className="max-w-3xl">
+      <CreatedToast message="Collection created" />
       <Link
         href="/admin/collections"
         className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"

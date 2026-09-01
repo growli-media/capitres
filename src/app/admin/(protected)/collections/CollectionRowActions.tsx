@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { DotsThreeVertical, PencilSimple, Trash } from "@phosphor-icons/react";
 import { deleteCollectionAction, toggleCollectionArchivedAction } from "./actions";
+import { useAdminToast } from "../components/AdminToastProvider";
 import { glassIconButton } from "../../glass";
 
 export default function CollectionRowActions({
@@ -16,6 +17,7 @@ export default function CollectionRowActions({
   const [open, setOpen] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [pending, startTransition] = useTransition();
+  const showToast = useAdminToast();
 
   return (
     <div className="relative flex items-center justify-end gap-1">
@@ -45,7 +47,11 @@ export default function CollectionRowActions({
               type="button"
               disabled={pending}
               onClick={() => {
-                startTransition(() => toggleCollectionArchivedAction(slug, !archived));
+                const next = !archived;
+                startTransition(async () => {
+                  await toggleCollectionArchivedAction(slug, next);
+                  showToast(next ? "Collection archived" : "Collection unarchived");
+                });
                 setOpen(false);
               }}
               className="flex w-full cursor-pointer items-center px-3 py-2 text-start text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:text-slate-300 dark:hover:bg-slate-700"

@@ -288,5 +288,5 @@ export async function deleteProductAction(id: string): Promise<void> {
   await requirePermission("products");
   await deleteProductPermanently(id);
   revalidateStorefront();
-  redirect("/admin/products");
+  redirect("/admin/products?deleted=1");
 }

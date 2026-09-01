@@ -6,6 +6,7 @@ import Modal from "../components/Modal";
 import { customerName, type Order } from "@/lib/orders/order-helpers";
 import { formatIQD } from "@/lib/money";
 import { getDeletedOrdersAction, restoreOrdersAction, hardDeleteOrdersAction } from "./actions";
+import { useAdminToast } from "../components/AdminToastProvider";
 import { glassButtonSecondary, glassButtonPrimary } from "../../glass";
 
 function formatDate(iso: string): string {
@@ -27,6 +28,7 @@ export default function RecentlyDeletedPanel({ onRestored }: { onRestored: () =>
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmingForever, setConfirmingForever] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const showToast = useAdminToast();
 
   function openPanel() {
     setOpen(true);
@@ -55,6 +57,7 @@ export default function RecentlyDeletedPanel({ onRestored }: { onRestored: () =>
       setOrders((prev) => prev.filter((o) => !refs.includes(o.ref)));
       setSelected(new Set());
       onRestored();
+      showToast(`${refs.length} order${refs.length === 1 ? "" : "s"} restored`);
     });
   }
 
@@ -65,6 +68,7 @@ export default function RecentlyDeletedPanel({ onRestored }: { onRestored: () =>
       setOrders((prev) => prev.filter((o) => !refs.includes(o.ref)));
       setSelected(new Set());
       setConfirmingForever(false);
+      showToast(`${refs.length} order${refs.length === 1 ? "" : "s"} deleted forever`, "danger");
     });
   }
 

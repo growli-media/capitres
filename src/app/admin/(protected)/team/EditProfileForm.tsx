@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { PencilSimple } from "@phosphor-icons/react";
 import Modal from "../components/Modal";
 import { updateOwnProfileAction, updateUserProfileAction } from "./actions";
+import { useAdminToast } from "../components/AdminToastProvider";
 import { glassInput, glassButtonPrimary } from "../../glass";
 
 const inputClass = `h-10 w-full px-3 ${glassInput}`;
@@ -34,6 +35,7 @@ export default function EditProfileForm({
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const [pending, startTransition] = useTransition();
+  const showToast = useAdminToast();
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -47,6 +49,7 @@ export default function EditProfileForm({
       } else {
         setError(undefined);
         setOpen(false);
+        showToast("Profile updated");
       }
     });
   }

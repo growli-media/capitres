@@ -2,10 +2,12 @@
 
 import { useActionState } from "react";
 import { addEmailAction } from "./actions";
+import { useActionToast } from "../components/useActionToast";
 import { glassInput, glassButtonPrimary } from "../../glass";
 
 export default function AddEmailForm() {
   const [state, formAction, pending] = useActionState(addEmailAction, undefined);
+  useActionToast(pending, state?.error, "Email approved");
 
   return (
     <form action={formAction} className="mt-6 flex flex-wrap items-end gap-3">

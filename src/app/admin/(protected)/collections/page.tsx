@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Plus } from "@phosphor-icons/react/dist/ssr";
 import { listAdminCollections } from "@/lib/admin/collections";
 import CollectionRowActions from "./CollectionRowActions";
+import { CreatedToast } from "../components/CreatedToast";
 import { glassCard, glassButtonPrimary, glassTone } from "../../glass";
 import { requirePermission } from "@/lib/admin/permissions";
 
@@ -15,6 +16,7 @@ export default async function AdminCollectionsPage() {
 
   return (
     <div>
+      <CreatedToast param="deleted" message="Collection deleted" />
       <div className="mb-6 flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">

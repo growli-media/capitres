@@ -10,6 +10,7 @@ import CancelOrderButton from "./CancelOrderButton";
 import NoteButton from "./NoteButton";
 import RecentlyDeletedPanel from "./RecentlyDeletedPanel";
 import TimeRangeSlider from "../components/TimeRangeSlider";
+import { useAdminToast } from "../components/AdminToastProvider";
 import { DEFAULT_TIME_RANGE_VALUE, type TimeRangeValue } from "@/lib/admin/time-range";
 import { glassCard, glassTone } from "../../glass";
 
@@ -38,6 +39,7 @@ export default function OrdersView({ initial }: { initial: Order[] }) {
   const [range, setRange] = useState<TimeRangeValue>(DEFAULT_TIME_RANGE_VALUE);
   const [orders, setOrders] = useState<Order[]>(initial);
   const [isPending, startTransition] = useTransition();
+  const showToast = useAdminToast();
 
   function handleChange(value: TimeRangeValue) {
     setRange(value);
@@ -50,6 +52,14 @@ export default function OrdersView({ initial }: { initial: Order[] }) {
     setOrders((prev) => prev.filter((o) => o.ref !== ref));
     startTransition(async () => {
       await deleteOrderAction(ref);
+      showToast("Order deleted");
+    });
+  }
+
+  function handleMarkDelivered(ref: string) {
+    startTransition(async () => {
+      await markOrderDeliveredAction(ref);
+      showToast("Order marked as delivered");
     });
   }
 
@@ -103,14 +113,13 @@ export default function OrdersView({ initial }: { initial: Order[] }) {
                 <div className="mt-3 flex flex-wrap items-center gap-1.5">
                   <NoteButton orderRef={o.ref} initialNote={o.adminNote ?? null} />
                   {o.status === "CashOnDelivery" && (
-                    <form action={markOrderDeliveredAction.bind(null, o.ref)}>
-                      <button
-                        type="submit"
-                        className="rounded-full bg-slate-900/90 px-3 py-1.5 text-xs font-semibold text-white shadow-sm backdrop-blur-md transition-colors hover:bg-slate-800 dark:bg-white/90 dark:text-slate-900 dark:hover:bg-white"
-                      >
-                        Mark as delivered
-                      </button>
-                    </form>
+                    <button
+                      type="button"
+                      onClick={() => handleMarkDelivered(o.ref)}
+                      className="rounded-full bg-slate-900/90 px-3 py-1.5 text-xs font-semibold text-white shadow-sm backdrop-blur-md transition-colors hover:bg-slate-800 dark:bg-white/90 dark:text-slate-900 dark:hover:bg-white"
+                    >
+                      Mark as delivered
+                    </button>
                   )}
                   <CancelOrderButton orderRef={o.ref} status={o.status} />
                   <button

@@ -5,6 +5,7 @@ import { LockKey } from "@phosphor-icons/react";
 import Modal from "../components/Modal";
 import { updateUserPermissionsAction } from "./actions";
 import { PERMISSIONS, PERMISSION_LABELS, type Permission } from "@/lib/admin/permissions-shared";
+import { useAdminToast } from "../components/AdminToastProvider";
 import { glassButtonPrimary, glassButtonSecondary } from "../../glass";
 
 /** Owner-only control (the row this renders in is already gated on
@@ -22,6 +23,7 @@ export default function EditPermissionsButton({
   permissions: Permission[];
 }) {
   const [open, setOpen] = useState(false);
+  const showToast = useAdminToast();
 
   return (
     <>
@@ -38,6 +40,7 @@ export default function EditPermissionsButton({
           action={async (formData) => {
             await updateUserPermissionsAction(userId, formData);
             setOpen(false);
+            showToast(`Access updated for ${name}`);
           }}
           className="space-y-4"
         >

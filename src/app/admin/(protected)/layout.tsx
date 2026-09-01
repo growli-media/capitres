@@ -4,6 +4,7 @@ import { getAbandonedCount } from "@/lib/admin/queries";
 import { getPendingReviewsCount } from "@/lib/admin/reviews";
 import { getAccessLevel } from "@/lib/admin/permissions";
 import AdminShell from "./AdminShell";
+import { AdminToastProvider } from "./components/AdminToastProvider";
 
 export default async function ProtectedAdminLayout({
   children,
@@ -23,8 +24,10 @@ export default async function ProtectedAdminLayout({
   };
 
   return (
-    <AdminShell badgeCounts={badgeCounts} access={access}>
-      {children}
-    </AdminShell>
+    <AdminToastProvider>
+      <AdminShell badgeCounts={badgeCounts} access={access}>
+        {children}
+      </AdminShell>
+    </AdminToastProvider>
   );
 }

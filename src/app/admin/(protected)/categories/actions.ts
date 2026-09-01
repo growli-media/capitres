@@ -94,5 +94,5 @@ export async function deleteCategoryAction(slug: string): Promise<{ error?: stri
   const result = await deleteCategory(slug);
   if (result.error) return result;
   revalidateStorefront();
-  redirect("/admin/categories");
+  redirect("/admin/categories?deleted=1");
 }

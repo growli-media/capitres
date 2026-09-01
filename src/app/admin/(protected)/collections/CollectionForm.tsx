@@ -15,6 +15,7 @@ import {
 import type { AdminCollectionRow } from "@/lib/admin/collections";
 import { createCollectionAction, updateCollectionAction, type FormState } from "./actions";
 import { uploadProductImage } from "../../upload-image-action";
+import { useActionToast } from "../components/useActionToast";
 import { glassInput, glassTextarea, glassButtonPrimary, glassButtonSecondary, glassTone } from "../../glass";
 
 interface ImageRow {
@@ -64,6 +65,7 @@ export default function CollectionForm({
       ? updateCollectionAction.bind(null, collection.slug)
       : createCollectionAction;
   const [state, formAction, pending] = useActionState<FormState, FormData>(boundAction, {});
+  useActionToast(pending, state.error, "Collection saved");
 
   const [images, setImages] = useState<ImageRow[]>(() =>
     collection && collection.heroImages.length > 0

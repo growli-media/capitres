@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Check, Plus } from "@phosphor-icons/react/dist/ssr";
 import { listAdminCategories, isReservedCategory } from "@/lib/admin/categories";
 import CategoryRowActions from "./CategoryRowActions";
+import { CreatedToast } from "../components/CreatedToast";
 import { glassCard, glassButtonPrimary, glassTone } from "../../glass";
 import { requirePermission } from "@/lib/admin/permissions";
 
@@ -21,6 +22,8 @@ export default async function AdminCategoriesPage({
 
   return (
     <div>
+      <CreatedToast message="Category created" />
+      <CreatedToast param="deleted" message="Category deleted" />
       <div className="mb-6 flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">

@@ -9,6 +9,7 @@ import EditProfileForm from "./EditProfileForm";
 import EditPermissionsButton from "./EditPermissionsButton";
 import TransferOwnershipButton from "./TransferOwnershipButton";
 import TeamIdentityBadge, { GROWLI_ADMIN_EMAIL } from "./team-identity";
+import { ToastFormButton } from "../components/ToastFormButton";
 import { glassCard, glassTone } from "../../glass";
 
 export const metadata: Metadata = { title: "Team" };
@@ -162,20 +163,20 @@ function TeamTable({
                       permissions={user.permissions}
                     />
                     {user.email !== GROWLI_ADMIN_EMAIL && (
-                      <form action={setUserFullAccessAction.bind(null, user.id, !user.fullAccess)}>
-                        <button
-                          type="submit"
-                          disabled={!viewerIsOwner}
-                          title={!viewerIsOwner ? "Only the owner can change full access" : undefined}
-                          className={`rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap backdrop-blur-md transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
-                            user.fullAccess
-                              ? glassTone.info
-                              : "border border-slate-300/70 bg-white/50 text-slate-700 hover:bg-white/80 dark:border-slate-700/70 dark:bg-slate-900/40 dark:text-slate-300 dark:hover:bg-slate-800/70"
-                          }`}
-                        >
-                          {user.fullAccess ? "Full access: On" : "Grant full access"}
-                        </button>
-                      </form>
+                      <ToastFormButton
+                        action={() => setUserFullAccessAction(user.id, !user.fullAccess)}
+                        toastMessage={`Full access ${user.fullAccess ? "revoked from" : "granted to"} ${fullName || user.email}`}
+                        toastTone={user.fullAccess ? "danger" : "success"}
+                        disabled={!viewerIsOwner}
+                        title={!viewerIsOwner ? "Only the owner can change full access" : undefined}
+                        className={`rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap backdrop-blur-md transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                          user.fullAccess
+                            ? glassTone.info
+                            : "border border-slate-300/70 bg-white/50 text-slate-700 hover:bg-white/80 dark:border-slate-700/70 dark:bg-slate-900/40 dark:text-slate-300 dark:hover:bg-slate-800/70"
+                        }`}
+                      >
+                        {user.fullAccess ? "Full access: On" : "Grant full access"}
+                      </ToastFormButton>
                     )}
                   </>
                 )}
@@ -192,25 +193,25 @@ function TeamTable({
                   />
                 )}
                 {user && (
-                  <form action={setUserDisabledAction.bind(null, user.id, !user.disabled)}>
-                    <button
-                      type="submit"
-                      disabled={isSelf || user.isOwner}
-                      className="rounded-full border border-slate-300/70 bg-white/50 px-3 py-1.5 text-xs font-semibold text-slate-700 backdrop-blur-md transition-colors hover:bg-white/80 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700/70 dark:bg-slate-900/40 dark:text-slate-300 dark:hover:bg-slate-800/70"
-                      title={isSelf ? "You can't disable your own account" : undefined}
-                    >
-                      {user.disabled ? "Enable" : "Disable"}
-                    </button>
-                  </form>
-                )}
-                <form action={removeEmailAction.bind(null, entry.email)}>
-                  <button
-                    type="submit"
-                    className="rounded-full border border-slate-300/70 bg-white/50 px-3 py-1.5 text-xs font-semibold text-slate-500 backdrop-blur-md transition-colors hover:bg-white/80 dark:border-slate-700/70 dark:bg-slate-900/40 dark:text-slate-400 dark:hover:bg-slate-800/70"
+                  <ToastFormButton
+                    action={() => setUserDisabledAction(user.id, !user.disabled)}
+                    toastMessage={`${fullName || user.email} ${user.disabled ? "enabled" : "disabled"}`}
+                    toastTone={user.disabled ? "success" : "danger"}
+                    disabled={isSelf || user.isOwner}
+                    className="rounded-full border border-slate-300/70 bg-white/50 px-3 py-1.5 text-xs font-semibold text-slate-700 backdrop-blur-md transition-colors hover:bg-white/80 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700/70 dark:bg-slate-900/40 dark:text-slate-300 dark:hover:bg-slate-800/70"
+                    title={isSelf ? "You can't disable your own account" : undefined}
                   >
-                    Remove
-                  </button>
-                </form>
+                    {user.disabled ? "Enable" : "Disable"}
+                  </ToastFormButton>
+                )}
+                <ToastFormButton
+                  action={() => removeEmailAction(entry.email)}
+                  toastMessage={`${entry.email} removed`}
+                  toastTone="danger"
+                  className="rounded-full border border-slate-300/70 bg-white/50 px-3 py-1.5 text-xs font-semibold text-slate-500 backdrop-blur-md transition-colors hover:bg-white/80 dark:border-slate-700/70 dark:bg-slate-900/40 dark:text-slate-400 dark:hover:bg-slate-800/70"
+                >
+                  Remove
+                </ToastFormButton>
               </div>
             </div>
           );
@@ -293,20 +294,20 @@ function TeamTable({
                         permissions={user.permissions}
                       />
                       {user.email !== GROWLI_ADMIN_EMAIL && (
-                        <form action={setUserFullAccessAction.bind(null, user.id, !user.fullAccess)}>
-                          <button
-                            type="submit"
-                            disabled={!viewerIsOwner}
-                            title={!viewerIsOwner ? "Only the owner can change full access" : undefined}
-                            className={`rounded-full px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap backdrop-blur-md transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
-                              user.fullAccess
-                                ? glassTone.info
-                                : "border border-slate-300/70 bg-white/50 text-slate-700 hover:bg-white/80 dark:border-slate-700/70 dark:bg-slate-900/40 dark:text-slate-300 dark:hover:bg-slate-800/70"
-                            }`}
-                          >
-                            {user.fullAccess ? "Full access: On" : "Grant full access"}
-                          </button>
-                        </form>
+                        <ToastFormButton
+                          action={() => setUserFullAccessAction(user.id, !user.fullAccess)}
+                          toastMessage={`Full access ${user.fullAccess ? "revoked from" : "granted to"} ${fullName || user.email}`}
+                          toastTone={user.fullAccess ? "danger" : "success"}
+                          disabled={!viewerIsOwner}
+                          title={!viewerIsOwner ? "Only the owner can change full access" : undefined}
+                          className={`rounded-full px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap backdrop-blur-md transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                            user.fullAccess
+                              ? glassTone.info
+                              : "border border-slate-300/70 bg-white/50 text-slate-700 hover:bg-white/80 dark:border-slate-700/70 dark:bg-slate-900/40 dark:text-slate-300 dark:hover:bg-slate-800/70"
+                          }`}
+                        >
+                          {user.fullAccess ? "Full access: On" : "Grant full access"}
+                        </ToastFormButton>
                       )}
                     </div>
                   )}
@@ -326,25 +327,25 @@ function TeamTable({
                       />
                     )}
                     {user && (
-                      <form action={setUserDisabledAction.bind(null, user.id, !user.disabled)}>
-                        <button
-                          type="submit"
-                          disabled={isSelf || user.isOwner}
-                          className="rounded-full border border-slate-300/70 bg-white/50 px-2 py-1 text-[11px] font-semibold text-slate-700 backdrop-blur-md transition-colors hover:bg-white/80 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700/70 dark:bg-slate-900/40 dark:text-slate-300 dark:hover:bg-slate-800/70"
-                          title={isSelf ? "You can't disable your own account" : undefined}
-                        >
-                          {user.disabled ? "Enable" : "Disable"}
-                        </button>
-                      </form>
-                    )}
-                    <form action={removeEmailAction.bind(null, entry.email)}>
-                      <button
-                        type="submit"
-                        className="rounded-full border border-slate-300/70 bg-white/50 px-2 py-1 text-[11px] font-semibold text-slate-500 backdrop-blur-md transition-colors hover:bg-white/80 dark:border-slate-700/70 dark:bg-slate-900/40 dark:text-slate-400 dark:hover:bg-slate-800/70"
+                      <ToastFormButton
+                        action={() => setUserDisabledAction(user.id, !user.disabled)}
+                        toastMessage={`${fullName || user.email} ${user.disabled ? "enabled" : "disabled"}`}
+                        toastTone={user.disabled ? "success" : "danger"}
+                        disabled={isSelf || user.isOwner}
+                        className="rounded-full border border-slate-300/70 bg-white/50 px-2 py-1 text-[11px] font-semibold text-slate-700 backdrop-blur-md transition-colors hover:bg-white/80 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700/70 dark:bg-slate-900/40 dark:text-slate-300 dark:hover:bg-slate-800/70"
+                        title={isSelf ? "You can't disable your own account" : undefined}
                       >
-                        Remove
-                      </button>
-                    </form>
+                        {user.disabled ? "Enable" : "Disable"}
+                      </ToastFormButton>
+                    )}
+                    <ToastFormButton
+                      action={() => removeEmailAction(entry.email)}
+                      toastMessage={`${entry.email} removed`}
+                      toastTone="danger"
+                      className="rounded-full border border-slate-300/70 bg-white/50 px-2 py-1 text-[11px] font-semibold text-slate-500 backdrop-blur-md transition-colors hover:bg-white/80 dark:border-slate-700/70 dark:bg-slate-900/40 dark:text-slate-400 dark:hover:bg-slate-800/70"
+                    >
+                      Remove
+                    </ToastFormButton>
                   </div>
                 </td>
               </tr>

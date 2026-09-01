@@ -8,6 +8,7 @@ import {
   markSoldOutAction,
   toggleArchivedAction,
 } from "./actions";
+import { useAdminToast } from "../components/AdminToastProvider";
 import { glassIconButton } from "../../glass";
 
 export default function ProductRowActions({
@@ -20,6 +21,7 @@ export default function ProductRowActions({
   const [open, setOpen] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [pending, startTransition] = useTransition();
+  const showToast = useAdminToast();
 
   return (
     <div className="relative flex items-center justify-end gap-1">
@@ -32,7 +34,12 @@ export default function ProductRowActions({
       </Link>
       <button
         type="button"
-        onClick={() => startTransition(() => markSoldOutAction(id))}
+        onClick={() =>
+          startTransition(async () => {
+            await markSoldOutAction(id);
+            showToast("Marked as sold out");
+          })
+        }
         disabled={pending}
         className="hidden h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-slate-500 transition-colors hover:bg-white/60 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-100 disabled:opacity-50 sm:flex"
         title="Set every size's stock to 0"
@@ -58,7 +65,10 @@ export default function ProductRowActions({
             <button
               type="button"
               onClick={() => {
-                startTransition(() => markSoldOutAction(id));
+                startTransition(async () => {
+                  await markSoldOutAction(id);
+                  showToast("Marked as sold out");
+                });
                 setOpen(false);
               }}
               className="flex w-full cursor-pointer items-center px-3 py-2 text-start text-sm text-slate-700 hover:bg-slate-50 sm:hidden dark:text-slate-300 dark:hover:bg-slate-700"
@@ -68,7 +78,11 @@ export default function ProductRowActions({
             <button
               type="button"
               onClick={() => {
-                startTransition(() => toggleArchivedAction(id, !archived));
+                const next = !archived;
+                startTransition(async () => {
+                  await toggleArchivedAction(id, next);
+                  showToast(next ? "Product archived" : "Product unarchived");
+                });
                 setOpen(false);
               }}
               className="flex w-full cursor-pointer items-center px-3 py-2 text-start text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-700"

@@ -5,6 +5,7 @@ import { Plus } from "@phosphor-icons/react/dist/ssr";
 import { listAdminProducts } from "@/lib/admin/products";
 import { formatIQD } from "@/lib/money";
 import ProductRowActions from "./ProductRowActions";
+import { CreatedToast } from "../components/CreatedToast";
 import { glassCard, glassButtonPrimary, glassTone } from "../../glass";
 import { requirePermission } from "@/lib/admin/permissions";
 
@@ -51,6 +52,7 @@ export default async function AdminProductsPage() {
 
   return (
     <div>
+      <CreatedToast param="deleted" message="Product deleted" />
       <div className="mb-6 flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">

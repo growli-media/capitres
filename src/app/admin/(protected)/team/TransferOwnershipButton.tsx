@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { CrownSimple } from "@phosphor-icons/react";
 import Modal from "../components/Modal";
 import { transferOwnershipAction } from "./actions";
+import { useActionToast } from "../components/useActionToast";
 import { glassButtonSecondary, glassButtonPrimary, glassInput } from "../../glass";
 
 /** Strict-owner-only (the caller renders this component only when
@@ -17,6 +18,7 @@ export default function TransferOwnershipButton({
 }) {
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(transferOwnershipAction, undefined);
+  useActionToast(pending, state?.error, "Ownership transferred");
   const [selectedId, setSelectedId] = useState(eligibleUsers[0]?.id ?? "");
   const selected = eligibleUsers.find((u) => u.id === selectedId);
 

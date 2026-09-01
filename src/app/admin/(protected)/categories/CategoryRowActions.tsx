@@ -7,6 +7,7 @@ import {
   deleteCategoryAction,
   toggleCategoryArchivedAction,
 } from "./actions";
+import { useAdminToast } from "../components/AdminToastProvider";
 import { glassIconButton } from "../../glass";
 
 export default function CategoryRowActions({
@@ -22,6 +23,7 @@ export default function CategoryRowActions({
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const showToast = useAdminToast();
 
   function onDelete() {
     startTransition(async () => {
@@ -61,7 +63,11 @@ export default function CategoryRowActions({
               type="button"
               disabled={pending}
               onClick={() => {
-                startTransition(() => toggleCategoryArchivedAction(slug, !archived));
+                const next = !archived;
+                startTransition(async () => {
+                  await toggleCategoryArchivedAction(slug, next);
+                  showToast(next ? "Category archived" : "Category unarchived");
+                });
                 setOpen(false);
               }}
               className="flex w-full cursor-pointer items-center px-3 py-2 text-start text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:text-slate-300 dark:hover:bg-slate-700"

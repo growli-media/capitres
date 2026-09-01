@@ -5,6 +5,7 @@ import { CaretLeft, Check } from "@phosphor-icons/react/dist/ssr";
 import { catalog } from "@/lib/catalog";
 import { getAdminProduct, listAdminProducts } from "@/lib/admin/products";
 import ProductForm from "../../ProductForm";
+import { CreatedToast } from "../../../components/CreatedToast";
 import { glassTone } from "../../../../glass";
 import { requirePermission } from "@/lib/admin/permissions";
 
@@ -31,6 +32,7 @@ export default async function EditProductPage({
 
   return (
     <div className="max-w-3xl">
+      <CreatedToast message="Product created" />
       <Link
         href="/admin/products"
         className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"

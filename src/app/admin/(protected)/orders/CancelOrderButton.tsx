@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { cancelOrderAction } from "./actions";
+import { useAdminToast } from "../components/AdminToastProvider";
 
 /** Orders that have already been paid or are already terminal never show
  * this button — see the comment on cancelOrderAction for why. */
@@ -16,6 +17,7 @@ export default function CancelOrderButton({
 }) {
   const [confirming, setConfirming] = useState(false);
   const [pending, startTransition] = useTransition();
+  const showToast = useAdminToast();
 
   if (!CANCELABLE_STATUSES.includes(status)) return null;
 
@@ -23,7 +25,12 @@ export default function CancelOrderButton({
     return (
       <button
         type="button"
-        onClick={() => startTransition(() => cancelOrderAction(orderRef))}
+        onClick={() =>
+          startTransition(async () => {
+            await cancelOrderAction(orderRef);
+            showToast("Order cancelled");
+          })
+        }
         disabled={pending}
         className="rounded-full bg-red-600 px-3 py-1.5 text-xs font-semibold text-white transition-opacity hover:opacity-80 disabled:opacity-50 dark:bg-red-500"
       >
