@@ -14,12 +14,10 @@ const chipBase = "inline-flex h-7 w-7 shrink-0 items-center justify-center round
  * server-rendered TeamTable). Two special cases:
  *
  * - Growli's own email is the full-access override toggle — its actual
- *   brand mark (the Brand Guidelines doc's "Navy on light" / "White on
- *   dark" pair, already in the codebase as growli-icon.png/
- *   growli-icon-white.png for the sidebar footer — same asset, reused
- *   here rather than duplicated), swapped by theme the same way
- *   AdminNav's own wordmark is. No colored chip backing needed — each
- *   variant is already built for its own background. That chip IS this
+ *   brand mark (white variant — growli-icon-white.png, already in the
+ *   codebase for the sidebar footer, reused here rather than duplicated)
+ *   on a red chip when off, green when on, so the state reads at a
+ *   glance without needing to hover for the tooltip. That chip IS this
  *   account's full-access toggle when `canToggle` (a strict-owner
  *   viewer): clicking it flips full_access. For anyone else it renders
  *   the same visual as a static, non-interactive badge.
@@ -42,13 +40,11 @@ export default function TeamIdentityBadge({
   if (email === GROWLI_ADMIN_EMAIL) {
     const visual = (
       <span
-        className={`${chipBase} ${fullAccess ? "opacity-100 ring-2 ring-[#8FC7EF] ring-offset-1 ring-offset-white dark:ring-offset-slate-900" : "opacity-50 grayscale"}`}
+        className={`${chipBase} ${fullAccess ? "bg-emerald-600" : "bg-red-600"}`}
         title={fullAccess ? "Growli Media — full access on" : "Growli Media — full access off"}
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- tiny fixed-size mark, next/image is overkill */}
-        <img src="/brand/growli-icon.png" alt="" className="h-6 w-6 dark:hidden" />
-        {/* eslint-disable-next-line @next/next/no-img-element -- tiny fixed-size mark, next/image is overkill */}
-        <img src="/brand/growli-icon-white.png" alt="" className="hidden h-6 w-6 dark:block" />
+        <img src="/brand/growli-icon-white.png" alt="" className="h-6 w-6" />
       </span>
     );
     if (!canToggle) return visual;
