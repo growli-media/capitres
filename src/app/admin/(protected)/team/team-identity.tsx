@@ -48,7 +48,7 @@ export default function TeamIdentityBadge({
         title={fullAccess ? "Growli Media — full access on" : "Growli Media — full access off"}
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- tiny fixed-size mark, next/image is overkill */}
-        <img src="/brand/growli-icon-white.png" alt="" className="h-6 w-6" />
+        <img src="/brand/growli-icon-white.png" alt="" className="h-4.5 w-4.5" />
       </span>
     );
     if (!canToggle) return visual;
