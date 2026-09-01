@@ -13,18 +13,20 @@ const chipBase = "inline-flex h-7 w-7 shrink-0 items-center justify-center round
  * Server-renderable (no "use client" — this lives inside the already
  * server-rendered TeamTable). Two special cases:
  *
- * - Growli's own email is the full-access override toggle — currently a
- *   plain "G" monogram placeholder (navy chip) pending a real Growli
- *   logo asset (the first file provided turned out to be Capitres' own
- *   mark, not Growli's — see capitres-c-mark.svg below). Swap the inner
- *   span for an <img>, same pattern as Capitres', once the real one
- *   arrives. That chip IS this account's full-access toggle when
- *   `canToggle` (a strict-owner viewer): clicking it flips full_access.
- *   For anyone else it renders the same visual as a static,
- *   non-interactive badge.
+ * - Growli's own email is the full-access override toggle — its actual
+ *   brand mark (the Brand Guidelines doc's "Navy on light" / "White on
+ *   dark" pair, already in the codebase as growli-icon.png/
+ *   growli-icon-white.png for the sidebar footer — same asset, reused
+ *   here rather than duplicated), swapped by theme the same way
+ *   AdminNav's own wordmark is. No colored chip backing needed — each
+ *   variant is already built for its own background. That chip IS this
+ *   account's full-access toggle when `canToggle` (a strict-owner
+ *   viewer): clicking it flips full_access. For anyone else it renders
+ *   the same visual as a static, non-interactive badge.
  * - Capitres' own email gets their actual mark
  *   (public/brand/capitres-c-mark.svg) on a solid black chip, matching
- *   their storefront's stark black/white brand.
+ *   their storefront's stark black/white brand — only one color variant
+ *   provided so far, hence the fixed dark backing.
  */
 export default function TeamIdentityBadge({
   email,
@@ -40,10 +42,13 @@ export default function TeamIdentityBadge({
   if (email === GROWLI_ADMIN_EMAIL) {
     const visual = (
       <span
-        className={`${chipBase} bg-[#1B3445] text-xs font-bold text-white ${fullAccess ? "opacity-100 ring-2 ring-[#8FC7EF] ring-offset-1 ring-offset-white dark:ring-offset-slate-900" : "opacity-50 grayscale"}`}
+        className={`${chipBase} ${fullAccess ? "opacity-100 ring-2 ring-[#8FC7EF] ring-offset-1 ring-offset-white dark:ring-offset-slate-900" : "opacity-50 grayscale"}`}
         title={fullAccess ? "Growli Media — full access on" : "Growli Media — full access off"}
       >
-        G
+        {/* eslint-disable-next-line @next/next/no-img-element -- tiny fixed-size mark, next/image is overkill */}
+        <img src="/brand/growli-icon.png" alt="" className="h-6 w-6 dark:hidden" />
+        {/* eslint-disable-next-line @next/next/no-img-element -- tiny fixed-size mark, next/image is overkill */}
+        <img src="/brand/growli-icon-white.png" alt="" className="hidden h-6 w-6 dark:block" />
       </span>
     );
     if (!canToggle) return visual;
