@@ -7,7 +7,7 @@ import { setUserFullAccessAction } from "./actions";
 export const GROWLI_ADMIN_EMAIL = "hasan@growli.media";
 export const CAPITRES_OFFICIAL_EMAIL = "capitresoficial@gmail.com";
 
-const chipBase = "inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full transition-all";
+const chipBase = "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-all";
 
 /**
  * Server-renderable (no "use client" — this lives inside the already
@@ -41,7 +41,7 @@ export default function TeamIdentityBadge({
         title={fullAccess ? "Growli Media — full access on" : "Growli Media — full access off"}
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- tiny fixed-size mark, next/image is overkill */}
-        <img src="/brand/growli-g-mark.svg" alt="" className="h-3.5 w-3.5" />
+        <img src="/brand/growli-g-mark.svg" alt="" className="h-5 w-5" />
       </span>
     );
     if (!canToggle) return visual;
@@ -62,7 +62,7 @@ export default function TeamIdentityBadge({
   if (email === CAPITRES_OFFICIAL_EMAIL) {
     return (
       <span
-        className={`${chipBase} border border-slate-300 bg-slate-100 text-[10px] font-bold text-slate-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300`}
+        className={`${chipBase} border border-slate-300 bg-slate-100 text-xs font-bold text-slate-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300`}
         title="Capitres"
       >
         C
