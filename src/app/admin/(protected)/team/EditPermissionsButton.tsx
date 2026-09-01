@@ -28,9 +28,9 @@ export default function EditPermissionsButton({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold whitespace-nowrap ${glassButtonSecondary}`}
+        className={`flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold whitespace-nowrap text-slate-700 dark:text-slate-300 ${glassButtonSecondary}`}
       >
-        <LockKey size={12} aria-hidden="true" />
+        <LockKey size={12} aria-hidden="true" className="text-slate-700 dark:text-slate-300" />
         Edit access
       </button>
       <Modal open={open} onClose={() => setOpen(false)} title={`${name}'s access`}>
@@ -45,20 +45,20 @@ export default function EditPermissionsButton({
             Choose which sections {name} can see and change. Nothing checked means no access
             beyond the dashboard.
           </p>
-          <div className="flex flex-wrap gap-2">
+          <div className="divide-y divide-slate-200 overflow-hidden rounded-lg border border-slate-300 dark:divide-slate-800 dark:border-slate-700">
             {PERMISSIONS.map((p) => (
               <label
                 key={p}
-                className="flex min-h-10 cursor-pointer items-center gap-2 rounded-lg border border-slate-300 px-3 text-sm has-[:checked]:border-slate-900 has-[:checked]:bg-slate-900 has-[:checked]:text-white dark:border-slate-700 dark:has-[:checked]:border-slate-100 dark:has-[:checked]:bg-slate-100 dark:has-[:checked]:text-slate-900"
+                className="flex min-h-11 cursor-pointer items-center justify-between gap-3 px-3 text-sm text-slate-700 transition-colors has-[:checked]:bg-slate-50 dark:text-slate-300 dark:has-[:checked]:bg-slate-800/60"
               >
+                {PERMISSION_LABELS[p]}
                 <input
                   type="checkbox"
                   name="permissions"
                   value={p}
                   defaultChecked={permissions.includes(p)}
-                  className="sr-only"
+                  className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:ring-slate-100"
                 />
-                {PERMISSION_LABELS[p]}
               </label>
             ))}
           </div>

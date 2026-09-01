@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Trash } from "@phosphor-icons/react";
 import { customerName, customerAddress, type Order } from "@/lib/orders/order-helpers";
 import { PAID_STATUSES, FAILED_STATUSES } from "@/lib/admin/queries-shared";
 import { formatIQD } from "@/lib/money";
-import { markOrderDeliveredAction, getOrdersForRangeAction } from "./actions";
+import { markOrderDeliveredAction, getOrdersForRangeAction, deleteOrderAction } from "./actions";
 import CancelOrderButton from "./CancelOrderButton";
 import NoteButton from "./NoteButton";
+import RecentlyDeletedPanel from "./RecentlyDeletedPanel";
 import TimeRangeSlider from "../components/TimeRangeSlider";
 import { DEFAULT_TIME_RANGE_VALUE, type TimeRangeValue } from "@/lib/admin/time-range";
 import { glassCard, glassTone } from "../../glass";
@@ -41,6 +43,19 @@ export default function OrdersView({ initial }: { initial: Order[] }) {
     setRange(value);
     startTransition(async () => {
       setOrders(await getOrdersForRangeAction(value));
+    });
+  }
+
+  function handleDelete(ref: string) {
+    setOrders((prev) => prev.filter((o) => o.ref !== ref));
+    startTransition(async () => {
+      await deleteOrderAction(ref);
+    });
+  }
+
+  function handleRestored() {
+    startTransition(async () => {
+      setOrders(await getOrdersForRangeAction(range));
     });
   }
 
@@ -98,6 +113,15 @@ export default function OrdersView({ initial }: { initial: Order[] }) {
                     </form>
                   )}
                   <CancelOrderButton orderRef={o.ref} status={o.status} />
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(o.ref)}
+                    aria-label="Delete order"
+                    title="Delete order"
+                    className="flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-slate-500 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+                  >
+                    <Trash size={15} />
+                  </button>
                 </div>
               </div>
             ))}
@@ -161,6 +185,15 @@ export default function OrdersView({ initial }: { initial: Order[] }) {
                             </form>
                           )}
                           <CancelOrderButton orderRef={o.ref} status={o.status} />
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(o.ref)}
+                            aria-label="Delete order"
+                            title="Delete order"
+                            className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-slate-500 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+                          >
+                            <Trash size={14} />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -171,6 +204,8 @@ export default function OrdersView({ initial }: { initial: Order[] }) {
           </div>
         </div>
       )}
+
+      <RecentlyDeletedPanel onRestored={handleRestored} />
     </div>
   );
 }

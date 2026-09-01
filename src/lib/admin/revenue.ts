@@ -29,7 +29,7 @@ export async function getRevenueSeries(start: Date | null, end: Date): Promise<R
                coalesce(sum((totals->>'total')::int), 0)::text as revenue,
                count(*)::text as orders
         from orders
-        where status = any(${PAID_STATUSES})
+        where status = any(${PAID_STATUSES}) and deleted_at is null
           and created_at >= ${start} and created_at <= ${end}
         group by bucket
         order by bucket asc
@@ -39,7 +39,7 @@ export async function getRevenueSeries(start: Date | null, end: Date): Promise<R
                coalesce(sum((totals->>'total')::int), 0)::text as revenue,
                count(*)::text as orders
         from orders
-        where status = any(${PAID_STATUSES}) and created_at <= ${end}
+        where status = any(${PAID_STATUSES}) and deleted_at is null and created_at <= ${end}
         group by bucket
         order by bucket asc
       `;

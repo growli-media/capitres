@@ -33,6 +33,10 @@ export interface AdminUser {
   /** Ignored when isOwner is true. Default-deny: a non-owner sees nothing
    * until the owner grants specific sections. */
   permissions: Permission[];
+  /** Owner-grantable override — same effect as isOwner for `can()`, but
+   * distinct: doesn't unlock toggling anyone's fullAccess or transferring
+   * ownership. See hasFullControl() in permissions.ts. */
+  fullAccess: boolean;
 }
 
 interface AdminUserRow {
@@ -53,6 +57,7 @@ interface AdminUserRow {
   company: string | null;
   is_owner: boolean;
   permissions: string[];
+  full_access: boolean;
 }
 
 function toUser(row: AdminUserRow): AdminUser {
@@ -74,6 +79,7 @@ function toUser(row: AdminUserRow): AdminUser {
     company: row.company,
     isOwner: row.is_owner,
     permissions: row.permissions as Permission[],
+    fullAccess: row.full_access,
   };
 }
 
@@ -106,7 +112,7 @@ export async function getUserByEmail(email: string): Promise<AdminUser | undefin
   const rows = await sql<AdminUserRow[]>`
     select id, email, password_hash, totp_secret, totp_enabled, disabled,
            failed_attempts, locked_until::text, token_version, created_at::text,
-           first_name, last_name, phone, role, company, is_owner, permissions
+           first_name, last_name, phone, role, company, is_owner, permissions, full_access
     from admin_users where email = ${normalizeEmail(email)} limit 1
   `;
   return rows[0] ? toUser(rows[0]) : undefined;
@@ -116,7 +122,7 @@ export async function getUserById(id: string): Promise<AdminUser | undefined> {
   const rows = await sql<AdminUserRow[]>`
     select id, email, password_hash, totp_secret, totp_enabled, disabled,
            failed_attempts, locked_until::text, token_version, created_at::text,
-           first_name, last_name, phone, role, company, is_owner, permissions
+           first_name, last_name, phone, role, company, is_owner, permissions, full_access
     from admin_users where id = ${id} limit 1
   `;
   return rows[0] ? toUser(rows[0]) : undefined;
@@ -129,7 +135,7 @@ export async function createUser(email: string, passwordHash: string): Promise<A
     values (${id}, ${normalizeEmail(email)}, ${passwordHash})
     returning id, email, password_hash, totp_secret, totp_enabled, disabled,
               failed_attempts, locked_until::text, token_version, created_at::text,
-              first_name, last_name, phone, role, company, is_owner, permissions
+              first_name, last_name, phone, role, company, is_owner, permissions, full_access
   `;
   return toUser(rows[0]);
 }
@@ -199,6 +205,29 @@ export async function setUserPermissions(id: string, permissions: Permission[]):
   await sql`update admin_users set permissions = ${jsonb(permissions)} where id = ${id}`;
 }
 
+/** Strict-owner-only, enforced by the caller (setUserFullAccessAction) —
+ * this function itself trusts its input, same convention as
+ * setUserPermissions above. */
+export async function setUserFullAccess(id: string, value: boolean): Promise<void> {
+  await sql`update admin_users set full_access = ${value} where id = ${id}`;
+}
+
+/** Moves the owner role from one account to another in a single
+ * transaction. `fromId` must always be resolved server-side from the
+ * caller's own session (never accepted as client input) — enforced by
+ * the caller (transferOwnershipAction) — so a transfer can never touch
+ * some other account's is_owner row, even if more than one currently
+ * exists. Doesn't touch permissions or full_access on either side: the
+ * demoted former owner keeps whatever full_access they had (or didn't)
+ * going in, and the new owner's own permissions/full_access become moot
+ * the instant is_owner flips true. */
+export async function transferOwnership(fromId: string, toId: string): Promise<void> {
+  await sql.begin(async (tx) => {
+    await tx`update admin_users set is_owner = false where id = ${fromId}`;
+    await tx`update admin_users set is_owner = true where id = ${toId}`;
+  });
+}
+
 export async function countEnabledAdmins(excludingId?: string): Promise<number> {
   const rows = await sql<{ count: string }[]>`
     select count(*)::text as count
@@ -210,7 +239,11 @@ export async function countEnabledAdmins(excludingId?: string): Promise<number> 
 }
 
 /**
- * Self-service profile update. Callers MUST already have verified, before
+ * Despite the name, this is generic over `id` — it has zero session
+ * coupling itself. Two call sites: self-service (updateOwnProfileAction,
+ * id always the caller's own session.id) and an owner/full-control user
+ * editing a non-owner teammate's profile (updateUserProfileAction, id is
+ * the target's). Both callers MUST already have verified, before
  * calling this, that `patch.email` (once normalized) is either unchanged
  * or is an allowlist-approved address not claimed by a different account
  * — see updateOwnProfileAction in team/actions.ts. When the email does
@@ -270,7 +303,7 @@ export async function listUsers(): Promise<AdminUser[]> {
   const rows = await sql<AdminUserRow[]>`
     select id, email, password_hash, totp_secret, totp_enabled, disabled,
            failed_attempts, locked_until::text, token_version, created_at::text,
-           first_name, last_name, phone, role, company, is_owner, permissions
+           first_name, last_name, phone, role, company, is_owner, permissions, full_access
     from admin_users order by created_at asc
   `;
   return rows.map(toUser);

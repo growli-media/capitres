@@ -37,12 +37,14 @@ export interface OrderStore {
    * for orders we created with an empty `customer` (the card-payment
    * path no longer collects anything before redirecting). */
   mergeCustomer(ref: string, patch: Partial<Order["customer"]>): Promise<void>;
-  /** Admin dashboard: full order list, newest first. */
+  /** Admin dashboard: full order list, newest first. Excludes
+   * soft-deleted orders — see softDelete()/listDeleted(). */
   list(): Promise<Order[]>;
   /** Range-scoped list for the time-range slider (Orders, Dashboard,
    * Revenue) — a separate method rather than adding params to list()
    * so list()'s existing unfiltered/500-cap contract stays untouched for
-   * its other callers. `start: null` means no lower bound ("All time"). */
+   * its other callers. `start: null` means no lower bound ("All time").
+   * Excludes soft-deleted orders. */
   listInRange(start: Date | null, end: Date): Promise<Order[]>;
   /** Atomically claims this order for the one-time Meta CAPI purchase
    * event — returns the order if this call is the one that should send
@@ -50,6 +52,19 @@ export interface OrderStore {
   claimForMetaCapi(ref: string): Promise<Order | undefined>;
   /** Overwrites the staff-only admin note (single field, not a log). */
   updateNote(ref: string, note: string): Promise<void>;
+  /** Hides an order from every admin list/aggregate — the Orders page's
+   * trash icon. Doesn't affect get()/setStatus(), so the storefront and
+   * Wayl webhook keep working on it regardless. */
+  softDelete(ref: string): Promise<void>;
+  /** Un-hides a soft-deleted order — the "Recently deleted" panel's
+   * Restore action. */
+  restore(ref: string): Promise<void>;
+  /** Permanent — an actual row delete, not another soft-delete flag.
+   * "Delete forever" from the Recently deleted panel. */
+  hardDelete(ref: string): Promise<void>;
+  /** Orders soft-deleted at or after `since` — the Recently deleted
+   * panel's 60-day window, newest-deleted first. */
+  listDeleted(since: Date): Promise<Order[]>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -71,6 +86,7 @@ interface OrderRow {
   ad_tracking: AdTracking | null;
   meta_capi_sent: boolean;
   admin_note: string | null;
+  deleted_at: string | null;
 }
 
 function toOrder(row: OrderRow): Order {
@@ -89,6 +105,7 @@ function toOrder(row: OrderRow): Order {
     adTracking: row.ad_tracking ?? undefined,
     metaCapiSent: row.meta_capi_sent,
     adminNote: row.admin_note ?? undefined,
+    deletedAt: row.deleted_at ?? undefined,
   };
 }
 
@@ -111,7 +128,8 @@ const postgresOrderStore: OrderStore = {
     const rows = await sql<OrderRow[]>`
       select ref, created_at::text as created_at, locale, status,
              wayl_link_id, payment_method, mock, customer, lines, totals,
-             promo_code, ad_tracking, meta_capi_sent, admin_note
+             promo_code, ad_tracking, meta_capi_sent, admin_note,
+             deleted_at::text as deleted_at
       from orders where ref = ${ref} limit 1
     `;
     return rows[0] ? toOrder(rows[0]) : undefined;
@@ -125,7 +143,8 @@ const postgresOrderStore: OrderStore = {
       where ref = ${ref}
       returning ref, created_at::text as created_at, locale, status,
                 wayl_link_id, payment_method, mock, customer, lines, totals,
-                promo_code, ad_tracking, meta_capi_sent, admin_note
+                promo_code, ad_tracking, meta_capi_sent, admin_note,
+                deleted_at::text as deleted_at
     `;
     return rows[0] ? toOrder(rows[0]) : undefined;
   },
@@ -140,8 +159,9 @@ const postgresOrderStore: OrderStore = {
     const rows = await sql<OrderRow[]>`
       select ref, created_at::text as created_at, locale, status,
              wayl_link_id, payment_method, mock, customer, lines, totals,
-             promo_code, ad_tracking, meta_capi_sent, admin_note
-      from orders order by created_at desc limit 500
+             promo_code, ad_tracking, meta_capi_sent, admin_note,
+             deleted_at::text as deleted_at
+      from orders where deleted_at is null order by created_at desc limit 500
     `;
     return rows.map(toOrder);
   },
@@ -152,7 +172,8 @@ const postgresOrderStore: OrderStore = {
       where ref = ${ref} and meta_capi_sent = false
       returning ref, created_at::text as created_at, locale, status,
                 wayl_link_id, payment_method, mock, customer, lines, totals,
-                promo_code, ad_tracking, meta_capi_sent, admin_note
+                promo_code, ad_tracking, meta_capi_sent, admin_note,
+                deleted_at::text as deleted_at
     `;
     return rows[0] ? toOrder(rows[0]) : undefined;
   },
@@ -166,19 +187,42 @@ const postgresOrderStore: OrderStore = {
       ? await sql<OrderRow[]>`
           select ref, created_at::text as created_at, locale, status,
                  wayl_link_id, payment_method, mock, customer, lines, totals,
-                 promo_code, ad_tracking, meta_capi_sent, admin_note
+                 promo_code, ad_tracking, meta_capi_sent, admin_note,
+                 deleted_at::text as deleted_at
           from orders
-          where created_at >= ${start} and created_at <= ${end}
+          where deleted_at is null and created_at >= ${start} and created_at <= ${end}
           order by created_at desc
         `
       : await sql<OrderRow[]>`
           select ref, created_at::text as created_at, locale, status,
                  wayl_link_id, payment_method, mock, customer, lines, totals,
-                 promo_code, ad_tracking, meta_capi_sent, admin_note
+                 promo_code, ad_tracking, meta_capi_sent, admin_note,
+                 deleted_at::text as deleted_at
           from orders
-          where created_at <= ${end}
+          where deleted_at is null and created_at <= ${end}
           order by created_at desc
         `;
+    return rows.map(toOrder);
+  },
+  async softDelete(ref) {
+    await sql`update orders set deleted_at = now() where ref = ${ref}`;
+  },
+  async restore(ref) {
+    await sql`update orders set deleted_at = null where ref = ${ref}`;
+  },
+  async hardDelete(ref) {
+    await sql`delete from orders where ref = ${ref}`;
+  },
+  async listDeleted(since) {
+    const rows = await sql<OrderRow[]>`
+      select ref, created_at::text as created_at, locale, status,
+             wayl_link_id, payment_method, mock, customer, lines, totals,
+             promo_code, ad_tracking, meta_capi_sent, admin_note,
+             deleted_at::text as deleted_at
+      from orders
+      where deleted_at is not null and deleted_at >= ${since}
+      order by deleted_at desc
+    `;
     return rows.map(toOrder);
   },
 };
@@ -232,9 +276,9 @@ const fileOrderStore: OrderStore = {
   },
   async list() {
     const all = await readAll();
-    return Object.values(all).sort((a, b) =>
-      b.createdAt.localeCompare(a.createdAt),
-    );
+    return Object.values(all)
+      .filter((o) => !o.deletedAt)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   },
   async claimForMetaCapi(ref) {
     const all = await readAll();
@@ -257,10 +301,37 @@ const fileOrderStore: OrderStore = {
     const startMs = start?.getTime();
     return Object.values(all)
       .filter((o) => {
+        if (o.deletedAt) return false;
         const t = new Date(o.createdAt).getTime();
         return (startMs === undefined || t >= startMs) && t <= endMs;
       })
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  },
+  async softDelete(ref) {
+    const all = await readAll();
+    const order = all[ref];
+    if (!order) return;
+    order.deletedAt = new Date().toISOString();
+    await writeAll(all);
+  },
+  async restore(ref) {
+    const all = await readAll();
+    const order = all[ref];
+    if (!order) return;
+    order.deletedAt = undefined;
+    await writeAll(all);
+  },
+  async hardDelete(ref) {
+    const all = await readAll();
+    delete all[ref];
+    await writeAll(all);
+  },
+  async listDeleted(since) {
+    const all = await readAll();
+    const sinceMs = since.getTime();
+    return Object.values(all)
+      .filter((o) => o.deletedAt && new Date(o.deletedAt).getTime() >= sinceMs)
+      .sort((a, b) => (b.deletedAt ?? "").localeCompare(a.deletedAt ?? ""));
   },
 };
 

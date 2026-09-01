@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import { requireUserSession } from "@/lib/admin/auth";
-import { listAllowlist } from "@/lib/admin/allowlist";
-import { listUsers, getUserById } from "@/lib/admin/users";
-import { removeEmailAction, setUserDisabledAction } from "./actions";
+import { hasFullControl } from "@/lib/admin/permissions";
+import { listAllowlist, type AllowlistEntry } from "@/lib/admin/allowlist";
+import { listUsers, getUserById, type AdminUser } from "@/lib/admin/users";
+import { removeEmailAction, setUserDisabledAction, setUserFullAccessAction } from "./actions";
 import AddEmailForm from "./AddEmailForm";
 import EditProfileForm from "./EditProfileForm";
 import EditPermissionsButton from "./EditPermissionsButton";
+import TransferOwnershipButton from "./TransferOwnershipButton";
+import TeamIdentityBadge, { GROWLI_ADMIN_EMAIL } from "./team-identity";
 import { glassCard, glassTone } from "../../glass";
 
 export const metadata: Metadata = { title: "Team" };
@@ -22,12 +25,13 @@ function statusLabel(entry: { hasAccount: boolean; totpEnabled: boolean; disable
 export default async function TeamPage() {
   const session = await requireUserSession();
   const currentUser = session ? await getUserById(session.id) : undefined;
+  const canManage = currentUser ? hasFullControl(currentUser) : false;
 
   return (
     <div>
       <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Team</h1>
       <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-        {currentUser?.isOwner
+        {canManage
           ? "Only approved emails can sign up for an admin account."
           : "Your own profile — ask the account owner to change what you can access."}
       </p>
@@ -39,9 +43,10 @@ export default async function TeamPage() {
         </div>
       )}
 
-      {/* Non-owners only see their own profile — no visibility into the
-          rest of the team, allowlist, or anyone else's access. */}
-      {session && currentUser && !currentUser.isOwner && (
+      {/* Non-owner, non-full-access viewers only see their own profile —
+          no visibility into the rest of the team, allowlist, or anyone
+          else's access. */}
+      {session && currentUser && !canManage && (
         <div className={`mt-6 max-w-md p-5 ${glassCard}`}>
           <div className="flex items-center justify-between gap-4">
             <div>
@@ -68,21 +73,43 @@ export default async function TeamPage() {
         </div>
       )}
 
-      {session && currentUser?.isOwner && (
-        <>
-          <AddEmailForm />
-
-          <TeamTable ownerId={currentUser.id} />
-        </>
+      {session && currentUser && canManage && (
+        <TeamManagement viewer={currentUser} />
       )}
     </div>
   );
 }
 
-async function TeamTable({ ownerId }: { ownerId: string }) {
-  const allowlist = await listAllowlist();
-  const users = await listUsers();
+async function TeamManagement({ viewer }: { viewer: AdminUser }) {
+  const [allowlist, users] = await Promise.all([listAllowlist(), listUsers()]);
+  const eligibleUsers = users
+    .filter((u) => !u.isOwner && !u.disabled && u.totpEnabled && u.id !== viewer.id)
+    .map((u) => ({
+      id: u.id,
+      name: [u.firstName, u.lastName].filter(Boolean).join(" ") || u.email,
+      email: u.email,
+    }));
 
+  return (
+    <>
+      <AddEmailForm />
+      {viewer.isOwner && <TransferOwnershipButton eligibleUsers={eligibleUsers} />}
+      <TeamTable viewerId={viewer.id} viewerIsOwner={viewer.isOwner} allowlist={allowlist} users={users} />
+    </>
+  );
+}
+
+function TeamTable({
+  viewerId,
+  viewerIsOwner,
+  allowlist,
+  users,
+}: {
+  viewerId: string;
+  viewerIsOwner: boolean;
+  allowlist: AllowlistEntry[];
+  users: AdminUser[];
+}) {
   return (
     <>
       {/* Mobile: stacked cards, no horizontal scroll */}
@@ -94,13 +121,23 @@ async function TeamTable({ ownerId }: { ownerId: string }) {
           const status = statusLabel(entry);
           const user = users.find((u) => u.email === entry.email);
           const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ");
-          const isSelf = user?.id === ownerId;
+          const isSelf = user?.id === viewerId;
           return (
             <div key={entry.email} className={`p-4 ${glassCard}`}>
               <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="font-medium text-slate-900 dark:text-slate-100">{fullName || entry.email}</p>
-                  <p className="truncate text-xs text-slate-500 dark:text-slate-400">{entry.email}</p>
+                <div className="flex min-w-0 items-center gap-2">
+                  <div className="min-w-0">
+                    <p className="font-medium text-slate-900 dark:text-slate-100">{fullName || entry.email}</p>
+                    <p className="truncate text-xs text-slate-500 dark:text-slate-400">{entry.email}</p>
+                  </div>
+                  {user && (
+                    <TeamIdentityBadge
+                      email={user.email}
+                      userId={user.id}
+                      fullAccess={user.fullAccess}
+                      canToggle={viewerIsOwner}
+                    />
+                  )}
                 </div>
                 <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${status.cls}`}>
                   {status.text}
@@ -117,13 +154,31 @@ async function TeamTable({ ownerId }: { ownerId: string }) {
                     Owner — full access
                   </span>
                 ) : (
-                  <EditPermissionsButton
-                    userId={user.id}
-                    name={fullName || user.email}
-                    permissions={user.permissions}
-                  />
+                  <>
+                    <EditPermissionsButton
+                      userId={user.id}
+                      name={fullName || user.email}
+                      permissions={user.permissions}
+                    />
+                    {user.email !== GROWLI_ADMIN_EMAIL && (
+                      <form action={setUserFullAccessAction.bind(null, user.id, !user.fullAccess)}>
+                        <button
+                          type="submit"
+                          disabled={!viewerIsOwner}
+                          title={!viewerIsOwner ? "Only the owner can change full access" : undefined}
+                          className={`rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap backdrop-blur-md transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                            user.fullAccess
+                              ? glassTone.info
+                              : "border border-slate-300/70 bg-white/50 text-slate-700 hover:bg-white/80 dark:border-slate-700/70 dark:bg-slate-900/40 dark:text-slate-300 dark:hover:bg-slate-800/70"
+                          }`}
+                        >
+                          {user.fullAccess ? "Full access: On" : "Grant full access"}
+                        </button>
+                      </form>
+                    )}
+                  </>
                 )}
-                {isSelf && user && (
+                {user && !user.isOwner && (isSelf || viewerIsOwner) && (
                   <EditProfileForm
                     firstName={user.firstName}
                     lastName={user.lastName}
@@ -131,13 +186,15 @@ async function TeamTable({ ownerId }: { ownerId: string }) {
                     role={user.role}
                     company={user.company}
                     email={user.email}
+                    targetUserId={isSelf ? undefined : user.id}
+                    targetName={isSelf ? undefined : fullName || user.email}
                   />
                 )}
                 {user && (
                   <form action={setUserDisabledAction.bind(null, user.id, !user.disabled)}>
                     <button
                       type="submit"
-                      disabled={isSelf}
+                      disabled={isSelf || user.isOwner}
                       className="rounded-full border border-slate-300/70 bg-white/50 px-3 py-1.5 text-xs font-semibold text-slate-700 backdrop-blur-md transition-colors hover:bg-white/80 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700/70 dark:bg-slate-900/40 dark:text-slate-300 dark:hover:bg-slate-800/70"
                       title={isSelf ? "You can't disable your own account" : undefined}
                     >
@@ -192,10 +249,22 @@ async function TeamTable({ ownerId }: { ownerId: string }) {
             const status = statusLabel(entry);
             const user = users.find((u) => u.email === entry.email);
             const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ");
-            const isSelf = user?.id === ownerId;
+            const isSelf = user?.id === viewerId;
             return (
               <tr key={entry.email}>
-                <td className="px-2.5 py-2 font-medium text-slate-900 dark:text-slate-100">{fullName || "—"}</td>
+                <td className="px-2.5 py-2 font-medium text-slate-900 dark:text-slate-100">
+                  <div className="flex items-center gap-2">
+                    <span>{fullName || "—"}</span>
+                    {user && (
+                      <TeamIdentityBadge
+                        email={user.email}
+                        userId={user.id}
+                        fullAccess={user.fullAccess}
+                        canToggle={viewerIsOwner}
+                      />
+                    )}
+                  </div>
+                </td>
                 <td className="px-2.5 py-2 text-slate-600 dark:text-slate-400">{entry.email}</td>
                 <td className="px-2.5 py-2 text-slate-600 dark:text-slate-400">{user?.role || "—"}</td>
                 <td className="px-2.5 py-2 text-slate-600 dark:text-slate-400">{user?.company || "—"}</td>
@@ -215,16 +284,34 @@ async function TeamTable({ ownerId }: { ownerId: string }) {
                       Owner — full access
                     </span>
                   ) : (
-                    <EditPermissionsButton
-                      userId={user.id}
-                      name={fullName || user.email}
-                      permissions={user.permissions}
-                    />
+                    <div className="flex flex-wrap items-center gap-1">
+                      <EditPermissionsButton
+                        userId={user.id}
+                        name={fullName || user.email}
+                        permissions={user.permissions}
+                      />
+                      {user.email !== GROWLI_ADMIN_EMAIL && (
+                        <form action={setUserFullAccessAction.bind(null, user.id, !user.fullAccess)}>
+                          <button
+                            type="submit"
+                            disabled={!viewerIsOwner}
+                            title={!viewerIsOwner ? "Only the owner can change full access" : undefined}
+                            className={`rounded-full px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap backdrop-blur-md transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                              user.fullAccess
+                                ? glassTone.info
+                                : "border border-slate-300/70 bg-white/50 text-slate-700 hover:bg-white/80 dark:border-slate-700/70 dark:bg-slate-900/40 dark:text-slate-300 dark:hover:bg-slate-800/70"
+                            }`}
+                          >
+                            {user.fullAccess ? "Full access: On" : "Grant full access"}
+                          </button>
+                        </form>
+                      )}
+                    </div>
                   )}
                 </td>
                 <td className="px-2.5 py-2">
                   <div className="flex items-center justify-end gap-1 whitespace-nowrap">
-                    {isSelf && user && (
+                    {user && !user.isOwner && (isSelf || viewerIsOwner) && (
                       <EditProfileForm
                         firstName={user.firstName}
                         lastName={user.lastName}
@@ -232,13 +319,15 @@ async function TeamTable({ ownerId }: { ownerId: string }) {
                         role={user.role}
                         company={user.company}
                         email={user.email}
+                        targetUserId={isSelf ? undefined : user.id}
+                        targetName={isSelf ? undefined : fullName || user.email}
                       />
                     )}
                     {user && (
                       <form action={setUserDisabledAction.bind(null, user.id, !user.disabled)}>
                         <button
                           type="submit"
-                          disabled={isSelf}
+                          disabled={isSelf || user.isOwner}
                           className="rounded-full border border-slate-300/70 bg-white/50 px-2 py-1 text-[11px] font-semibold text-slate-700 backdrop-blur-md transition-colors hover:bg-white/80 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700/70 dark:bg-slate-900/40 dark:text-slate-300 dark:hover:bg-slate-800/70"
                           title={isSelf ? "You can't disable your own account" : undefined}
                         >

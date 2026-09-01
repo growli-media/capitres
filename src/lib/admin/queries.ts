@@ -20,14 +20,14 @@ export async function getAbandonedCount(start: Date | null = null, end: Date = n
     ? await sql<{ count: string }[]>`
         select count(*)::text as count
         from orders
-        where status != all(${NOT_ABANDONED_STATUSES})
+        where status != all(${NOT_ABANDONED_STATUSES}) and deleted_at is null
           and created_at < now() - make_interval(mins => ${ABANDONED_GRACE_MINUTES})
           and created_at >= ${start} and created_at <= ${end}
       `
     : await sql<{ count: string }[]>`
         select count(*)::text as count
         from orders
-        where status != all(${NOT_ABANDONED_STATUSES})
+        where status != all(${NOT_ABANDONED_STATUSES}) and deleted_at is null
           and created_at < now() - make_interval(mins => ${ABANDONED_GRACE_MINUTES})
           and created_at <= ${end}
       `;
@@ -93,7 +93,7 @@ export async function listAbandonedOrders(
           status,
           admin_note
         from orders
-        where status != all(${NOT_ABANDONED_STATUSES})
+        where status != all(${NOT_ABANDONED_STATUSES}) and deleted_at is null
           and created_at < now() - make_interval(mins => ${ABANDONED_GRACE_MINUTES})
           and created_at >= ${start} and created_at <= ${end}
         order by created_at desc
@@ -131,7 +131,7 @@ export async function listAbandonedOrders(
       status,
       admin_note
     from orders
-    where status != all(${NOT_ABANDONED_STATUSES})
+    where status != all(${NOT_ABANDONED_STATUSES}) and deleted_at is null
       and created_at < now() - make_interval(mins => ${ABANDONED_GRACE_MINUTES})
       and created_at <= ${end}
     order by created_at desc

@@ -57,3 +57,42 @@ export async function updateOrderNoteAction(ref: string, note: string): Promise<
   revalidatePath("/admin/orders");
   revalidatePath("/admin/abandoned");
 }
+
+/** How far back "Recently deleted" looks — orders soft-deleted before
+ * this just stop showing up there (they're not auto-purged; only an
+ * explicit "delete forever" removes the row). */
+const RECENTLY_DELETED_DAYS = 60;
+
+/** The Orders page's trash icon — hides an order from every admin list/
+ * aggregate without touching the storefront/webhook side (get()/
+ * setStatus() are unfiltered — see store.ts). */
+export async function deleteOrderAction(ref: string): Promise<void> {
+  if (!(await isAuthenticated())) return;
+  if (!(await can("orders"))) return;
+  await orderStore.softDelete(ref);
+  revalidatePath("/admin/orders");
+  revalidatePath("/admin");
+}
+
+export async function getDeletedOrdersAction(): Promise<Order[]> {
+  await requirePermission("orders");
+  const since = new Date();
+  since.setDate(since.getDate() - RECENTLY_DELETED_DAYS);
+  return orderStore.listDeleted(since);
+}
+
+export async function restoreOrdersAction(refs: string[]): Promise<void> {
+  if (!(await isAuthenticated())) return;
+  if (!(await can("orders"))) return;
+  await Promise.all(refs.map((ref) => orderStore.restore(ref)));
+  revalidatePath("/admin/orders");
+  revalidatePath("/admin");
+}
+
+/** Permanent — an actual row delete. Only reachable from the Recently
+ * deleted panel, on orders that are already soft-deleted. */
+export async function hardDeleteOrdersAction(refs: string[]): Promise<void> {
+  if (!(await isAuthenticated())) return;
+  if (!(await can("orders"))) return;
+  await Promise.all(refs.map((ref) => orderStore.hardDelete(ref)));
+}

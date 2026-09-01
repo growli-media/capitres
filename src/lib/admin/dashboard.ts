@@ -16,14 +16,14 @@ export async function getDashboardKpis(start: Date | null = null, end: Date = ne
           select coalesce(sum((totals->>'total')::int), 0)::text as revenue,
                  count(*)::text as order_count
           from orders
-          where status = any(${PAID_STATUSES})
+          where status = any(${PAID_STATUSES}) and deleted_at is null
             and created_at >= ${start} and created_at <= ${end}
         `
       : sql<{ revenue: string; order_count: string }[]>`
           select coalesce(sum((totals->>'total')::int), 0)::text as revenue,
                  count(*)::text as order_count
           from orders
-          where status = any(${PAID_STATUSES}) and created_at <= ${end}
+          where status = any(${PAID_STATUSES}) and deleted_at is null and created_at <= ${end}
         `,
     sql<{ count: string }[]>`
       select count(*)::text as count from reviews where approved = false
@@ -57,7 +57,7 @@ export async function getTopProducts(
           sum((line->>'qty')::int)::text as qty,
           sum((line->>'qty')::int * (line->>'unitAmount')::int)::text as revenue
         from orders, jsonb_array_elements(lines) as line
-        where status = any(${PAID_STATUSES})
+        where status = any(${PAID_STATUSES}) and deleted_at is null
           and created_at >= ${start} and created_at <= ${end}
         group by line->>'title'
         order by sum((line->>'qty')::int * (line->>'unitAmount')::int) desc
@@ -69,7 +69,7 @@ export async function getTopProducts(
           sum((line->>'qty')::int)::text as qty,
           sum((line->>'qty')::int * (line->>'unitAmount')::int)::text as revenue
         from orders, jsonb_array_elements(lines) as line
-        where status = any(${PAID_STATUSES}) and created_at <= ${end}
+        where status = any(${PAID_STATUSES}) and deleted_at is null and created_at <= ${end}
         group by line->>'title'
         order by sum((line->>'qty')::int * (line->>'unitAmount')::int) desc
         limit ${limit}

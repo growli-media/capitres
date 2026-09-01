@@ -30,9 +30,10 @@ import type { AccessLevel } from "@/lib/admin/permissions";
 const navIconButton =
   "flex shrink-0 cursor-pointer items-center justify-center rounded-full border border-[#1B3445]/10 bg-[#1B3445]/[0.03] text-[#5A7387] shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] backdrop-blur-md transition-all hover:border-[#1B3445]/20 hover:bg-[#1B3445]/[0.06] hover:text-[#1B3445] dark:border-white/12 dark:bg-white/5 dark:text-[#aebfce] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] dark:hover:border-white/25 dark:hover:bg-white/12 dark:hover:text-white dark:hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]";
 
-/** `permission: null` means always visible (Dashboard); `"owner"` is a
- * sentinel for Team, which is owner-only by construction rather than a
- * grantable permission — see src/lib/admin/permissions.ts. */
+/** `permission: null` means always visible — Team included: every team
+ * member can now reach the page (it shows their own profile card unless
+ * they have full control, see team/page.tsx's canManage split), so
+ * there's no longer any reason to hide the nav link itself. */
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", icon: ChartLineUp, exact: true, permission: null },
   { href: "/admin/revenue", label: "Revenue", icon: CurrencyCircleDollar, exact: false, permission: "revenue" },
@@ -42,7 +43,7 @@ const NAV_ITEMS = [
   { href: "/admin/abandoned", label: "Abandoned carts", icon: ShoppingCartSimple, exact: false, permission: "abandoned_carts" },
   { href: "/admin/orders", label: "Orders", icon: Receipt, exact: false, permission: "orders" },
   { href: "/admin/reviews", label: "Reviews", icon: Star, exact: false, permission: "reviews" },
-  { href: "/admin/team", label: "Team", icon: UsersThree, exact: false, permission: "owner" },
+  { href: "/admin/team", label: "Team", icon: UsersThree, exact: false, permission: null },
 ] as const;
 
 export default function AdminNav({
@@ -70,8 +71,7 @@ export default function AdminNav({
   const pathname = usePathname();
   const visibleItems = NAV_ITEMS.filter((item) => {
     if (item.permission === null) return true;
-    if (item.permission === "owner") return access.isOwner;
-    return access.isOwner || (access.permissions as readonly string[]).includes(item.permission);
+    return access.isOwner || access.fullAccess || (access.permissions as readonly string[]).includes(item.permission);
   });
 
   return (

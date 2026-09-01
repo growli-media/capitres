@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { PencilSimple } from "@phosphor-icons/react";
 import Modal from "../components/Modal";
-import { updateOwnProfileAction } from "./actions";
+import { updateOwnProfileAction, updateUserProfileAction } from "./actions";
 import { glassInput, glassButtonPrimary } from "../../glass";
 
 const inputClass = `h-10 w-full px-3 ${glassInput}`;
@@ -16,6 +16,8 @@ export default function EditProfileForm({
   role,
   company,
   email,
+  targetUserId,
+  targetName,
 }: {
   firstName: string | null;
   lastName: string | null;
@@ -23,6 +25,11 @@ export default function EditProfileForm({
   role: string | null;
   company: string | null;
   email: string;
+  /** Set when an owner/full-control viewer is editing a teammate's
+   * profile instead of their own — routes to updateUserProfileAction and
+   * relabels the trigger/modal accordingly. */
+  targetUserId?: string;
+  targetName?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | undefined>();
@@ -32,7 +39,9 @@ export default function EditProfileForm({
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     startTransition(async () => {
-      const result = await updateOwnProfileAction(undefined, formData);
+      const result = targetUserId
+        ? await updateUserProfileAction(targetUserId, undefined, formData)
+        : await updateOwnProfileAction(undefined, formData);
       if (result?.error) {
         setError(result.error);
       } else {
@@ -55,7 +64,7 @@ export default function EditProfileForm({
         <PencilSimple size={12} />
         Edit profile
       </button>
-      <Modal open={open} onClose={() => setOpen(false)} title="Edit your profile">
+      <Modal open={open} onClose={() => setOpen(false)} title={targetUserId ? `Edit ${targetName}'s profile` : "Edit your profile"}>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>

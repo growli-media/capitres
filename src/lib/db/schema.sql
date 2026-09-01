@@ -205,13 +205,30 @@ UPDATE collections SET hero_images = jsonb_build_array(hero_image) WHERE hero_im
 -- Team permissions — see src/lib/admin/permissions.ts for the grantable
 -- keys and how these are enforced. Owners bypass `permissions` entirely;
 -- everyone else needs the specific section granted explicitly (default
--- deny). is_owner is not editable through the UI in this pass — only set
--- here (existing accounts) or left false (new signups).
+-- deny). is_owner is now editable through the UI — see the ownership
+-- transfer feature below — so this file must never again write to it in
+-- bulk (a prior one-time grandfather backfill lived here; removed once
+-- its job was done, since this whole file re-runs on every db:migrate
+-- and an unconditional `is_owner = true` UPDATE would silently undo any
+-- future transfer the next time this migrates against production).
 ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS is_owner boolean NOT NULL DEFAULT false;
 ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS permissions jsonb NOT NULL DEFAULT '[]';
 
--- Every account created before this feature existed already had full,
--- unrestricted access (that was the only mode that existed) — grandfather
--- all of them as owners so nobody currently using the dashboard loses
--- access. Safe to re-run: once true, this WHERE clause excludes them.
-UPDATE admin_users SET is_owner = true WHERE is_owner = false;
+-- Owner-grantable override: bypasses `permissions` the same way is_owner
+-- does, but is a distinct flag — it's meant for a trusted collaborator
+-- (e.g. the agency that built/maintains the site) who needs to act with
+-- full access without literally holding the owner role, which stays
+-- reserved for the two owner-only actions this doesn't unlock: toggling
+-- full_access itself, and transferring ownership. See hasFullControl()
+-- in src/lib/admin/permissions.ts.
+ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS full_access boolean NOT NULL DEFAULT false;
+
+-- Soft delete for orders — "delete" from the Orders page hides an order
+-- from every admin list/aggregate (recent orders, revenue, abandoned
+-- carts, top products) without touching the storefront/webhook side
+-- (order lookups by ref there stay unfiltered, so a customer's own
+-- confirmation page and Wayl status updates keep working regardless).
+-- Recently-deleted shows anything with deleted_at within the last 60
+-- days; "delete forever" is a real DELETE FROM, not a further column.
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS deleted_at timestamptz;
+CREATE INDEX IF NOT EXISTS idx_orders_deleted_at ON orders(deleted_at) WHERE deleted_at IS NOT NULL;

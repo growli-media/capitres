@@ -90,6 +90,10 @@ export interface Order {
   metaCapiSent?: boolean;
   /** Staff-only note, never shown to the customer — see admin/(protected)/orders/NoteButton.tsx. */
   adminNote?: string;
+  /** Soft-deleted from the Orders page — undefined/absent means not
+   * deleted. Excluded from admin lists/aggregates but not from
+   * storefront/webhook lookups (get(), setStatus()) — see store.ts. */
+  deletedAt?: string;
 }
 
 /** Display name for an order's customer — handles both the current
