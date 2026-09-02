@@ -164,7 +164,7 @@ function TeamTable({
                     />
                     {user.email !== GROWLI_ADMIN_EMAIL && (
                       <ToastFormButton
-                        action={() => setUserFullAccessAction(user.id, !user.fullAccess)}
+                        action={setUserFullAccessAction.bind(null, user.id, !user.fullAccess)}
                         toastMessage={`Full access ${user.fullAccess ? "revoked from" : "granted to"} ${fullName || user.email}`}
                         toastTone={user.fullAccess ? "danger" : "success"}
                         disabled={!viewerIsOwner}
@@ -194,7 +194,7 @@ function TeamTable({
                 )}
                 {user && (
                   <ToastFormButton
-                    action={() => setUserDisabledAction(user.id, !user.disabled)}
+                    action={setUserDisabledAction.bind(null, user.id, !user.disabled)}
                     toastMessage={`${fullName || user.email} ${user.disabled ? "enabled" : "disabled"}`}
                     toastTone={user.disabled ? "success" : "danger"}
                     disabled={isSelf || user.isOwner}
@@ -205,7 +205,7 @@ function TeamTable({
                   </ToastFormButton>
                 )}
                 <ToastFormButton
-                  action={() => removeEmailAction(entry.email)}
+                  action={removeEmailAction.bind(null, entry.email)}
                   toastMessage={`${entry.email} removed`}
                   toastTone="danger"
                   className="rounded-full border border-slate-300/70 bg-white/50 px-3 py-1.5 text-xs font-semibold text-slate-500 backdrop-blur-md transition-colors hover:bg-white/80 dark:border-slate-700/70 dark:bg-slate-900/40 dark:text-slate-400 dark:hover:bg-slate-800/70"
@@ -295,7 +295,7 @@ function TeamTable({
                       />
                       {user.email !== GROWLI_ADMIN_EMAIL && (
                         <ToastFormButton
-                          action={() => setUserFullAccessAction(user.id, !user.fullAccess)}
+                          action={setUserFullAccessAction.bind(null, user.id, !user.fullAccess)}
                           toastMessage={`Full access ${user.fullAccess ? "revoked from" : "granted to"} ${fullName || user.email}`}
                           toastTone={user.fullAccess ? "danger" : "success"}
                           disabled={!viewerIsOwner}
@@ -328,7 +328,7 @@ function TeamTable({
                     )}
                     {user && (
                       <ToastFormButton
-                        action={() => setUserDisabledAction(user.id, !user.disabled)}
+                        action={setUserDisabledAction.bind(null, user.id, !user.disabled)}
                         toastMessage={`${fullName || user.email} ${user.disabled ? "enabled" : "disabled"}`}
                         toastTone={user.disabled ? "success" : "danger"}
                         disabled={isSelf || user.isOwner}
@@ -339,7 +339,7 @@ function TeamTable({
                       </ToastFormButton>
                     )}
                     <ToastFormButton
-                      action={() => removeEmailAction(entry.email)}
+                      action={removeEmailAction.bind(null, entry.email)}
                       toastMessage={`${entry.email} removed`}
                       toastTone="danger"
                       className="rounded-full border border-slate-300/70 bg-white/50 px-2 py-1 text-[11px] font-semibold text-slate-500 backdrop-blur-md transition-colors hover:bg-white/80 dark:border-slate-700/70 dark:bg-slate-900/40 dark:text-slate-400 dark:hover:bg-slate-800/70"
