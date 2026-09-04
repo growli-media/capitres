@@ -1,13 +1,18 @@
 import type { Metadata } from "next";
 import { DEFAULT_TIME_RANGE } from "@/lib/admin/time-range";
 import { getDashboardForRangeAction } from "./dashboard-actions";
+import { getOnboardingSteps } from "@/lib/admin/onboarding";
 import NightSkyBanner from "./components/NightSkyBanner";
+import OnboardingChecklist from "./components/OnboardingChecklist";
 import DashboardView from "./DashboardView";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
 export default async function AdminDashboardPage() {
-  const initial = await getDashboardForRangeAction({ mode: "preset", key: DEFAULT_TIME_RANGE });
+  const [initial, onboardingSteps] = await Promise.all([
+    getDashboardForRangeAction({ mode: "preset", key: DEFAULT_TIME_RANGE }),
+    getOnboardingSteps(),
+  ]);
 
   return (
     <div>
@@ -18,6 +23,7 @@ export default async function AdminDashboardPage() {
       </p>
 
       <div className="mt-6">
+        <OnboardingChecklist steps={onboardingSteps} />
         <NightSkyBanner />
       </div>
 

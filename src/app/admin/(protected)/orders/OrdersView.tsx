@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { Trash } from "@phosphor-icons/react";
+import { DownloadSimple, Trash } from "@phosphor-icons/react";
 import { customerName, customerAddress, type Order } from "@/lib/orders/order-helpers";
 import { PAID_STATUSES, FAILED_STATUSES } from "@/lib/admin/queries-shared";
 import { formatIQD } from "@/lib/money";
@@ -12,8 +12,9 @@ import NoteButton from "./NoteButton";
 import RecentlyDeletedPanel from "./RecentlyDeletedPanel";
 import TimeRangeSlider from "../components/TimeRangeSlider";
 import { useAdminToast } from "../components/AdminToastProvider";
+import { downloadCsv } from "../components/csv";
 import { DEFAULT_TIME_RANGE_VALUE, type TimeRangeValue } from "@/lib/admin/time-range";
-import { glassCard, glassTone } from "../../glass";
+import { glassButtonSecondary, glassCard, glassTone } from "../../glass";
 
 function StatusBadge({ status }: { status: string }) {
   const isPaid = (PAID_STATUSES as readonly string[]).includes(status);
@@ -73,7 +74,32 @@ export default function OrdersView({ initial }: { initial: Order[] }) {
   return (
     <div>
       <TimeRangeSlider value={range} onChange={handleChange} pending={isPending} />
-      <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">{orders.length} in this range.</p>
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <p className="text-sm text-slate-500 dark:text-slate-400">{orders.length} in this range.</p>
+        {orders.length > 0 && (
+          <button
+            type="button"
+            onClick={() =>
+              downloadCsv(
+                `capitres-orders-${new Date().toISOString().slice(0, 10)}.csv`,
+                orders.map((o) => ({
+                  ref: o.ref,
+                  date: o.createdAt,
+                  customer: customerName(o.customer),
+                  phone: o.customer.phone ?? "",
+                  status: o.status,
+                  items: o.lines.reduce((n, l) => n + l.qty, 0),
+                  totalIQD: o.totals.total,
+                })),
+              )
+            }
+            className={`flex h-9 shrink-0 cursor-pointer items-center gap-1.5 px-3 text-xs font-semibold text-slate-700 dark:text-slate-300 ${glassButtonSecondary}`}
+          >
+            <DownloadSimple size={14} aria-hidden="true" />
+            Export CSV
+          </button>
+        )}
+      </div>
 
       {orders.length === 0 ? (
         <div className="mt-6 rounded-xl border border-dashed border-slate-300 py-16 text-center dark:border-slate-700">

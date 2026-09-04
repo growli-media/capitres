@@ -6,6 +6,7 @@ import { listAdminProducts } from "@/lib/admin/products";
 import { formatIQD } from "@/lib/money";
 import ProductRowActions from "./ProductRowActions";
 import ProductsTable from "./ProductsTable";
+import ExportProductsButton from "./ExportProductsButton";
 import { CreatedToast } from "../components/CreatedToast";
 import { glassCard, glassButtonPrimary, glassTone } from "../../glass";
 import { requirePermission } from "@/lib/admin/permissions";
@@ -63,13 +64,16 @@ export default async function AdminProductsPage() {
             {products.length} total — changes go live on the site immediately.
           </p>
         </div>
-        <Link
-          href="/admin/products/new"
-          className={`flex h-10 shrink-0 cursor-pointer items-center gap-2 px-4 text-sm font-semibold ${glassButtonPrimary}`}
-        >
-          <Plus size={16} aria-hidden="true" />
-          New product
-        </Link>
+        <div className="flex shrink-0 items-center gap-2">
+          <ExportProductsButton products={products} />
+          <Link
+            href="/admin/products/new"
+            className={`flex h-10 shrink-0 cursor-pointer items-center gap-2 px-4 text-sm font-semibold ${glassButtonPrimary}`}
+          >
+            <Plus size={16} aria-hidden="true" />
+            New product
+          </Link>
+        </div>
       </div>
 
       {products.length === 0 ? (
