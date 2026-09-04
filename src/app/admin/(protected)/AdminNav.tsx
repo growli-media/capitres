@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   ChartLineUp,
   CurrencyCircleDollar,
+  MagnifyingGlass,
   Receipt,
   ShoppingCartSimple,
   SidebarSimple,
@@ -19,6 +20,7 @@ import {
 } from "@phosphor-icons/react";
 import { logout } from "../logout-action";
 import SupportPanel from "./components/SupportPanel";
+import { OPEN_COMMAND_PALETTE_EVENT } from "./components/CommandPalette";
 import ThemeToggle from "./ThemeToggle";
 import type { AccessLevel } from "@/lib/admin/permissions";
 
@@ -111,7 +113,23 @@ export default function AdminNav({
         </button>
       </div>
 
-      <ul className="mt-6 flex-1 space-y-2 overflow-y-auto px-4">
+      <div className="px-4 pt-2">
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new CustomEvent(OPEN_COMMAND_PALETTE_EVENT))}
+          className="flex min-h-11 w-full cursor-pointer items-center justify-between gap-2 rounded-full border border-[#1B3445]/10 bg-[#1B3445]/[0.03] px-3 text-sm font-medium text-[#5A7387] shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] backdrop-blur-md transition-all hover:border-[#1B3445]/20 hover:bg-[#1B3445]/[0.06] hover:text-[#1B3445] dark:border-white/12 dark:bg-white/5 dark:text-[#aebfce] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] dark:hover:border-white/25 dark:hover:bg-white/12 dark:hover:text-white dark:hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]"
+        >
+          <span className="flex items-center gap-3">
+            <MagnifyingGlass size={16} aria-hidden="true" />
+            Search
+          </span>
+          <kbd className="rounded border border-current/20 px-1.5 py-0.5 text-[10px] font-medium opacity-70">
+            ⌘K
+          </kbd>
+        </button>
+      </div>
+
+      <ul className="mt-4 flex-1 space-y-2 overflow-y-auto px-4">
         {visibleItems.map((item) => {
           const active = item.exact
             ? pathname === item.href
