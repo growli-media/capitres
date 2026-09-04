@@ -180,7 +180,7 @@ function TeamTable({
                     )}
                   </>
                 )}
-                {user && !user.isOwner && (isSelf || viewerIsOwner) && (
+                {user && (isSelf || !user.isOwner) && (
                   <EditProfileForm
                     firstName={user.firstName}
                     lastName={user.lastName}
@@ -314,7 +314,7 @@ function TeamTable({
                 </td>
                 <td className="px-2.5 py-2">
                   <div className="flex items-center justify-end gap-1 whitespace-nowrap">
-                    {user && !user.isOwner && (isSelf || viewerIsOwner) && (
+                    {user && (isSelf || !user.isOwner) && (
                       <EditProfileForm
                         firstName={user.firstName}
                         lastName={user.lastName}
