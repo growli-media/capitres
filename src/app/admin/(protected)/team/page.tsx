@@ -219,13 +219,12 @@ function TeamTable({
       </div>
 
       {/* Desktop: table — compact padding/type tuned so all 8 columns fit
-          at typical desktop widths without any scrolling (the wide
-          1600px content container in AdminShell.tsx helps too), which is
-          what was actually asked for: a horizontally-scrolling table read
-          as "not really responsive." overflow-x-auto stays as a safety
-          net for anything still narrower than expected. */}
-      <div className={`mt-8 hidden overflow-hidden md:block ${glassCard}`}>
-      <div className="overflow-x-auto">
+          at typical desktop widths (the wide 1600px content container in
+          AdminShell.tsx helps too). No overflow-x-auto wrapper: a table
+          with its own independent scrollbar read as a "picture in
+          picture" box sitting inside the page instead of just being part
+          of it. */}
+      <div className={`mt-8 hidden md:block ${glassCard}`}>
       <table className="w-full text-xs">
         <thead>
           <tr className="border-b border-slate-200 text-[11px] uppercase tracking-wide text-slate-400 dark:border-slate-800 dark:text-slate-500">
@@ -353,7 +352,6 @@ function TeamTable({
           })}
         </tbody>
       </table>
-      </div>
       </div>
     </>
   );

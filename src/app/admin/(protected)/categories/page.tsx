@@ -87,8 +87,7 @@ export default async function AdminCategoriesPage({
       </div>
 
       {/* Desktop: table */}
-      <div className={`hidden overflow-hidden md:block ${glassCard}`}>
-        <div className="overflow-x-auto">
+      <div className={`hidden md:block ${glassCard}`}>
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400 dark:border-slate-800 dark:text-slate-500">
@@ -135,7 +134,6 @@ export default async function AdminCategoriesPage({
               ))}
             </tbody>
           </table>
-        </div>
       </div>
     </div>
   );
