@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import {
   MagnifyingGlass,
@@ -164,6 +165,22 @@ export default function CommandPalette({ access }: { access: AccessLevel }) {
 
   if (!mounted || !open) return null;
 
+  const commandItems = items.filter((it): it is Item & { kind: "command" } => it.kind === "command");
+  const resultItems = items.filter((it): it is Item & { kind: "result" } => it.kind === "result");
+
+  /** Row highlight is a plain CSS `hover:` class, not a JS-state
+   * conditional — hovering used to wait on a React re-render (setSelected
+   * → reconcile → paint) before the highlight showed up, which read as
+   * laggy. CSS hover paints on the same frame, no React involved; the
+   * `selected` state still updates on mouse-enter (so Enter still
+   * activates the right row and arrow-key nav stays in sync), it just
+   * no longer gates the *visual* feedback. `data-selected` covers the
+   * keyboard-navigated row when the mouse isn't the one driving it. */
+  const rowClass = (index: number) =>
+    `group flex w-full cursor-pointer items-center gap-3 rounded-lg px-2.5 text-start text-sm transition-colors duration-75 hover:bg-slate-900 hover:text-white dark:hover:bg-slate-100 dark:hover:text-slate-900 ${
+      selected === index ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900" : "text-slate-700 dark:text-slate-300"
+    }`;
+
   const palette = (
     <div
       className="fixed inset-0 z-[150] flex justify-center px-4 pt-[12vh]"
@@ -176,7 +193,12 @@ export default function CommandPalette({ access }: { access: AccessLevel }) {
         onClick={() => setOpen(false)}
         aria-hidden="true"
       />
-      <div className={`relative h-fit max-h-[70vh] w-full max-w-xl overflow-hidden rounded-2xl border ${glassPanel}`}>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.97, y: -8 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 420, damping: 32 }}
+        className={`relative h-fit max-h-[70vh] w-full max-w-xl overflow-hidden rounded-2xl border ${glassPanel}`}
+      >
         <div className="flex items-center gap-3 border-b border-slate-200/70 px-4 dark:border-slate-800">
           <MagnifyingGlass size={18} className="shrink-0 text-slate-400" aria-hidden="true" />
           <input
@@ -202,61 +224,50 @@ export default function CommandPalette({ access }: { access: AccessLevel }) {
               {query.trim().length >= 2 ? "No matches." : "Type to search, or pick a page below."}
             </p>
           )}
-          {filteredCommands.length > 0 && (
+          {commandItems.length > 0 && (
             <div className="px-2 pb-1">
               <p className="px-2 py-1 text-[11px] font-semibold tracking-wide text-slate-400 uppercase dark:text-slate-500">
                 Go to
               </p>
-              {filteredCommands.map((c) => {
-                const index = items.findIndex((it) => it.kind === "command" && it.command.id === c.id);
-                const Icon = c.icon;
+              {commandItems.map((item) => {
+                const index = items.indexOf(item);
+                const Icon = item.command.icon;
                 return (
                   <button
-                    key={c.id}
+                    key={item.command.id}
                     type="button"
                     onMouseEnter={() => setSelected(index)}
-                    onClick={() => go(c.href)}
-                    className={`flex h-10 w-full cursor-pointer items-center gap-3 rounded-lg px-2.5 text-sm ${
-                      selected === index
-                        ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
-                        : "text-slate-700 dark:text-slate-300"
-                    }`}
+                    onClick={() => go(item.command.href)}
+                    className={`h-10 ${rowClass(index)}`}
                   >
                     <Icon size={16} aria-hidden="true" />
-                    {c.label}
+                    {item.command.label}
                   </button>
                 );
               })}
             </div>
           )}
-          {results.length > 0 && (
+          {resultItems.length > 0 && (
             <div className="px-2 pt-1">
               <p className="px-2 py-1 text-[11px] font-semibold tracking-wide text-slate-400 uppercase dark:text-slate-500">
                 Results
               </p>
-              {results.map((r, i) => {
-                const index = items.findIndex((it) => it.kind === "result" && it.result === r);
+              {resultItems.map((item) => {
+                const index = items.indexOf(item);
+                const r = item.result;
                 const Icon = TYPE_ICON[r.type];
                 return (
                   <button
-                    key={`${r.type}-${r.label}-${i}`}
+                    key={`${r.type}-${r.label}-${index}`}
                     type="button"
                     onMouseEnter={() => setSelected(index)}
                     onClick={() => go(r.href)}
-                    className={`flex h-11 w-full cursor-pointer items-center gap-3 rounded-lg px-2.5 text-start text-sm ${
-                      selected === index
-                        ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
-                        : "text-slate-700 dark:text-slate-300"
-                    }`}
+                    className={`h-11 ${rowClass(index)}`}
                   >
                     <Icon size={16} aria-hidden="true" className="shrink-0" />
                     <span className="min-w-0 flex-1 truncate">{r.label}</span>
                     {r.sublabel && (
-                      <span
-                        className={`shrink-0 truncate text-xs ${
-                          selected === index ? "text-white/70 dark:text-slate-900/60" : "text-slate-400 dark:text-slate-500"
-                        }`}
-                      >
+                      <span className="shrink-0 truncate text-xs text-slate-400 group-hover:text-white/70 dark:text-slate-500 dark:group-hover:text-slate-900/60">
                         {r.sublabel}
                       </span>
                     )}
@@ -266,7 +277,7 @@ export default function CommandPalette({ access }: { access: AccessLevel }) {
             </div>
           )}
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 
