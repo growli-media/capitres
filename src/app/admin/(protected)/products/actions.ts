@@ -9,6 +9,7 @@ import {
   deleteProductPermanently,
   markAllVariantsSoldOut,
   setProductArchived,
+  setProductPrice,
   slugExists,
   updateProduct,
   type ColorInput,
@@ -295,4 +296,33 @@ export async function deleteProductAction(id: string): Promise<void> {
   await logAdminActivity(`Deleted product ${id}`);
   revalidateStorefront();
   redirect("/admin/products?deleted=1");
+}
+
+/** Inline price edit from the Products table row. */
+export async function updateProductPriceAction(
+  id: string,
+  priceAmount: number,
+): Promise<{ error?: string }> {
+  await requirePermission("products");
+  if (!Number.isFinite(priceAmount) || priceAmount <= 0) {
+    return { error: "Enter a valid price." };
+  }
+  await setProductPrice(id, Math.round(priceAmount));
+  await logAdminActivity(`Changed price for product ${id}`);
+  revalidateStorefront();
+  return {};
+}
+
+export async function bulkArchiveProductsAction(ids: string[], archived: boolean): Promise<void> {
+  await requirePermission("products");
+  await Promise.all(ids.map((id) => setProductArchived(id, archived)));
+  await logAdminActivity(`${archived ? "Archived" : "Unarchived"} ${ids.length} product${ids.length === 1 ? "" : "s"}`);
+  revalidateStorefront();
+}
+
+export async function bulkDeleteProductsAction(ids: string[]): Promise<void> {
+  await requirePermission("products");
+  await Promise.all(ids.map((id) => deleteProductPermanently(id)));
+  await logAdminActivity(`Deleted ${ids.length} product${ids.length === 1 ? "" : "s"}`);
+  revalidateStorefront();
 }

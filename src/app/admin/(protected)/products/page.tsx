@@ -5,6 +5,7 @@ import { Plus } from "@phosphor-icons/react/dist/ssr";
 import { listAdminProducts } from "@/lib/admin/products";
 import { formatIQD } from "@/lib/money";
 import ProductRowActions from "./ProductRowActions";
+import ProductsTable from "./ProductsTable";
 import { CreatedToast } from "../components/CreatedToast";
 import { glassCard, glassButtonPrimary, glassTone } from "../../glass";
 import { requirePermission } from "@/lib/admin/permissions";
@@ -142,83 +143,8 @@ export default async function AdminProductsPage() {
             ))}
           </div>
 
-          {/* Desktop: table */}
-          <div className={`hidden md:block ${glassCard}`}>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400 dark:border-slate-800 dark:text-slate-500">
-                  <th className="px-4 py-3 text-start font-medium whitespace-nowrap">Product</th>
-                  <th className="px-4 py-3 text-start font-medium whitespace-nowrap">Category</th>
-                  <th className="px-4 py-3 text-start font-medium whitespace-nowrap">Price</th>
-                  <th className="px-4 py-3 text-start font-medium whitespace-nowrap">Stock</th>
-                  <th className="px-4 py-3 text-start font-medium whitespace-nowrap">Status</th>
-                  <th className="px-4 py-3" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {products.map((p) => (
-                  <tr key={p.id}>
-                    <td className={`px-4 py-3 ${p.archived ? "opacity-50" : ""}`}>
-                      <div className="flex items-center gap-3">
-                        <div className="relative h-12 w-10 shrink-0 overflow-hidden rounded-md bg-slate-100 dark:bg-slate-800">
-                          {p.images[0] && (
-                            <Image
-                              src={p.images[0].url}
-                              alt=""
-                              fill
-                              sizes="40px"
-                              className="object-cover"
-                              unoptimized
-                            />
-                          )}
-                        </div>
-                        <div className="min-w-40">
-                          <Link
-                            href={`/admin/products/${p.id}/edit`}
-                            className="block truncate font-medium text-slate-900 hover:underline dark:text-slate-100"
-                          >
-                            {p.titleEn}
-                          </Link>
-                          <span className="text-xs text-slate-400 dark:text-slate-500">/{p.slug}</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className={`px-4 py-3 whitespace-nowrap text-slate-600 dark:text-slate-400 ${p.archived ? "opacity-50" : ""}`}>{p.category}</td>
-                    <td className={`px-4 py-3 whitespace-nowrap ${p.archived ? "opacity-50" : ""}`}>
-                      <span className="price font-medium text-slate-900 dark:text-slate-100">
-                        {formatIQD(p.priceAmount, "en")}
-                      </span>
-                      {p.compareAtAmount && (
-                        <span className="price ms-2 text-xs text-slate-400 line-through dark:text-slate-500">
-                          {formatIQD(p.compareAtAmount, "en")}
-                        </span>
-                      )}
-                    </td>
-                    <td className={`px-4 py-3 whitespace-nowrap ${p.archived ? "opacity-50" : ""}`}>
-                      <StockBadge
-                        isGiftCard={p.category === "gift-cards"}
-                        totalStock={p.totalStock}
-                      />
-                    </td>
-                    <td className={`px-4 py-3 whitespace-nowrap ${p.archived ? "opacity-50" : ""}`}>
-                      {p.archived ? (
-                        <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${glassTone.neutral}`}>
-                          Archived
-                        </span>
-                      ) : (
-                        <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${glassTone.info}`}>
-                          Live
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <ProductRowActions id={p.id} archived={p.archived} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {/* Desktop: table — bulk select + inline price edit */}
+          <ProductsTable products={products} />
         </>
       )}
     </div>

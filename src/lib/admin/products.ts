@@ -359,6 +359,13 @@ export async function setProductArchived(id: string, archived: boolean): Promise
   await sql`update products set archived = ${archived}, updated_at = now() where id = ${id}`;
 }
 
+/** Inline price edit from the Products table row — a single-field
+ * update, deliberately not routed through updateProduct()'s full
+ * ProductInput (which would need every other field re-supplied). */
+export async function setProductPrice(id: string, priceAmount: number): Promise<void> {
+  await sql`update products set price_amount = ${priceAmount}, updated_at = now() where id = ${id}`;
+}
+
 export async function markAllVariantsSoldOut(id: string): Promise<void> {
   await sql`update product_variants set stock = 0 where product_id = ${id}`;
 }
