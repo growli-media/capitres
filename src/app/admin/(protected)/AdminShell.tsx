@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { List, SidebarSimple } from "@phosphor-icons/react";
 import AdminNav from "./AdminNav";
 import CommandPalette from "./components/CommandPalette";
+import NewOrderWatcher from "./components/NewOrderWatcher";
 import { glassIconButton, sidebarGlass } from "../glass";
 import type { AccessLevel } from "@/lib/admin/permissions";
 
@@ -177,6 +178,7 @@ export default function AdminShell({
       )}
 
       <CommandPalette access={access} />
+      <NewOrderWatcher />
 
       <main
         className={`relative z-10 min-h-dvh pt-20 transition-[padding] duration-300 ease-out md:pt-8 ${

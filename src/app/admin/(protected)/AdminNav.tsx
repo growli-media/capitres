@@ -21,6 +21,7 @@ import {
 import { logout } from "../logout-action";
 import SupportPanel from "./components/SupportPanel";
 import { OPEN_COMMAND_PALETTE_EVENT } from "./components/CommandPalette";
+import NotificationBell from "./components/NotificationBell";
 import ThemeToggle from "./ThemeToggle";
 import type { AccessLevel } from "@/lib/admin/permissions";
 
@@ -103,14 +104,17 @@ export default function AdminNav({
             Admin
           </span>
         </Link>
-        <button
-          type="button"
-          onClick={onToggleSidebar}
-          aria-label={sidebarToggleVariant === "close" ? "Close sidebar" : "Hide sidebar"}
-          className={`${navIconButton} mt-0.5 h-8 w-8`}
-        >
-          {sidebarToggleVariant === "close" ? <X size={14} /> : <SidebarSimple size={14} />}
-        </button>
+        <div className="mt-0.5 flex shrink-0 items-center gap-1.5">
+          <NotificationBell className={navIconButton} />
+          <button
+            type="button"
+            onClick={onToggleSidebar}
+            aria-label={sidebarToggleVariant === "close" ? "Close sidebar" : "Hide sidebar"}
+            className={`${navIconButton} h-8 w-8`}
+          >
+            {sidebarToggleVariant === "close" ? <X size={14} /> : <SidebarSimple size={14} />}
+          </button>
+        </div>
       </div>
 
       <div className="px-4 pt-2">
