@@ -1,21 +1,13 @@
 import type { Metadata } from "next";
-import { getDashboardKpis, getTopProducts } from "@/lib/admin/dashboard";
-import { getAbandonedCount } from "@/lib/admin/queries";
-import { orderStore } from "@/lib/orders/store";
-import { rangeToDates, DEFAULT_TIME_RANGE } from "@/lib/admin/time-range";
+import { DEFAULT_TIME_RANGE } from "@/lib/admin/time-range";
+import { getDashboardForRangeAction } from "./dashboard-actions";
 import NightSkyBanner from "./components/NightSkyBanner";
 import DashboardView from "./DashboardView";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
 export default async function AdminDashboardPage() {
-  const { start, end } = rangeToDates(DEFAULT_TIME_RANGE);
-  const [kpis, topProducts, abandonedCount, recentOrders] = await Promise.all([
-    getDashboardKpis(start, end),
-    getTopProducts(5, start, end),
-    getAbandonedCount(start, end),
-    orderStore.listInRange(start, end),
-  ]);
+  const initial = await getDashboardForRangeAction({ mode: "preset", key: DEFAULT_TIME_RANGE });
 
   return (
     <div>
@@ -30,9 +22,7 @@ export default async function AdminDashboardPage() {
       </div>
 
       <div className="mt-6">
-        <DashboardView
-          initial={{ kpis, abandonedCount, recentOrders: recentOrders.slice(0, 6), topProducts }}
-        />
+        <DashboardView initial={initial} />
       </div>
     </div>
   );

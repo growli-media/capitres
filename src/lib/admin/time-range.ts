@@ -104,6 +104,18 @@ export function resolveTimeRange(value: TimeRangeValue): { start: Date | null; e
   return rangeToDates(value.key);
 }
 
+/** The immediately preceding period of the same length, contiguous with
+ * (not overlapping) `start` — used to compute "+12% vs previous period"
+ * deltas on the dashboard KPI cards. Null when `start` is null: "all
+ * time" has no meaningful previous period to compare against. */
+export function previousPeriod(start: Date | null, end: Date): { start: Date; end: Date } | null {
+  if (!start) return null;
+  const durationMs = end.getTime() - start.getTime();
+  const prevEnd = new Date(start.getTime() - 1);
+  const prevStart = new Date(prevEnd.getTime() - durationMs);
+  return { start: prevStart, end: prevEnd };
+}
+
 /** Formats a Date as a plain `yyyy-mm-dd` key using its LOCAL date parts —
  * deliberately not `toISOString().slice(0, 10)`, which reads UTC fields
  * and silently rolls back to the previous calendar day for anyone in a

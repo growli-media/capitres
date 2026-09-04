@@ -16,6 +16,11 @@ import {
   normalizeEmail,
 } from "@/lib/admin/users";
 import { isPermission, hasFullControl, type Permission } from "@/lib/admin/permissions";
+import { logAdminActivity } from "@/lib/admin/activity";
+
+function displayName(user: { firstName: string | null; lastName: string | null; email: string }): string {
+  return [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email;
+}
 
 /**
  * Every action here checks the caller's session itself — the legacy
@@ -37,6 +42,7 @@ export async function addEmailAction(
   if (!isValidEmail(email)) return { error: "Enter a valid email address." };
 
   await addToAllowlist(email);
+  await logAdminActivity(`Approved ${email} for team access`);
   revalidatePath("/admin/team");
   return {};
 }
@@ -47,6 +53,7 @@ export async function removeEmailAction(email: string): Promise<void> {
   const caller = await getUserById(session.id);
   if (!caller || !hasFullControl(caller)) return;
   await removeFromAllowlist(email);
+  await logAdminActivity(`Removed ${email} from the team allowlist`);
   revalidatePath("/admin/team");
 }
 
@@ -66,6 +73,9 @@ export async function setUserDisabledAction(userId: string, disabled: boolean): 
   }
 
   await setDisabled(userId, disabled);
+  if (target) {
+    await logAdminActivity(`${disabled ? "Disabled" : "Enabled"} ${displayName(target)}'s account`);
+  }
   revalidatePath("/admin/team");
 }
 
@@ -90,6 +100,7 @@ export async function updateUserPermissionsAction(
 
   const permissions = formData.getAll("permissions").map(String).filter(isPermission) as Permission[];
   await setUserPermissions(userId, permissions);
+  await logAdminActivity(`Updated access for ${displayName(target)}`);
   revalidatePath("/admin/team");
 }
 
@@ -174,6 +185,7 @@ export async function updateUserProfileAction(
   if (emailError) return { error: emailError };
 
   await updateOwnProfile(targetUserId, { firstName, lastName, phone, role, company, email });
+  await logAdminActivity(`Updated ${displayName(target)}'s profile`);
   revalidatePath("/admin/team");
   return {};
 }
@@ -194,6 +206,7 @@ export async function setUserFullAccessAction(userId: string, value: boolean): P
   if (!target || target.isOwner) return;
 
   await setUserFullAccess(userId, value);
+  await logAdminActivity(`${value ? "Granted" : "Revoked"} full access ${value ? "to" : "from"} ${displayName(target)}`);
   revalidatePath("/admin/team");
 }
 
@@ -224,6 +237,7 @@ export async function transferOwnershipAction(
   }
 
   await transferOwnership(caller.id, target.id);
+  await logAdminActivity(`Transferred ownership to ${displayName(target)}`);
   revalidatePath("/admin/team");
   return {};
 }

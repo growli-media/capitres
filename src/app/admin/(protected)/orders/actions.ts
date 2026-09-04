@@ -5,6 +5,7 @@ import { isAuthenticated } from "@/lib/admin/auth";
 import { orderStore, type Order } from "@/lib/orders/store";
 import { can, requirePermission } from "@/lib/admin/permissions";
 import { resolveTimeRange, type TimeRangeValue } from "@/lib/admin/time-range";
+import { logAdminActivity } from "@/lib/admin/activity";
 
 export async function getOrdersForRangeAction(range: TimeRangeValue): Promise<Order[]> {
   await requirePermission("orders");
@@ -25,6 +26,7 @@ export async function markOrderDeliveredAction(ref: string): Promise<void> {
   if (!(await isAuthenticated())) return;
   if (!(await can("orders"))) return;
   await orderStore.setStatus(ref, "Delivered", "CashOnDelivery");
+  await logAdminActivity(`Marked order ${ref} as delivered`);
   revalidatePath("/admin/orders");
   revalidatePath("/admin");
 }
@@ -45,6 +47,7 @@ export async function cancelOrderAction(ref: string): Promise<void> {
   if (!(await isAuthenticated())) return;
   if (!(await can("orders")) && !(await can("abandoned_carts"))) return;
   await orderStore.setStatus(ref, "Cancelled");
+  await logAdminActivity(`Cancelled order ${ref}`);
   revalidatePath("/admin/orders");
   revalidatePath("/admin/abandoned");
   revalidatePath("/admin");
@@ -70,6 +73,7 @@ export async function deleteOrderAction(ref: string): Promise<void> {
   if (!(await isAuthenticated())) return;
   if (!(await can("orders"))) return;
   await orderStore.softDelete(ref);
+  await logAdminActivity(`Deleted order ${ref}`);
   revalidatePath("/admin/orders");
   revalidatePath("/admin");
 }
@@ -85,6 +89,7 @@ export async function restoreOrdersAction(refs: string[]): Promise<void> {
   if (!(await isAuthenticated())) return;
   if (!(await can("orders"))) return;
   await Promise.all(refs.map((ref) => orderStore.restore(ref)));
+  await logAdminActivity(`Restored ${refs.length} order${refs.length === 1 ? "" : "s"}`);
   revalidatePath("/admin/orders");
   revalidatePath("/admin");
 }
@@ -95,4 +100,5 @@ export async function hardDeleteOrdersAction(refs: string[]): Promise<void> {
   if (!(await isAuthenticated())) return;
   if (!(await can("orders"))) return;
   await Promise.all(refs.map((ref) => orderStore.hardDelete(ref)));
+  await logAdminActivity(`Permanently deleted ${refs.length} order${refs.length === 1 ? "" : "s"}`);
 }

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { deleteReview, setReviewApproved, listAdminReviews, type AdminReview } from "@/lib/admin/reviews";
 import { requirePermission } from "@/lib/admin/permissions";
 import { resolveTimeRange, type TimeRangeValue } from "@/lib/admin/time-range";
+import { logAdminActivity } from "@/lib/admin/activity";
 
 export async function getReviewsForRangeAction(range: TimeRangeValue): Promise<AdminReview[]> {
   await requirePermission("reviews");
@@ -18,17 +19,20 @@ function revalidateStorefront() {
 export async function approveReviewAction(id: string): Promise<void> {
   await requirePermission("reviews");
   await setReviewApproved(id, true);
+  await logAdminActivity(`Approved a review`);
   revalidateStorefront();
 }
 
 export async function unapproveReviewAction(id: string): Promise<void> {
   await requirePermission("reviews");
   await setReviewApproved(id, false);
+  await logAdminActivity(`Unpublished a review`);
   revalidateStorefront();
 }
 
 export async function deleteReviewAction(id: string): Promise<void> {
   await requirePermission("reviews");
   await deleteReview(id);
+  await logAdminActivity(`Deleted a review`);
   revalidateStorefront();
 }

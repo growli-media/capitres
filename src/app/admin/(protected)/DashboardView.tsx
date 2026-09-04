@@ -8,6 +8,8 @@ import {
   ChartLineUp,
   ShoppingCartSimple,
   CaretRight,
+  TrendUp,
+  TrendDown,
 } from "@phosphor-icons/react";
 import TimeRangeSlider from "./components/TimeRangeSlider";
 import { getDashboardForRangeAction, type DashboardRangeResult } from "./dashboard-actions";
@@ -16,18 +18,50 @@ import { customerName } from "@/lib/orders/order-helpers";
 import { formatIQD } from "@/lib/money";
 import { glassCard } from "../glass";
 
+/** `invert`: for a metric where going up is bad news (abandoned carts),
+ * so the up/down arrow's color meaning flips — up still shows TrendUp,
+ * it just reads as a warning (red) instead of good news (green). */
+function DeltaBadge({ delta, invert }: { delta: number | null | undefined; invert?: boolean }) {
+  if (delta === null || delta === undefined) return null;
+  if (delta === 0) {
+    return (
+      <span className="text-xs font-medium text-slate-400 dark:text-slate-500">No change</span>
+    );
+  }
+  const up = delta > 0;
+  const good = invert ? !up : up;
+  return (
+    <span
+      className={`flex items-center gap-0.5 text-xs font-semibold ${
+        good ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
+      }`}
+    >
+      {up ? <TrendUp size={12} weight="bold" /> : <TrendDown size={12} weight="bold" />}
+      {up ? "+" : ""}
+      {delta}%
+    </span>
+  );
+}
+
 function KpiCard({
   icon: Icon,
   label,
   value,
   href,
   tone,
+  delta,
+  invertDelta,
 }: {
   icon: React.ComponentType<{ size?: number; className?: string }>;
   label: string;
   value: string;
   href?: string;
   tone?: "alert";
+  /** Percent change vs. the previous equal-length period — undefined
+   * hides the row entirely (e.g. "all time" has no previous period),
+   * null shows nothing but reserves no special case, 0 shows "No change". */
+  delta?: number | null;
+  invertDelta?: boolean;
 }) {
   const content = (
     <div
@@ -41,8 +75,11 @@ function KpiCard({
         <Icon size={16} />
         <span className="text-xs font-medium tracking-wide uppercase">{label}</span>
       </div>
-      <div className="mt-2 text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-        {value}
+      <div className="mt-2 flex items-baseline gap-2">
+        <span className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+          {value}
+        </span>
+        <DeltaBadge delta={delta} invert={invertDelta} />
       </div>
     </div>
   );
@@ -80,22 +117,39 @@ export default function DashboardView({ initial }: { initial: DashboardRangeResu
     });
   }
 
-  const { kpis, abandonedCount, recentOrders, topProducts } = data;
+  const { kpis, kpiDeltas, abandonedCount, recentOrders, topProducts } = data;
 
   return (
     <div>
       <TimeRangeSlider value={range} onChange={handleChange} pending={isPending} />
 
       <div className={`mt-6 grid grid-cols-2 gap-4 transition-opacity lg:grid-cols-4 ${isPending ? "opacity-60" : ""}`}>
-        <KpiCard icon={CurrencyCircleDollar} label="Revenue" value={formatIQD(kpis.revenue, "en")} />
-        <KpiCard icon={Receipt} label="Paid orders" value={String(kpis.orderCount)} />
-        <KpiCard icon={ChartLineUp} label="Avg. order value" value={formatIQD(kpis.aov, "en")} />
+        <KpiCard
+          icon={CurrencyCircleDollar}
+          label="Revenue"
+          value={formatIQD(kpis.revenue, "en")}
+          delta={kpiDeltas?.revenue}
+        />
+        <KpiCard
+          icon={Receipt}
+          label="Paid orders"
+          value={String(kpis.orderCount)}
+          delta={kpiDeltas?.orderCount}
+        />
+        <KpiCard
+          icon={ChartLineUp}
+          label="Avg. order value"
+          value={formatIQD(kpis.aov, "en")}
+          delta={kpiDeltas?.aov}
+        />
         <KpiCard
           icon={ShoppingCartSimple}
           label="Abandoned carts"
           value={String(abandonedCount)}
           href="/admin/abandoned"
           tone={abandonedCount > 0 ? "alert" : undefined}
+          delta={kpiDeltas?.abandonedCount}
+          invertDelta
         />
       </div>
 

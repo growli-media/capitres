@@ -12,6 +12,7 @@ import {
   type CategoryInput,
 } from "@/lib/admin/categories";
 import { requirePermission } from "@/lib/admin/permissions";
+import { logAdminActivity } from "@/lib/admin/activity";
 
 export interface FormState {
   error?: string;
@@ -65,6 +66,7 @@ export async function createCategoryAction(
   }
 
   await createCategory(parsed);
+  await logAdminActivity(`Created category "${parsed.titleEn}"`);
   revalidateStorefront();
   redirect(`/admin/categories?created=1`);
 }
@@ -80,6 +82,7 @@ export async function updateCategoryAction(
 
   parsed.slug = slug; // slug is locked on edit
   await updateCategory(slug, parsed);
+  await logAdminActivity(`Updated category "${parsed.titleEn}"`);
   revalidateStorefront();
   return {};
 }
@@ -87,6 +90,7 @@ export async function updateCategoryAction(
 export async function toggleCategoryArchivedAction(slug: string, archived: boolean): Promise<void> {
   await requirePermission("categories");
   await setCategoryArchived(slug, archived);
+  await logAdminActivity(`${archived ? "Archived" : "Unarchived"} category "${slug}"`);
   revalidateStorefront();
 }
 
@@ -94,6 +98,7 @@ export async function deleteCategoryAction(slug: string): Promise<{ error?: stri
   await requirePermission("categories");
   const result = await deleteCategory(slug);
   if (result.error) return result;
+  await logAdminActivity(`Deleted category "${slug}"`);
   revalidateStorefront();
   redirect("/admin/categories?deleted=1");
 }

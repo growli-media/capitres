@@ -13,6 +13,7 @@ import {
   type CollectionInput,
 } from "@/lib/admin/collections";
 import { requirePermission } from "@/lib/admin/permissions";
+import { logAdminActivity } from "@/lib/admin/activity";
 
 export interface FormState {
   error?: string;
@@ -130,6 +131,7 @@ export async function createCollectionAction(
   }
 
   await createCollection(parsed);
+  await logAdminActivity(`Created collection "${parsed.titleEn}"`);
   revalidateStorefront();
   redirect(`/admin/collections/${parsed.slug}/edit?created=1`);
 }
@@ -148,6 +150,7 @@ export async function updateCollectionAction(
   parsed.slug = slug;
 
   await updateCollection(slug, parsed);
+  await logAdminActivity(`Updated collection "${parsed.titleEn}"`);
   revalidateStorefront();
   return {};
 }
@@ -155,12 +158,14 @@ export async function updateCollectionAction(
 export async function toggleCollectionArchivedAction(slug: string, archived: boolean): Promise<void> {
   await requirePermission("collections");
   await setCollectionArchived(slug, archived);
+  await logAdminActivity(`${archived ? "Archived" : "Unarchived"} collection "${slug}"`);
   revalidateStorefront();
 }
 
 export async function deleteCollectionAction(slug: string): Promise<void> {
   await requirePermission("collections");
   await deleteCollectionPermanently(slug);
+  await logAdminActivity(`Deleted collection "${slug}"`);
   revalidateStorefront();
   redirect("/admin/collections?deleted=1");
 }

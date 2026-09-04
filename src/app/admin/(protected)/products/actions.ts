@@ -16,6 +16,7 @@ import {
   type ProductInput,
 } from "@/lib/admin/products";
 import { requirePermission } from "@/lib/admin/permissions";
+import { logAdminActivity } from "@/lib/admin/activity";
 
 export interface FormState {
   error?: string;
@@ -249,6 +250,7 @@ export async function createProductAction(
   }
 
   const id = await createProduct(parsed);
+  await logAdminActivity(`Created product "${parsed.titleEn}"`);
   revalidateStorefront();
   redirect(`/admin/products/${id}/edit?created=1`);
 }
@@ -268,6 +270,7 @@ export async function updateProductAction(
   parsed.slug = currentSlug;
 
   await updateProduct(id, parsed);
+  await logAdminActivity(`Updated product "${parsed.titleEn}"`);
   revalidateStorefront();
   return {};
 }
@@ -275,18 +278,21 @@ export async function updateProductAction(
 export async function toggleArchivedAction(id: string, archived: boolean): Promise<void> {
   await requirePermission("products");
   await setProductArchived(id, archived);
+  await logAdminActivity(`${archived ? "Archived" : "Unarchived"} product ${id}`);
   revalidateStorefront();
 }
 
 export async function markSoldOutAction(id: string): Promise<void> {
   await requirePermission("products");
   await markAllVariantsSoldOut(id);
+  await logAdminActivity(`Marked product ${id} as sold out`);
   revalidateStorefront();
 }
 
 export async function deleteProductAction(id: string): Promise<void> {
   await requirePermission("products");
   await deleteProductPermanently(id);
+  await logAdminActivity(`Deleted product ${id}`);
   revalidateStorefront();
   redirect("/admin/products?deleted=1");
 }

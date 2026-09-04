@@ -240,3 +240,16 @@ CREATE INDEX IF NOT EXISTS idx_orders_deleted_at ON orders(deleted_at) WHERE del
 -- schema is stored). Empty array = feature off for that product; the
 -- storefront PDP only shows the section when it's non-empty.
 ALTER TABLE products ADD COLUMN IF NOT EXISTS related_product_slugs jsonb NOT NULL DEFAULT '[]';
+
+-- Admin activity feed — one row per meaningful mutation (product saved,
+-- order cancelled, team member's access changed, ...), read by the
+-- notification bell and any future "recent activity" view. Append-only,
+-- no FK to admin_users (a deleted/disabled account's past actions should
+-- stay in the log, not vanish or block the delete).
+CREATE TABLE IF NOT EXISTS admin_activity_log (
+  id         bigserial PRIMARY KEY,
+  actor_name text NOT NULL,
+  message    text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_admin_activity_log_created_at ON admin_activity_log (created_at DESC);
