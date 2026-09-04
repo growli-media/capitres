@@ -140,9 +140,17 @@ export default async function LocaleLayout({
           <CurrencyProvider>
             <PageviewTracker />
             <SmoothScroll />
+            {/* Two RTL fixes, both about the *hidden* state of this link.
+                `sr-only` leaves it absolutely positioned at its static
+                position, which in RTL is the right edge — so it spilled past
+                the viewport and Arabic phones zoomed the whole page out to
+                fit. `start-0 top-0` pins it inside instead, and the padding
+                moved to `focus:` because applied unconditionally it beat
+                sr-only's own `padding: 0` and gave the hidden link a ~33px
+                box. Visible/focused appearance is unchanged. */}
             <a
               href="#main"
-              className="sr-only z-50 bg-ink px-4 py-3 text-paper focus:not-sr-only focus:fixed focus:start-2 focus:top-2"
+              className="sr-only start-0 top-0 z-50 bg-ink text-paper focus:not-sr-only focus:fixed focus:start-2 focus:top-2 focus:px-4 focus:py-3"
             >
               {t("skipToContent")}
             </a>
