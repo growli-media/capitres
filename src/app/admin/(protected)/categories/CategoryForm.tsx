@@ -29,9 +29,13 @@ const inputClass = `h-10 w-full px-3 ${glassInput}`;
 export default function CategoryForm({
   mode,
   category,
+  nextSortOrder = 0,
 }: {
   mode: "create" | "edit";
   category?: AdminCategoryRow;
+  /** New categories append to the end of the drag-ordered list — only
+   * used in create mode, computed by the caller. */
+  nextSortOrder?: number;
 }) {
   const boundAction =
     mode === "edit" && category
@@ -94,17 +98,10 @@ export default function CategoryForm({
         </Field>
       </section>
 
-      <section className="max-w-xs">
-        <Field label="Sort order" hint="Lower numbers show first in the shop menu.">
-          <input
-            type="number"
-            name="sortOrder"
-            step={1}
-            defaultValue={category?.sortOrder ?? 0}
-            className={inputClass}
-          />
-        </Field>
-      </section>
+      {/* Display order is set by dragging rows on the categories list
+          page now, not typed here; this hidden field just carries the
+          existing value through unchanged on every save. */}
+      <input type="hidden" name="sortOrder" value={category?.sortOrder ?? nextSortOrder} />
 
       <div aria-live="polite">
         {state.error && (

@@ -2,12 +2,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CaretLeft } from "@phosphor-icons/react/dist/ssr";
 import CollectionForm from "../CollectionForm";
+import { listAdminCollections } from "@/lib/admin/collections";
 import { requirePermission } from "@/lib/admin/permissions";
 
 export const metadata: Metadata = { title: "New collection" };
 
 export default async function NewCollectionPage() {
   await requirePermission("collections");
+  const collections = await listAdminCollections();
+  const nextSortOrder = collections.length
+    ? Math.max(...collections.map((c) => c.sortOrder)) + 1
+    : 0;
   return (
     <div className="max-w-3xl">
       <Link
@@ -20,7 +25,7 @@ export default async function NewCollectionPage() {
       <h1 className="mb-6 text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
         New collection
       </h1>
-      <CollectionForm mode="create" />
+      <CollectionForm mode="create" nextSortOrder={nextSortOrder} />
     </div>
   );
 }

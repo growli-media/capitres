@@ -56,9 +56,13 @@ const textareaClass = glassTextarea;
 export default function CollectionForm({
   mode,
   collection,
+  nextSortOrder = 0,
 }: {
   mode: "create" | "edit";
   collection?: AdminCollectionRow;
+  /** New collections append to the end of the drag-ordered list —
+   * only used in create mode, computed by the caller. */
+  nextSortOrder?: number;
 }) {
   const boundAction =
     mode === "edit" && collection
@@ -561,8 +565,10 @@ export default function CollectionForm({
         </div>
       </section>
 
-      {/* Theme / order */}
-      <section className="grid grid-cols-2 gap-3">
+      {/* Theme — display order is set by dragging rows on the collections
+          list page now, not typed here; this hidden field just carries
+          the existing value through unchanged on every save. */}
+      <section className="max-w-xs">
         <Field label="Theme" hint="Controls text/badge contrast over the cover photo.">
           <select
             name="theme"
@@ -573,16 +579,8 @@ export default function CollectionForm({
             <option value="dark">Dark</option>
           </select>
         </Field>
-        <Field label="Sort order" hint="Lower numbers show first in the collections list.">
-          <input
-            type="number"
-            name="sortOrder"
-            step={1}
-            defaultValue={collection?.sortOrder ?? 0}
-            className={inputClass}
-          />
-        </Field>
       </section>
+      <input type="hidden" name="sortOrder" value={collection?.sortOrder ?? nextSortOrder} />
 
       <div aria-live="polite">
         {state.error && (

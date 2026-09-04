@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Check, Plus } from "@phosphor-icons/react/dist/ssr";
 import { listAdminCategories, isReservedCategory } from "@/lib/admin/categories";
 import CategoryRowActions from "./CategoryRowActions";
+import CategoriesTable from "./CategoriesTable";
 import { CreatedToast } from "../components/CreatedToast";
 import { glassCard, glassButtonPrimary, glassTone } from "../../glass";
 import { requirePermission } from "@/lib/admin/permissions";
@@ -71,7 +72,6 @@ export default async function AdminCategoriesPage({
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <span className="text-sm text-slate-600 dark:text-slate-400">{c.productCount} products</span>
-              <span className="text-sm text-slate-600 dark:text-slate-400">Order {c.sortOrder}</span>
               {c.archived ? (
                 <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${glassTone.neutral}`}>
                   Archived
@@ -86,55 +86,10 @@ export default async function AdminCategoriesPage({
         ))}
       </div>
 
-      {/* Desktop: table */}
-      <div className={`hidden md:block ${glassCard}`}>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400 dark:border-slate-800 dark:text-slate-500">
-                <th className="px-4 py-3 text-start font-medium whitespace-nowrap">Category</th>
-                <th className="px-4 py-3 text-start font-medium whitespace-nowrap">Products</th>
-                <th className="px-4 py-3 text-start font-medium whitespace-nowrap">Order</th>
-                <th className="px-4 py-3 text-start font-medium whitespace-nowrap">Status</th>
-                <th className="px-4 py-3" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {categories.map((c) => (
-                <tr key={c.slug}>
-                  <td className={`px-4 py-3 whitespace-nowrap ${c.archived ? "opacity-50" : ""}`}>
-                    <Link
-                      href={`/admin/categories/${c.slug}/edit`}
-                      className="font-medium text-slate-900 hover:underline dark:text-slate-100"
-                    >
-                      {c.titleEn}
-                    </Link>
-                    <span className="ms-2 text-xs text-slate-400 dark:text-slate-500">/{c.slug}</span>
-                  </td>
-                  <td className={`px-4 py-3 whitespace-nowrap text-slate-600 dark:text-slate-400 ${c.archived ? "opacity-50" : ""}`}>{c.productCount}</td>
-                  <td className={`px-4 py-3 whitespace-nowrap text-slate-600 dark:text-slate-400 ${c.archived ? "opacity-50" : ""}`}>{c.sortOrder}</td>
-                  <td className={`px-4 py-3 whitespace-nowrap ${c.archived ? "opacity-50" : ""}`}>
-                    {c.archived ? (
-                      <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${glassTone.neutral}`}>
-                        Archived
-                      </span>
-                    ) : (
-                      <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${glassTone.info}`}>
-                        Live
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <CategoryRowActions
-                      slug={c.slug}
-                      archived={c.archived}
-                      reserved={isReservedCategory(c.slug)}
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-      </div>
+      {/* Desktop: table, drag rows to reorder */}
+      <CategoriesTable
+        categories={categories.map((c) => ({ ...c, reserved: isReservedCategory(c.slug) }))}
+      />
     </div>
   );
 }

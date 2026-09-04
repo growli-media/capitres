@@ -6,6 +6,7 @@ import {
   categorySlugExists,
   createCategory,
   deleteCategory,
+  reorderCategories,
   setCategoryArchived,
   updateCategory,
   type CategoryInput,
@@ -95,4 +96,12 @@ export async function deleteCategoryAction(slug: string): Promise<{ error?: stri
   if (result.error) return result;
   revalidateStorefront();
   redirect("/admin/categories?deleted=1");
+}
+
+/** Drag-reordered list from the categories table — `slugs` is every
+ * category's slug in its new top-to-bottom order. */
+export async function reorderCategoriesAction(slugs: string[]): Promise<void> {
+  await requirePermission("categories");
+  await reorderCategories(slugs);
+  revalidateStorefront();
 }

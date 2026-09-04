@@ -35,7 +35,7 @@ export default function SupportPanel() {
           </a>
           <a
             href={`mailto:${SUPPORT_CONTACT.email}`}
-            className={`flex h-11 items-center gap-3 px-4 text-sm font-medium ${glassButtonSecondary}`}
+            className={`flex h-11 items-center gap-3 px-4 text-sm font-medium text-slate-700 dark:text-slate-200 ${glassButtonSecondary}`}
           >
             <EnvelopeSimple size={18} />
             {SUPPORT_CONTACT.email}
@@ -44,7 +44,7 @@ export default function SupportPanel() {
             href={SUPPORT_CONTACT.instagram}
             target="_blank"
             rel="noopener noreferrer"
-            className={`flex h-11 items-center gap-3 px-4 text-sm font-medium ${glassButtonSecondary}`}
+            className={`flex h-11 items-center gap-3 px-4 text-sm font-medium text-slate-700 dark:text-slate-200 ${glassButtonSecondary}`}
           >
             <InstagramLogo size={18} />
             Instagram

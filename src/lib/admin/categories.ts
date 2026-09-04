@@ -78,6 +78,17 @@ export async function setCategoryArchived(slug: string, archived: boolean): Prom
   await sql`update categories set archived = ${archived} where slug = ${slug}`;
 }
 
+/** Rewrites sort_order to match `slugs`' array position — same scheme
+ * and reasoning as reorderCollections in src/lib/admin/collections.ts. */
+export async function reorderCategories(slugs: string[]): Promise<void> {
+  await ensureCategoriesSeeded();
+  await sql.begin(async (tx) => {
+    for (let i = 0; i < slugs.length; i++) {
+      await tx`update categories set sort_order = ${i} where slug = ${slugs[i]}`;
+    }
+  });
+}
+
 /** Reserved slug that drives gift-card product behaviour — never deletable. */
 export function isReservedCategory(slug: string): boolean {
   return slug === GIFT_CARD_CATEGORY;

@@ -185,6 +185,19 @@ export async function setCollectionArchived(slug: string, archived: boolean): Pr
   await sql`update collections set archived = ${archived} where slug = ${slug}`;
 }
 
+/** Rewrites sort_order to match `slugs`' array position (0, 1, 2, ...) —
+ * the admin's own drag-reordered order on the list page. One statement
+ * per row inside a transaction; the list is small enough (a handful to a
+ * few dozen collections) that this is simpler than a bulk unnest/CASE
+ * query and still atomic. */
+export async function reorderCollections(slugs: string[]): Promise<void> {
+  await sql.begin(async (tx) => {
+    for (let i = 0; i < slugs.length; i++) {
+      await tx`update collections set sort_order = ${i} where slug = ${slugs[i]}`;
+    }
+  });
+}
+
 export async function deleteCollectionPermanently(slug: string): Promise<void> {
   // Products referencing this slug in their collection_slugs array just
   // stop matching anything — no FK to cascade, nothing else to clean up.

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Plus } from "@phosphor-icons/react/dist/ssr";
 import { listAdminCollections } from "@/lib/admin/collections";
 import CollectionRowActions from "./CollectionRowActions";
+import CollectionsTable from "./CollectionsTable";
 import { CreatedToast } from "../components/CreatedToast";
 import { glassCard, glassButtonPrimary, glassTone } from "../../glass";
 import { requirePermission } from "@/lib/admin/permissions";
@@ -77,7 +78,6 @@ export default async function AdminCollectionsPage() {
                 </div>
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   <span className="text-sm capitalize text-slate-600 dark:text-slate-400">{c.theme}</span>
-                  <span className="text-sm text-slate-600 dark:text-slate-400">Order {c.sortOrder}</span>
                   {c.archived ? (
                     <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${glassTone.neutral}`}>
                       Archived
@@ -92,67 +92,8 @@ export default async function AdminCollectionsPage() {
             ))}
           </div>
 
-          {/* Desktop: table */}
-          <div className={`hidden md:block ${glassCard}`}>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400 dark:border-slate-800 dark:text-slate-500">
-                  <th className="px-4 py-3 text-start font-medium whitespace-nowrap">Collection</th>
-                  <th className="px-4 py-3 text-start font-medium whitespace-nowrap">Theme</th>
-                  <th className="px-4 py-3 text-start font-medium whitespace-nowrap">Order</th>
-                  <th className="px-4 py-3 text-start font-medium whitespace-nowrap">Status</th>
-                  <th className="px-4 py-3" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {collections.map((c) => (
-                  <tr key={c.slug}>
-                    <td className={`px-4 py-3 ${c.archived ? "opacity-50" : ""}`}>
-                      <div className="flex items-center gap-3">
-                        <div className="relative h-12 w-16 shrink-0 overflow-hidden rounded-md bg-slate-100 dark:bg-slate-800">
-                          {c.heroImageUrl && (
-                            <Image
-                              src={c.heroImageUrl}
-                              alt=""
-                              fill
-                              sizes="64px"
-                              className="object-cover"
-                              unoptimized
-                            />
-                          )}
-                        </div>
-                        <div className="min-w-40">
-                          <Link
-                            href={`/admin/collections/${c.slug}/edit`}
-                            className="block truncate font-medium text-slate-900 hover:underline dark:text-slate-100"
-                          >
-                            {c.titleEn}
-                          </Link>
-                          <span className="text-xs text-slate-400 dark:text-slate-500">/{c.slug}</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className={`px-4 py-3 capitalize whitespace-nowrap text-slate-600 dark:text-slate-400 ${c.archived ? "opacity-50" : ""}`}>{c.theme}</td>
-                    <td className={`px-4 py-3 whitespace-nowrap text-slate-600 dark:text-slate-400 ${c.archived ? "opacity-50" : ""}`}>{c.sortOrder}</td>
-                    <td className={`px-4 py-3 whitespace-nowrap ${c.archived ? "opacity-50" : ""}`}>
-                      {c.archived ? (
-                        <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${glassTone.neutral}`}>
-                          Archived
-                        </span>
-                      ) : (
-                        <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${glassTone.info}`}>
-                          Live
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <CollectionRowActions slug={c.slug} archived={c.archived} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {/* Desktop: table, drag rows to reorder */}
+          <CollectionsTable collections={collections} />
         </>
       )}
     </div>

@@ -6,6 +6,7 @@ import {
   collectionSlugExists,
   createCollection,
   deleteCollectionPermanently,
+  reorderCollections,
   setCollectionArchived,
   updateCollection,
   type AdminCollectionImage,
@@ -162,4 +163,12 @@ export async function deleteCollectionAction(slug: string): Promise<void> {
   await deleteCollectionPermanently(slug);
   revalidateStorefront();
   redirect("/admin/collections?deleted=1");
+}
+
+/** Drag-reordered list from the collections table — `slugs` is every
+ * collection's slug in its new top-to-bottom order. */
+export async function reorderCollectionsAction(slugs: string[]): Promise<void> {
+  await requirePermission("collections");
+  await reorderCollections(slugs);
+  revalidateStorefront();
 }
