@@ -57,7 +57,7 @@ export default function Modal({
           so the "liquid glass" look stays on the surface meant to have
           it, not the backdrop. */}
       <div
-        className="absolute inset-0 bg-slate-950/55 dark:bg-black/70"
+        className="absolute inset-0 bg-slate-950/55 dark:bg-black/45"
         onClick={onClose}
         aria-hidden="true"
       />
