@@ -67,7 +67,7 @@ export async function searchAdminAction(query: string): Promise<SearchResult[]> 
       type: "order" as const,
       label: o.ref,
       sublabel: customerName(o.customer) || undefined,
-      href: `/admin/orders`,
+      href: `/admin/orders/${o.ref}`,
     })),
     ...categories.map((c) => ({
       type: "category" as const,

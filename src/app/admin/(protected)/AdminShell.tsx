@@ -98,7 +98,7 @@ export default function AdminShell({
           almost-imperceptible color wash. Growli's Sky (#8FC7EF) and
           Steel (#5A7387) only — no amber. Fixed + overflow-hidden on the
           wrapper so the blobs never introduce page scroll. */}
-      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
+      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden print:hidden" aria-hidden="true">
         <div className="motion-safe:animate-glow-drift-a absolute -left-1/4 top-1/4 h-[36rem] w-[36rem] rounded-full bg-[#8FC7EF]/35 blur-3xl dark:bg-[#8FC7EF]/10" />
         <div className="motion-safe:animate-glow-drift-b absolute -right-1/4 bottom-1/4 h-[32rem] w-[32rem] rounded-full bg-[#5A7387]/25 blur-3xl dark:bg-[#5A7387]/10" />
       </div>
@@ -112,7 +112,7 @@ export default function AdminShell({
           type="button"
           onClick={toggleSidebar}
           aria-label="Show sidebar"
-          className={`fixed top-4 start-4 z-30 hidden h-11 w-11 cursor-pointer md:flex ${glassIconButton}`}
+          className={`fixed top-4 start-4 z-30 hidden h-11 w-11 cursor-pointer md:flex print:hidden ${glassIconButton}`}
         >
           <SidebarSimple size={19} />
         </button>
@@ -126,7 +126,7 @@ export default function AdminShell({
           type="button"
           onClick={toggleSidebar}
           aria-label="Show sidebar"
-          className={`fixed top-4 start-4 z-30 h-11 w-11 cursor-pointer md:hidden ${glassIconButton}`}
+          className={`fixed top-4 start-4 z-30 h-11 w-11 cursor-pointer md:hidden print:hidden ${glassIconButton}`}
         >
           <List size={19} />
         </button>
@@ -138,7 +138,7 @@ export default function AdminShell({
           shrinks; a translate keeps the pill shape intact the whole way
           off-screen. */}
       <aside
-        className={`fixed inset-y-4 start-4 z-20 hidden w-64 overflow-hidden rounded-[2rem] border transition-transform duration-300 ease-out md:block ${sidebarGlass} ${
+        className={`fixed inset-y-4 start-4 z-20 hidden w-64 overflow-hidden rounded-[2rem] border transition-transform duration-300 ease-out md:block print:hidden ${sidebarGlass} ${
           collapsed ? "-translate-x-[calc(100%+2rem)]" : "translate-x-0"
         }`}
       >
@@ -181,11 +181,11 @@ export default function AdminShell({
       <NewOrderWatcher />
 
       <main
-        className={`relative z-10 min-h-dvh pt-20 transition-[padding] duration-300 ease-out md:pt-8 ${
+        className={`relative z-10 min-h-dvh pt-20 transition-[padding] duration-300 ease-out md:pt-8 print:p-0 ${
           collapsed ? "md:ps-8" : "md:ps-[18rem]"
         }`}
       >
-        <div className="mx-auto w-full max-w-[1600px] px-5 pb-8 md:px-10 md:pb-10">
+        <div className="mx-auto w-full max-w-[1600px] px-5 pb-8 md:px-10 md:pb-10 print:max-w-none print:p-0">
           {children}
         </div>
       </main>

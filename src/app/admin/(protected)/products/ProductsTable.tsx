@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { Check, Trash, X } from "@phosphor-icons/react";
 import type { AdminProductRow } from "@/lib/admin/products";
 import { formatIQD } from "@/lib/money";
 import ProductRowActions from "./ProductRowActions";
+import ProductQuickView from "./ProductQuickView";
 import { bulkArchiveProductsAction, bulkDeleteProductsAction, updateProductPriceAction } from "./actions";
 import { useAdminToast } from "../components/AdminToastProvider";
 import { glassCard, glassTone, glassButtonSecondary, glassInput } from "../../glass";
@@ -229,11 +229,7 @@ export default function ProductsTable({ products }: { products: AdminProductRow[
               </td>
               <td className={`px-4 py-3 ${p.archived ? "opacity-50" : ""}`}>
                 <div className="flex items-center gap-3">
-                  <div className="relative h-12 w-10 shrink-0 overflow-hidden rounded-md bg-slate-100 dark:bg-slate-800">
-                    {p.images[0] && (
-                      <Image src={p.images[0].url} alt="" fill sizes="40px" className="object-cover" unoptimized />
-                    )}
-                  </div>
+                  <ProductQuickView product={p} />
                   <div className="min-w-40">
                     <Link
                       href={`/admin/products/${p.id}/edit`}

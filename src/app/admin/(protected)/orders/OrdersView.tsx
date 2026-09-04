@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { Trash } from "@phosphor-icons/react";
 import { customerName, customerAddress, type Order } from "@/lib/orders/order-helpers";
 import { PAID_STATUSES, FAILED_STATUSES } from "@/lib/admin/queries-shared";
@@ -86,7 +87,12 @@ export default function OrdersView({ initial }: { initial: Order[] }) {
               <div key={o.ref} className={`p-4 ${glassCard}`}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="font-mono text-xs font-medium text-slate-900 dark:text-slate-100">{o.ref}</p>
+                    <Link
+                      href={`/admin/orders/${o.ref}`}
+                      className="font-mono text-xs font-medium text-slate-900 hover:underline dark:text-slate-100"
+                    >
+                      {o.ref}
+                    </Link>
                     <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">{formatDate(o.createdAt)}</p>
                   </div>
                   <StatusBadge status={o.status} />
@@ -155,7 +161,9 @@ export default function OrdersView({ initial }: { initial: Order[] }) {
                   {orders.map((o) => (
                     <tr key={o.ref}>
                       <td className="px-4 py-3 font-mono text-xs font-medium whitespace-nowrap text-slate-900 dark:text-slate-100">
-                        {o.ref}
+                        <Link href={`/admin/orders/${o.ref}`} className="hover:underline">
+                          {o.ref}
+                        </Link>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-slate-500 dark:text-slate-400">{formatDate(o.createdAt)}</td>
                       <td className="px-4 py-3 whitespace-nowrap">
@@ -184,14 +192,13 @@ export default function OrdersView({ initial }: { initial: Order[] }) {
                         <div className="flex items-center justify-end gap-1.5">
                           <NoteButton orderRef={o.ref} initialNote={o.adminNote ?? null} />
                           {o.status === "CashOnDelivery" && (
-                            <form action={markOrderDeliveredAction.bind(null, o.ref)}>
-                              <button
-                                type="submit"
-                                className="rounded-full bg-slate-900/90 px-3 py-1.5 text-xs font-semibold text-white shadow-sm backdrop-blur-md transition-colors hover:bg-slate-800 dark:bg-white/90 dark:text-slate-900 dark:hover:bg-white"
-                              >
-                                Mark as delivered
-                              </button>
-                            </form>
+                            <button
+                              type="button"
+                              onClick={() => handleMarkDelivered(o.ref)}
+                              className="rounded-full bg-slate-900/90 px-3 py-1.5 text-xs font-semibold text-white shadow-sm backdrop-blur-md transition-colors hover:bg-slate-800 dark:bg-white/90 dark:text-slate-900 dark:hover:bg-white"
+                            >
+                              Mark as delivered
+                            </button>
                           )}
                           <CancelOrderButton orderRef={o.ref} status={o.status} />
                           <button

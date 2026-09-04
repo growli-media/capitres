@@ -174,7 +174,11 @@ export default function DashboardView({ initial }: { initial: DashboardRangeResu
               {/* Mobile: stacked rows, no horizontal scroll */}
               <div className={`mt-3 divide-y divide-slate-100 overflow-hidden md:hidden dark:divide-slate-800 ${glassCard}`}>
                 {recentOrders.map((o) => (
-                  <div key={o.ref} className="flex items-center justify-between gap-3 px-4 py-3">
+                  <Link
+                    key={o.ref}
+                    href={`/admin/orders/${o.ref}`}
+                    className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-slate-50/60 dark:hover:bg-slate-800/40"
+                  >
                     <div className="min-w-0">
                       <p className="truncate font-medium text-slate-900 dark:text-slate-100">
                         {customerName(o.customer)}
@@ -187,7 +191,7 @@ export default function DashboardView({ initial }: { initial: DashboardRangeResu
                       </p>
                       <p className="text-xs text-slate-400 dark:text-slate-500">{formatDate(o.createdAt)}</p>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
 
@@ -199,7 +203,9 @@ export default function DashboardView({ initial }: { initial: DashboardRangeResu
                       {recentOrders.map((o) => (
                         <tr key={o.ref}>
                           <td className="px-4 py-3 font-mono text-xs whitespace-nowrap text-slate-500 dark:text-slate-400">
-                            {o.ref}
+                            <Link href={`/admin/orders/${o.ref}`} className="hover:underline">
+                              {o.ref}
+                            </Link>
                           </td>
                           <td className="px-4 py-3 font-medium whitespace-nowrap text-slate-900 dark:text-slate-100">
                             {customerName(o.customer)}
