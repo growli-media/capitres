@@ -49,6 +49,11 @@ export async function POST(request: Request): Promise<NextResponse> {
     });
     return NextResponse.json(json);
   } catch (error) {
+    // The client SDK swallows this response's actual error text and shows
+    // its own generic "Failed to retrieve the client token" instead (it
+    // only checks res.ok, never reads the body) — log the real reason
+    // here so a failure is diagnosable from Vercel's function logs.
+    console.error("blob-upload token generation failed:", error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Upload failed." },
       { status: 400 },
