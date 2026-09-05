@@ -183,7 +183,7 @@ export default function ProductForm({
     try {
       const result = await upload(filename, blob, {
         access: "public",
-        handleUploadUrl: "/api/admin/blob-upload",
+        handleUploadUrl: "/admin/blob-upload",
       });
       updateImage(id, { url: result.url });
     } catch (err) {

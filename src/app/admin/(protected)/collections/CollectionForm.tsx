@@ -137,7 +137,7 @@ export default function CollectionForm({
     try {
       const result = await upload(filename, blob, {
         access: "public",
-        handleUploadUrl: "/api/admin/blob-upload",
+        handleUploadUrl: "/admin/blob-upload",
       });
       updateImage(id, { url: result.url });
     } catch (err) {
@@ -193,7 +193,7 @@ export default function CollectionForm({
 
   /**
    * Video goes straight from the browser to Blob storage via the client-
-   * upload flow (upload() + /api/admin/blob-upload issuing a short-lived
+   * upload flow (upload() + /admin/blob-upload issuing a short-lived
    * token) — NOT the same Server Action used for photos. Vercel Serverless
    * Functions cap request bodies around 4.5MB regardless of Next.js
    * config, so a real video clip has to bypass this app's server
@@ -207,7 +207,7 @@ export default function CollectionForm({
     try {
       const blob = await upload(file.name, file, {
         access: "public",
-        handleUploadUrl: "/api/admin/blob-upload",
+        handleUploadUrl: "/admin/blob-upload",
       });
       setVideoUrl(blob.url);
     } catch (err) {

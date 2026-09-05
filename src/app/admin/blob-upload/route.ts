@@ -27,6 +27,17 @@ const ALLOWED_TYPES = [
  * browser to Blob storage via @vercel/blob/client's upload(), bypassing
  * this function (and that cap) entirely. See ProductForm.tsx /
  * CollectionForm.tsx for the client side of this flow.
+ *
+ * Lives under /admin/, not /api/admin/ — that's load-bearing, not
+ * cosmetic. createUserSession() (auth.ts) scopes the session cookie to
+ * `path: "/admin"` on purpose, so it isn't sent on every public
+ * storefront request. A cookie's path scope only matches by URL prefix,
+ * so at /api/admin/blob-upload the browser withheld it on every request,
+ * isAuthenticated() always failed, and every real (logged-in) upload
+ * attempt got the same generic "Failed to retrieve the client token" as
+ * a logged-out one — this is the actual fix for that, not the earlier
+ * error-logging alone. Keep this route inside /admin/ if it ever moves
+ * again, or give the cookie a broader path deliberately.
  */
 export async function POST(request: Request): Promise<NextResponse> {
   const body = (await request.json()) as HandleUploadBody;

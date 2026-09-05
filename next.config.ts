@@ -8,7 +8,8 @@ const nextConfig: NextConfig = {
     root: __dirname,
   },
   // Local-dev parity with the client-upload flow used for collection
-  // videos (src/app/api/admin/blob-upload/route.ts) — raising this alone
+  // videos and product/collection photos (src/app/admin/blob-upload/
+  // route.ts) — raising this alone
   // does NOT make large uploads work in production, since Vercel
   // Serverless Functions enforce their own ~4.5MB platform-level request
   // cap that no Next.js config can raise. Real video uploads go through
