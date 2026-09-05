@@ -95,6 +95,14 @@ export default function CollectionForm({
   const [videoError, setVideoError] = useState<string | null>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
+  // Named heroMode (not "mode") since the form's own create/edit mode
+  // prop already owns that name. A collection that was already saved
+  // with no real photos and a video (see actions.ts/collections.ts) is
+  // the one signal that it was in video mode last time.
+  const [heroMode, setHeroMode] = useState<"photo" | "video">(() =>
+    collection && collection.heroImages.length === 0 && collection.videoUrl ? "video" : "photo",
+  );
+
   function updateImage(id: number, patch: Partial<ImageRow>) {
     setImages((rows) => rows.map((r) => (r.id === id ? { ...r, ...patch } : r)));
   }
@@ -227,7 +235,34 @@ export default function CollectionForm({
       />
       {/* Photos */}
       <section>
-        <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Photos</h2>
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Photos</h2>
+          {heroMode === "photo" ? (
+            <button
+              type="button"
+              onClick={() => setHeroMode("video")}
+              className="cursor-pointer text-xs font-medium text-slate-500 underline decoration-dotted hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+            >
+              Use video instead
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setHeroMode("photo")}
+              className="cursor-pointer text-xs font-medium text-slate-500 underline decoration-dotted hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+            >
+              Use photo instead
+            </button>
+          )}
+        </div>
+        {heroMode === "video" ? (
+          <p className="rounded-lg border border-dashed border-slate-300 px-3.5 py-3 text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
+            This collection will show only the video below on its own page — no photo needed.
+            Anywhere else a thumbnail is required (the collections list, nav, homepage), a plain
+            placeholder is used automatically instead.
+          </p>
+        ) : (
+          <>
         <p className="mb-3 text-xs text-slate-400 dark:text-slate-500">
           The first photo (marked <span className="font-semibold text-slate-500 dark:text-slate-400">Main</span>)
           is the one shown in listings elsewhere on the site. Add more than one and they&rsquo;ll
@@ -402,17 +437,17 @@ export default function CollectionForm({
             <span className="text-xs text-slate-400 dark:text-slate-500">or drag images here</span>
           </div>
         </div>
+          </>
+        )}
       </section>
 
       {/* Video */}
       <section>
         <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Video</h2>
         <p className="mb-3 text-xs text-slate-400 dark:text-slate-500">
-          Optional. When set, the video replaces the photo rotation on the collection page —
-          customers can play or pause it. Max 80MB; compress longer clips first. A photo above is
-          still required even with a video set — it&rsquo;s the video&rsquo;s poster while it
-          loads, the fallback shown to visitors with reduced motion enabled, and what the
-          collections list and homepage panels show (they never play video).
+          {heroMode === "video"
+            ? "This is what shows on the collection's own page — customers can play or pause it. Max 80MB; compress longer clips first."
+            : "Optional. When set, the video replaces the photo rotation on the collection page — customers can play or pause it. Max 80MB; compress longer clips first. A photo above is still required — it's the video's poster while it loads, the fallback shown to visitors with reduced motion enabled, and what the collections list and homepage panels show (they never play video)."}
         </p>
         <div className="flex items-center gap-3">
           <button
@@ -580,6 +615,51 @@ export default function CollectionForm({
               defaultValue={collection?.descriptionKu}
               className={textareaClass}
             />
+          </Field>
+        </div>
+      </section>
+
+      {/* Text alignment */}
+      <section>
+        <h2 className="mb-1 text-sm font-semibold text-slate-900 dark:text-slate-100">Text alignment</h2>
+        <p className="mb-3 text-xs text-slate-400 dark:text-slate-500">
+          How the title, tagline and description sit on the collection page — set independently
+          per language, since a language&rsquo;s natural direction isn&rsquo;t always what you
+          want.
+        </p>
+        <div className="grid grid-cols-3 gap-3">
+          <Field label="English">
+            <select
+              name="textAlignEn"
+              defaultValue={collection?.textAlignEn ?? "left"}
+              className={`${inputClass} cursor-pointer`}
+            >
+              <option value="left">Left</option>
+              <option value="center">Center</option>
+              <option value="right">Right</option>
+            </select>
+          </Field>
+          <Field label="Arabic">
+            <select
+              name="textAlignAr"
+              defaultValue={collection?.textAlignAr ?? "right"}
+              className={`${inputClass} cursor-pointer`}
+            >
+              <option value="left">Left</option>
+              <option value="center">Center</option>
+              <option value="right">Right</option>
+            </select>
+          </Field>
+          <Field label="Kurdish">
+            <select
+              name="textAlignKu"
+              defaultValue={collection?.textAlignKu ?? "right"}
+              className={`${inputClass} cursor-pointer`}
+            >
+              <option value="left">Left</option>
+              <option value="center">Center</option>
+              <option value="right">Right</option>
+            </select>
           </Field>
         </div>
       </section>

@@ -73,12 +73,11 @@ function parseInput(formData: FormData, fallbackSlug: string): CollectionInput |
   const slug = slugify(String(formData.get("slug") ?? "") || fallbackSlug || titleEn);
   if (!slug) return { error: "Couldn't derive a URL slug — please set one." };
 
+  const videoUrl = String(formData.get("videoUrl") ?? "").trim();
+
   const heroImages = heroImagesOf(formData).filter((img) => img.url);
-  if (heroImages.length === 0) {
-    return {
-      error:
-        "Add at least one photo (upload or paste a URL) — needed even with a video set, since it's the video's poster and what the collections list and homepage show.",
-    };
+  if (heroImages.length === 0 && !videoUrl) {
+    return { error: "Add at least one photo, or a video." };
   }
   // An untitled photo falls back to the collection's own title, same
   // convention as the old single-photo field used.
@@ -91,9 +90,16 @@ function parseInput(formData: FormData, fallbackSlug: string): CollectionInput |
   const theme = String(formData.get("theme") ?? "light");
   if (theme !== "light" && theme !== "dark") return { error: "Choose a valid theme." };
 
+  const ALIGNMENTS = ["left", "center", "right"];
+  const textAlignEn = String(formData.get("textAlignEn") ?? "left");
+  const textAlignAr = String(formData.get("textAlignAr") ?? "right");
+  const textAlignKu = String(formData.get("textAlignKu") ?? "right");
+  if (!ALIGNMENTS.includes(textAlignEn) || !ALIGNMENTS.includes(textAlignAr) || !ALIGNMENTS.includes(textAlignKu)) {
+    return { error: "Choose a valid text alignment." };
+  }
+
   const sortOrder = Number(formData.get("sortOrder") ?? 0);
 
-  const videoUrl = String(formData.get("videoUrl") ?? "").trim();
   const publishedDate = String(formData.get("publishedDate") ?? "").trim();
   const publishedWhere = String(formData.get("publishedWhere") ?? "").trim();
 
@@ -110,6 +116,9 @@ function parseInput(formData: FormData, fallbackSlug: string): CollectionInput |
     descriptionKu,
     heroImages,
     videoUrl: videoUrl || null,
+    textAlignEn,
+    textAlignAr,
+    textAlignKu,
     publishedDate: publishedDate || null,
     publishedWhere: publishedWhere || null,
     theme,

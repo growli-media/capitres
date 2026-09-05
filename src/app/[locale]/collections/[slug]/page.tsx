@@ -48,6 +48,12 @@ export default async function CollectionPage({
     catalog.getProducts({ collection: slug }, "featured"),
   ]);
 
+  // Physical alignment, deliberately independent of reading direction —
+  // see Collection.textAlign's doc comment. Set once here and inherited
+  // by the hero's and description strip's text children.
+  const align = pick(collection.textAlign, locale);
+  const alignClass = align === "center" ? "text-center" : align === "right" ? "text-right" : "text-left";
+
   return (
     <>
       {/* Collection hero */}
@@ -59,7 +65,9 @@ export default async function CollectionPage({
           aria-hidden="true"
           className="absolute inset-0 bg-gradient-to-t from-ink via-ink/45 to-ink/25"
         />
-        <div className="container-x relative flex min-h-[62dvh] flex-col justify-end pb-12 pt-32 md:min-h-[70dvh] md:pb-16">
+        <div
+          className={`container-x relative flex min-h-[62dvh] flex-col justify-end pb-12 pt-32 md:min-h-[70dvh] md:pb-16 ${alignClass}`}
+        >
           <Reveal>
             <p className="text-eyebrow mb-4 text-green">
               {t("eyebrow")}
@@ -91,7 +99,7 @@ export default async function CollectionPage({
       </section>
 
       {/* Description strip */}
-      <section className="container-x border-b border-line py-10 md:py-14">
+      <section className={`container-x border-b border-line py-10 md:py-14 ${alignClass}`}>
         <Reveal>
           <p className="max-w-3xl text-lg leading-relaxed text-ink/75 md:text-xl">
             {pick(collection.description, locale)}

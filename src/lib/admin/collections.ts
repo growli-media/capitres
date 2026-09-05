@@ -29,6 +29,11 @@ export interface AdminCollectionRow {
   /** Story banner — see CollectionForm.tsx's "Photos" section. */
   heroImages: AdminCollectionImage[];
   videoUrl: string | null;
+  /** Physical left/center/right per locale — see schema.sql for why
+   * these default to each language's natural direction, not "left". */
+  textAlignEn: string;
+  textAlignAr: string;
+  textAlignKu: string;
   publishedDate: string | null;
   publishedWhere: string | null;
   theme: "light" | "dark";
@@ -50,6 +55,9 @@ interface CollectionRow {
   hero_image: { url: string; alt: { en: string; ar: string; ku: string } };
   hero_images: { url: string; alt: { en: string; ar: string; ku: string } }[] | null;
   video_url: string | null;
+  text_align_en: string;
+  text_align_ar: string;
+  text_align_ku: string;
   // postgres.js decodes a `date` column as a JS Date, not a string —
   // same gotcha documented in src/lib/catalog/providers/postgres.ts's
   // dateOnly() helper, reused below for the same reason.
@@ -92,6 +100,9 @@ function toRow(r: CollectionRow): AdminCollectionRow {
       altKu: img.alt?.ku ?? "",
     })),
     videoUrl: r.video_url,
+    textAlignEn: r.text_align_en,
+    textAlignAr: r.text_align_ar,
+    textAlignKu: r.text_align_ku,
     publishedDate: r.published_date ? dateOnly(r.published_date) : null,
     publishedWhere: r.published_where,
     theme: r.theme,
@@ -130,6 +141,9 @@ export interface CollectionInput {
   descriptionKu: string;
   heroImages: AdminCollectionImage[];
   videoUrl: string | null;
+  textAlignEn: string;
+  textAlignAr: string;
+  textAlignKu: string;
   publishedDate: string | null;
   publishedWhere: string | null;
   theme: "light" | "dark";
@@ -143,36 +157,56 @@ function heroImagesJson(input: CollectionInput) {
   }));
 }
 
+/** hero_image (singular) is NOT NULL — still what the admin thumbnail,
+ * storefront nav, and homepage panels read. A collection saved with no
+ * photos (video-only, see actions.ts) still needs something valid there,
+ * so it falls back to this on-brand placeholder rather than failing the
+ * insert. heroImages (plural) stays genuinely empty in that case — that's
+ * the signal CollectionHero.tsx uses to skip the photo layer entirely on
+ * the collection's own page and show only the video. */
+const VIDEO_ONLY_PLACEHOLDER_IMAGE = {
+  url: "/brand/video-only-placeholder.jpg",
+  alt: { en: "", ar: "", ku: "" },
+};
+
 export async function createCollection(input: CollectionInput): Promise<void> {
   const images = heroImagesJson(input);
+  const heroImage = images[0] ?? VIDEO_ONLY_PLACEHOLDER_IMAGE;
   await sql`
     insert into collections (
       slug, title_en, title_ar, title_ku,
       tagline_en, tagline_ar, tagline_ku,
       description_en, description_ar, description_ku,
-      hero_image, hero_images, video_url, published_date, published_where,
+      hero_image, hero_images, video_url,
+      text_align_en, text_align_ar, text_align_ku,
+      published_date, published_where,
       theme, sort_order
     ) values (
       ${input.slug}, ${input.titleEn}, ${input.titleAr}, ${input.titleKu},
       ${input.taglineEn}, ${input.taglineAr}, ${input.taglineKu},
       ${input.descriptionEn}, ${input.descriptionAr}, ${input.descriptionKu},
-      ${jsonb(images[0])}, ${jsonb(images)}, ${input.videoUrl}, ${input.publishedDate},
-      ${input.publishedWhere}, ${input.theme}, ${input.sortOrder}
+      ${jsonb(heroImage)}, ${jsonb(images)}, ${input.videoUrl},
+      ${input.textAlignEn}, ${input.textAlignAr}, ${input.textAlignKu},
+      ${input.publishedDate}, ${input.publishedWhere}, ${input.theme}, ${input.sortOrder}
     )
   `;
 }
 
 export async function updateCollection(slug: string, input: CollectionInput): Promise<void> {
   const images = heroImagesJson(input);
+  const heroImage = images[0] ?? VIDEO_ONLY_PLACEHOLDER_IMAGE;
   await sql`
     update collections set
       title_en = ${input.titleEn}, title_ar = ${input.titleAr}, title_ku = ${input.titleKu},
       tagline_en = ${input.taglineEn}, tagline_ar = ${input.taglineAr}, tagline_ku = ${input.taglineKu},
       description_en = ${input.descriptionEn}, description_ar = ${input.descriptionAr},
       description_ku = ${input.descriptionKu},
-      hero_image = ${jsonb(images[0])},
+      hero_image = ${jsonb(heroImage)},
       hero_images = ${jsonb(images)},
       video_url = ${input.videoUrl},
+      text_align_en = ${input.textAlignEn},
+      text_align_ar = ${input.textAlignAr},
+      text_align_ku = ${input.textAlignKu},
       published_date = ${input.publishedDate},
       published_where = ${input.publishedWhere},
       theme = ${input.theme},

@@ -85,6 +85,9 @@ interface CollectionRow {
   hero_image: { url: string; alt: LocalizedString };
   hero_images: { url: string; alt: LocalizedString }[] | null;
   video_url: string | null;
+  text_align_en: string;
+  text_align_ar: string;
+  text_align_ku: string;
   published_date: string | Date | null;
   published_where: string | null;
   theme: "dark" | "light";
@@ -215,6 +218,7 @@ function toCollection(row: CollectionRow): Collection {
     heroImage: toImage(row.hero_image),
     heroImages: (row.hero_images ?? []).map(toImage),
     videoUrl: row.video_url ?? undefined,
+    textAlign: loc(row.text_align_en, row.text_align_ar, row.text_align_ku),
     publishedDate: row.published_date ? dateOnly(row.published_date) : undefined,
     publishedWhere: row.published_where ?? undefined,
     theme: row.theme,

@@ -202,6 +202,17 @@ ALTER TABLE collections ADD COLUMN IF NOT EXISTS published_where text;
 -- photos. Guarded by IS NULL so it's safe to re-run.
 UPDATE collections SET hero_images = jsonb_build_array(hero_image) WHERE hero_images IS NULL;
 
+-- Per-locale text alignment for the collection hero + description strip —
+-- physical left/center/right (not logical start/end): a deliberate ask so
+-- an admin can defy a language's natural reading direction on purpose,
+-- e.g. a left-aligned Arabic headline for editorial effect. Defaults
+-- match today's actual rendering (English naturally starts left, Arabic/
+-- Kurdish naturally start right under dir="rtl") so no existing
+-- collection's layout changes until someone opts into a different value.
+ALTER TABLE collections ADD COLUMN IF NOT EXISTS text_align_en text NOT NULL DEFAULT 'left';
+ALTER TABLE collections ADD COLUMN IF NOT EXISTS text_align_ar text NOT NULL DEFAULT 'right';
+ALTER TABLE collections ADD COLUMN IF NOT EXISTS text_align_ku text NOT NULL DEFAULT 'right';
+
 -- Team permissions — see src/lib/admin/permissions.ts for the grantable
 -- keys and how these are enforced. Owners bypass `permissions` entirely;
 -- everyone else needs the specific section granted explicitly (default

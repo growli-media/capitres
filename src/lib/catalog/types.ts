@@ -118,6 +118,10 @@ export interface Collection {
   /** Optional customer-controlled video for the story banner — takes
    * priority over heroImages rotation when present. */
   videoUrl?: string;
+  /** Physical (not logical) text alignment for the hero + description
+   * strip, one value per locale — "left" | "center" | "right". A
+   * deliberate per-language override, not a reading-direction default. */
+  textAlign: LocalizedString;
   /** Optional publication credit, both independently optional. */
   publishedDate?: string;
   publishedWhere?: string;
