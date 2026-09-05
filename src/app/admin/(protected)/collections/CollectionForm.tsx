@@ -233,7 +233,8 @@ export default function CollectionForm({
           is the one shown in listings elsewhere on the site. Add more than one and they&rsquo;ll
           auto-rotate on the collection page. Drag the handle{" "}
           <DotsSixVertical size={12} className="inline align-middle" aria-hidden="true" /> or
-          use the arrows to reorder, and drop an image onto a photo to replace it.
+          use the arrows to reorder, and drop an image onto a photo to replace it. Alt text is
+          optional — it falls back to the collection&rsquo;s title if left blank.
         </p>
         <div className="space-y-4">
           {images.map((row, i) => (
@@ -345,7 +346,7 @@ export default function CollectionForm({
                   />
                 </Field>
                 <div className="grid grid-cols-3 gap-3">
-                  <Field label="Alt text (EN)">
+                  <Field label="Alt text (EN, optional)">
                     <input
                       type="text"
                       name="heroImageAltEn"
@@ -354,7 +355,7 @@ export default function CollectionForm({
                       className={inputClass}
                     />
                   </Field>
-                  <Field label="Alt text (AR)">
+                  <Field label="Alt text (AR, optional)">
                     <input
                       type="text"
                       name="heroImageAltAr"
@@ -364,7 +365,7 @@ export default function CollectionForm({
                       className={inputClass}
                     />
                   </Field>
-                  <Field label="Alt text (KU)">
+                  <Field label="Alt text (KU, optional)">
                     <input
                       type="text"
                       name="heroImageAltKu"

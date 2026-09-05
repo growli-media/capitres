@@ -252,7 +252,8 @@ export default function ProductForm({
           The first photo (marked <span className="font-semibold text-slate-500 dark:text-slate-400">Main</span>)
           is the one shown in listings. Drag the handle{" "}
           <DotsSixVertical size={12} className="inline align-middle" aria-hidden="true" /> or
-          use the arrows to reorder, and drop an image onto a photo to replace it.
+          use the arrows to reorder, and drop an image onto a photo to replace it. Alt text is
+          optional — it falls back to the product&rsquo;s title if left blank.
         </p>
         <div className="space-y-4">
           {images.map((row, i) => (
@@ -364,7 +365,7 @@ export default function ProductForm({
                   />
                 </Field>
                 <div className="grid grid-cols-3 gap-3">
-                  <Field label="Alt text (EN)">
+                  <Field label="Alt text (EN, optional)">
                     <input
                       type="text"
                       name="imageAltEn"
@@ -373,7 +374,7 @@ export default function ProductForm({
                       className={inputClass}
                     />
                   </Field>
-                  <Field label="Alt text (AR)">
+                  <Field label="Alt text (AR, optional)">
                     <input
                       type="text"
                       name="imageAltAr"
@@ -383,7 +384,7 @@ export default function ProductForm({
                       className={inputClass}
                     />
                   </Field>
-                  <Field label="Alt text (KU)">
+                  <Field label="Alt text (KU, optional)">
                     <input
                       type="text"
                       name="imageAltKu"
