@@ -95,7 +95,10 @@ export default async function HomePage({
           label: tHome("eightiesTitle"),
           sub: tHome("eightiesSub"),
           cta: tHome("eightiesCta"),
-          href: "/collections/80s-heritage",
+          // No "80s" collection exists yet — point at the shop rather
+          // than a slug that doesn't exist. Swap to its real collection
+          // href once it's created in admin.
+          href: "/shop",
         }}
       />
 
