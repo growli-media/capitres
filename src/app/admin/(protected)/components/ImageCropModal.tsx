@@ -1,38 +1,53 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
-import Cropper, { type Area } from "react-easy-crop";
+import { useCallback, useMemo, useRef, useState } from "react";
+import ReactCrop, {
+  centerCrop,
+  makeAspectCrop,
+  type PixelCrop,
+} from "react-image-crop";
+import "react-image-crop/dist/ReactCrop.css";
 import Modal from "./Modal";
 import { glassButtonPrimary, glassButtonSecondary } from "../../glass";
 
 const ASPECT_OPTIONS = [
+  { label: "Freeform", value: undefined },
   { label: "Square", value: 1 },
   { label: "Portrait 4:5", value: 4 / 5 },
   { label: "Landscape 16:9", value: 16 / 9 },
 ] as const;
 
-function loadImage(src: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error("Couldn't read that image."));
-    img.src = src;
-  });
+/** A centered crop covering 90% of the image — aspect-locked if given
+ * one, otherwise a plain freeform rectangle at the same size. */
+function centeredCropFor(
+  aspect: number | undefined,
+  width: number,
+  height: number,
+): PixelCrop {
+  if (aspect) {
+    return centerCrop(
+      makeAspectCrop({ unit: "px", width: width * 0.9 }, aspect, width, height),
+      width,
+      height,
+    );
+  }
+  const w = width * 0.9;
+  const h = height * 0.9;
+  return { unit: "px", x: (width - w) / 2, y: (height - h) / 2, width: w, height: h };
 }
 
-async function cropToBlob(
-  src: string,
-  area: Area,
+function cropToBlob(
+  image: HTMLImageElement,
+  area: { x: number; y: number; width: number; height: number },
   outputType: string,
   quality?: number,
 ): Promise<Blob> {
-  const img = await loadImage(src);
   const canvas = document.createElement("canvas");
   canvas.width = Math.round(area.width);
   canvas.height = Math.round(area.height);
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Cropping isn't supported in this browser.");
-  ctx.drawImage(img, area.x, area.y, area.width, area.height, 0, 0, canvas.width, canvas.height);
+  ctx.drawImage(image, area.x, area.y, area.width, area.height, 0, 0, canvas.width, canvas.height);
   return new Promise((resolve, reject) => {
     canvas.toBlob(
       (blob) => (blob ? resolve(blob) : reject(new Error("Couldn't process that crop."))),
@@ -43,17 +58,11 @@ async function cropToBlob(
 }
 
 /**
- * Crop step between picking a photo and uploading it. Pan/zoom within a
- * locked aspect box — react-easy-crop's own interaction model, not a
- * draggable resizable frame — so "aspect" below is a preset picker rather
- * than freeform. Renders nothing until a file is handed in; the caller
- * owns that state (open = file !== null) so one instance can serve every
- * photo row in a form instead of a modal per row.
- *
- * The editor below is keyed by the file's identity rather than resetting
- * its crop/zoom state in an effect when `file` changes — remounting on a
- * new file gives it fresh initial state for free and is the pattern React
- * itself recommends over an effect that exists purely to reset state.
+ * Crop step between picking a photo and uploading it — drag out or resize
+ * a crop box directly on the image (react-image-crop), locked to a preset
+ * aspect or left freeform. Renders nothing until a file is handed in; the
+ * caller owns that state (open = file !== null) so one instance can serve
+ * every photo row in a form instead of a modal per row.
  */
 export default function ImageCropModal({
   file,
@@ -92,12 +101,12 @@ function CropEditor({
   onApply: (blob: Blob, filename: string) => void;
   onCancel: () => void;
 }) {
-  const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [aspect, setAspect] = useState(defaultAspect);
-  const [area, setArea] = useState<Area | null>(null);
+  const [aspect, setAspect] = useState<number | undefined>(defaultAspect);
+  const [crop, setCrop] = useState<PixelCrop>();
+  const [completedCrop, setCompletedCrop] = useState<PixelCrop | null>(null);
   const [applying, setApplying] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
 
   // Deliberately never revoked: a cleanup effect that revokes it would
   // fire for real on Strict Mode's dev-only double-invoke (mount →
@@ -107,14 +116,39 @@ function CropEditor({
   // away — so the tradeoff favours not fighting Strict Mode over it.
   const objectUrl = useMemo(() => URL.createObjectURL(file), [file]);
 
+  function onImageLoad(e: React.SyntheticEvent<HTMLImageElement>) {
+    const { width, height } = e.currentTarget;
+    const next = centeredCropFor(aspect, width, height);
+    setCrop(next);
+    setCompletedCrop(next);
+  }
+
+  function handleAspectChange(next: number | undefined) {
+    setAspect(next);
+    const img = imgRef.current;
+    if (!img) return;
+    const c = centeredCropFor(next, img.width, img.height);
+    setCrop(c);
+    setCompletedCrop(c);
+  }
+
   const handleApply = useCallback(async () => {
-    if (!area) return;
+    const img = imgRef.current;
+    if (!img || !completedCrop || completedCrop.width === 0 || completedCrop.height === 0) return;
     setApplying(true);
     setError(null);
     try {
+      const scaleX = img.naturalWidth / img.width;
+      const scaleY = img.naturalHeight / img.height;
+      const area = {
+        x: completedCrop.x * scaleX,
+        y: completedCrop.y * scaleY,
+        width: completedCrop.width * scaleX,
+        height: completedCrop.height * scaleY,
+      };
       const outputType = file.type === "image/png" ? "image/png" : "image/jpeg";
       const blob = await cropToBlob(
-        objectUrl,
+        img,
         area,
         outputType,
         outputType === "image/jpeg" ? 0.9 : undefined,
@@ -126,50 +160,44 @@ function CropEditor({
     } finally {
       setApplying(false);
     }
-  }, [file, objectUrl, area, onApply]);
+  }, [file, completedCrop, onApply]);
 
   return (
     <div className="space-y-4">
-      <div className="relative h-96 w-full overflow-hidden rounded-lg bg-slate-900">
-        <Cropper
-          image={objectUrl}
+      <div className="flex max-h-[60vh] items-center justify-center overflow-auto rounded-lg bg-slate-900 p-2">
+        <ReactCrop
           crop={crop}
-          zoom={zoom}
           aspect={aspect}
-          onCropChange={setCrop}
-          onZoomChange={setZoom}
-          onCropComplete={(_, pixels) => setArea(pixels)}
-        />
-      </div>
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex gap-1.5">
-          {ASPECT_OPTIONS.map((opt) => (
-            <button
-              key={opt.label}
-              type="button"
-              onClick={() => setAspect(opt.value)}
-              className={`h-8 cursor-pointer rounded-full border px-3 text-xs font-medium transition-colors ${
-                aspect === opt.value
-                  ? "border-slate-900 bg-slate-900 text-white dark:border-slate-100 dark:bg-slate-100 dark:text-slate-900"
-                  : "border-slate-300 text-slate-600 hover:border-slate-400 dark:border-slate-700 dark:text-slate-400 dark:hover:border-slate-600"
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-        <label className="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-          Zoom
-          <input
-            type="range"
-            min={1}
-            max={3}
-            step={0.01}
-            value={zoom}
-            onChange={(e) => setZoom(Number(e.target.value))}
-            className="w-32 cursor-pointer accent-slate-900 dark:accent-slate-100"
+          ruleOfThirds
+          onChange={(pixelCrop) => setCrop(pixelCrop)}
+          onComplete={(pixelCrop) => setCompletedCrop(pixelCrop)}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element -- a
+              local blob: URL, not a remote image next/image can optimize */}
+          <img
+            ref={imgRef}
+            src={objectUrl}
+            alt=""
+            onLoad={onImageLoad}
+            className="max-h-[56vh] max-w-full"
           />
-        </label>
+        </ReactCrop>
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {ASPECT_OPTIONS.map((opt) => (
+          <button
+            key={opt.label}
+            type="button"
+            onClick={() => handleAspectChange(opt.value)}
+            className={`h-8 cursor-pointer rounded-full border px-3 text-xs font-medium transition-colors ${
+              aspect === opt.value
+                ? "border-slate-900 bg-slate-900 text-white dark:border-slate-100 dark:bg-slate-100 dark:text-slate-900"
+                : "border-slate-300 text-slate-600 hover:border-slate-400 dark:border-slate-700 dark:text-slate-400 dark:hover:border-slate-600"
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
       </div>
       {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
       <div className="flex justify-end gap-3 border-t border-slate-200 pt-4 dark:border-slate-800">
@@ -183,7 +211,7 @@ function CropEditor({
         <button
           type="button"
           onClick={handleApply}
-          disabled={applying || !area}
+          disabled={applying || !completedCrop}
           className={`h-10 cursor-pointer px-5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60 ${glassButtonPrimary}`}
         >
           {applying ? "Applying…" : "Apply & upload"}
