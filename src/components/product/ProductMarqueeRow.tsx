@@ -54,7 +54,6 @@ export default function ProductMarqueeRow({
   useEffect(() => {
     const el = scrollerRef.current;
     if (!el) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const sign = direction === "left" ? 1 : -1;
     if (sign < 0) {
