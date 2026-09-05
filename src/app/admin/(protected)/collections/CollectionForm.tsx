@@ -95,14 +95,6 @@ export default function CollectionForm({
   const [videoError, setVideoError] = useState<string | null>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
-  // Named heroMode (not "mode") since the form's own create/edit mode
-  // prop already owns that name. A collection that was already saved
-  // with no real photos and a video (see actions.ts/collections.ts) is
-  // the one signal that it was in video mode last time.
-  const [heroMode, setHeroMode] = useState<"photo" | "video">(() =>
-    collection && collection.heroImages.length === 0 && collection.videoUrl ? "video" : "photo",
-  );
-
   function updateImage(id: number, patch: Partial<ImageRow>) {
     setImages((rows) => rows.map((r) => (r.id === id ? { ...r, ...patch } : r)));
   }
@@ -235,38 +227,12 @@ export default function CollectionForm({
       />
       {/* Photos */}
       <section>
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Photos</h2>
-          {heroMode === "photo" ? (
-            <button
-              type="button"
-              onClick={() => setHeroMode("video")}
-              className="cursor-pointer text-xs font-medium text-slate-500 underline decoration-dotted hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
-            >
-              Use video instead
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setHeroMode("photo")}
-              className="cursor-pointer text-xs font-medium text-slate-500 underline decoration-dotted hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
-            >
-              Use photo instead
-            </button>
-          )}
-        </div>
-        {heroMode === "video" ? (
-          <p className="rounded-lg border border-dashed border-slate-300 px-3.5 py-3 text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
-            This collection will show only the video below on its own page — no photo needed.
-            Anywhere else a thumbnail is required (the collections list, nav, homepage), a plain
-            placeholder is used automatically instead.
-          </p>
-        ) : (
-          <>
+        <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Photos</h2>
         <p className="mb-3 text-xs text-slate-400 dark:text-slate-500">
           The first photo (marked <span className="font-semibold text-slate-500 dark:text-slate-400">Main</span>)
-          is the one shown in listings elsewhere on the site. Add more than one and they&rsquo;ll
-          auto-rotate on the collection page. Drag the handle{" "}
+          is the one shown in listings elsewhere on the site, and behind the video (below) while it
+          loads if you set one. Add more than one and they&rsquo;ll auto-rotate on the collection
+          page when there&rsquo;s no video. Drag the handle{" "}
           <DotsSixVertical size={12} className="inline align-middle" aria-hidden="true" /> or
           use the arrows to reorder, and drop an image onto a photo to replace it. Alt text is
           optional — it falls back to the collection&rsquo;s title if left blank.
@@ -437,17 +403,16 @@ export default function CollectionForm({
             <span className="text-xs text-slate-400 dark:text-slate-500">or drag images here</span>
           </div>
         </div>
-          </>
-        )}
       </section>
 
       {/* Video */}
       <section>
         <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Video</h2>
         <p className="mb-3 text-xs text-slate-400 dark:text-slate-500">
-          {heroMode === "video"
-            ? "This is what shows on the collection's own page — customers can play or pause it. Max 80MB; compress longer clips first."
-            : "Optional. When set, the video replaces the photo rotation on the collection page — customers can play or pause it. Max 80MB; compress longer clips first. A photo above is still required — it's the video's poster while it loads, the fallback shown to visitors with reduced motion enabled, and what the collections list and homepage panels show (they never play video)."}
+          Optional. When set, the video takes over the collection&rsquo;s own page — shown alone,
+          never layered with the photo — and customers can play or pause it. The photo above is
+          still what shows in the collections list, nav, and homepage, and while the video loads.
+          Max 80MB; compress longer clips first.
         </p>
         <div className="flex items-center gap-3">
           <button

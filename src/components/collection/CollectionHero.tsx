@@ -5,7 +5,7 @@ import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { Pause, Play } from "@phosphor-icons/react";
 import type { Collection } from "@/lib/catalog/types";
-import { pick } from "@/lib/content";
+import { imageSrcKey, pick } from "@/lib/content";
 import { usePrefersReducedMotion } from "@/components/motion/usePrefersReducedMotion";
 
 const SLIDE_MS = 5000;
@@ -63,20 +63,15 @@ export default function CollectionHero({
   }
 
   if (hasVideo) {
-    // A collection saved with no real photos (see "Use video instead" in
-    // the admin) has an empty heroImages — collection.heroImage still
-    // holds a placeholder (hero_image is NOT NULL) but showing it here
-    // would defeat the point, so this is the one place that checks
-    // heroImages specifically rather than falling back to it.
-    const hasPhoto = !!(collection.heroImages && collection.heroImages.length > 0);
-    // Reduced motion normally means "photo only, no video at all" — but
-    // a video-only collection has nothing else to show, so fall back to
-    // the video's own first frame: no autoplay/loop, which is just as
-    // static as a photo would have been.
-    const showVideo = !reducedMotion || !hasPhoto;
-    return (
-      <div className="absolute inset-0">
-        {hasPhoto && (
+    // Photo and video never render layered on top of each other — the
+    // photo is the video's native `poster`, shown only until the video
+    // has a frame ready (or permanently, under reduced motion), not a
+    // separate <Image> stacked underneath. The photo itself still does
+    // all the other jobs (collections list, nav, homepage) — see
+    // heroImage's own doc comment in catalog/types.ts.
+    if (reducedMotion) {
+      return (
+        <div className="absolute inset-0">
           <Image
             src={images[0].src}
             alt=""
@@ -85,33 +80,32 @@ export default function CollectionHero({
             sizes="100vw"
             className="object-cover opacity-55"
           />
-        )}
-        {showVideo && (
-          <>
-            <video
-              ref={videoRef}
-              className="absolute inset-0 h-full w-full object-cover opacity-55"
-              autoPlay={!reducedMotion}
-              muted
-              loop={!reducedMotion}
-              playsInline
-              preload={reducedMotion ? "metadata" : "auto"}
-              aria-hidden="true"
-            >
-              <source src={collection.videoUrl} type="video/mp4" />
-            </video>
-            {!reducedMotion && (
-              <button
-                type="button"
-                onClick={toggleVideo}
-                aria-label={playing ? "Pause video" : "Play video"}
-                className="absolute bottom-6 end-6 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-paper/40 text-paper/80 backdrop-blur-sm transition-colors hover:border-paper hover:text-paper"
-              >
-                {playing ? <Pause size={14} weight="fill" /> : <Play size={14} weight="fill" />}
-              </button>
-            )}
-          </>
-        )}
+        </div>
+      );
+    }
+    return (
+      <div className="absolute inset-0">
+        <video
+          ref={videoRef}
+          poster={imageSrcKey(images[0].src)}
+          className="absolute inset-0 h-full w-full object-cover opacity-55"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          aria-hidden="true"
+        >
+          <source src={collection.videoUrl} type="video/mp4" />
+        </video>
+        <button
+          type="button"
+          onClick={toggleVideo}
+          aria-label={playing ? "Pause video" : "Play video"}
+          className="absolute bottom-6 end-6 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-paper/40 text-paper/80 backdrop-blur-sm transition-colors hover:border-paper hover:text-paper"
+        >
+          {playing ? <Pause size={14} weight="fill" /> : <Play size={14} weight="fill" />}
+        </button>
       </div>
     );
   }

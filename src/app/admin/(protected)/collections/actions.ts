@@ -73,11 +73,9 @@ function parseInput(formData: FormData, fallbackSlug: string): CollectionInput |
   const slug = slugify(String(formData.get("slug") ?? "") || fallbackSlug || titleEn);
   if (!slug) return { error: "Couldn't derive a URL slug — please set one." };
 
-  const videoUrl = String(formData.get("videoUrl") ?? "").trim();
-
   const heroImages = heroImagesOf(formData).filter((img) => img.url);
-  if (heroImages.length === 0 && !videoUrl) {
-    return { error: "Add at least one photo, or a video." };
+  if (heroImages.length === 0) {
+    return { error: "Add at least one photo (upload or paste a URL)." };
   }
   // An untitled photo falls back to the collection's own title, same
   // convention as the old single-photo field used.
@@ -100,6 +98,7 @@ function parseInput(formData: FormData, fallbackSlug: string): CollectionInput |
 
   const sortOrder = Number(formData.get("sortOrder") ?? 0);
 
+  const videoUrl = String(formData.get("videoUrl") ?? "").trim();
   const publishedDate = String(formData.get("publishedDate") ?? "").trim();
   const publishedWhere = String(formData.get("publishedWhere") ?? "").trim();
 

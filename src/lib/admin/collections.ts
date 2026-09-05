@@ -157,21 +157,8 @@ function heroImagesJson(input: CollectionInput) {
   }));
 }
 
-/** hero_image (singular) is NOT NULL — still what the admin thumbnail,
- * storefront nav, and homepage panels read. A collection saved with no
- * photos (video-only, see actions.ts) still needs something valid there,
- * so it falls back to this on-brand placeholder rather than failing the
- * insert. heroImages (plural) stays genuinely empty in that case — that's
- * the signal CollectionHero.tsx uses to skip the photo layer entirely on
- * the collection's own page and show only the video. */
-const VIDEO_ONLY_PLACEHOLDER_IMAGE = {
-  url: "/brand/video-only-placeholder.jpg",
-  alt: { en: "", ar: "", ku: "" },
-};
-
 export async function createCollection(input: CollectionInput): Promise<void> {
   const images = heroImagesJson(input);
-  const heroImage = images[0] ?? VIDEO_ONLY_PLACEHOLDER_IMAGE;
   await sql`
     insert into collections (
       slug, title_en, title_ar, title_ku,
@@ -185,7 +172,7 @@ export async function createCollection(input: CollectionInput): Promise<void> {
       ${input.slug}, ${input.titleEn}, ${input.titleAr}, ${input.titleKu},
       ${input.taglineEn}, ${input.taglineAr}, ${input.taglineKu},
       ${input.descriptionEn}, ${input.descriptionAr}, ${input.descriptionKu},
-      ${jsonb(heroImage)}, ${jsonb(images)}, ${input.videoUrl},
+      ${jsonb(images[0])}, ${jsonb(images)}, ${input.videoUrl},
       ${input.textAlignEn}, ${input.textAlignAr}, ${input.textAlignKu},
       ${input.publishedDate}, ${input.publishedWhere}, ${input.theme}, ${input.sortOrder}
     )
@@ -194,14 +181,13 @@ export async function createCollection(input: CollectionInput): Promise<void> {
 
 export async function updateCollection(slug: string, input: CollectionInput): Promise<void> {
   const images = heroImagesJson(input);
-  const heroImage = images[0] ?? VIDEO_ONLY_PLACEHOLDER_IMAGE;
   await sql`
     update collections set
       title_en = ${input.titleEn}, title_ar = ${input.titleAr}, title_ku = ${input.titleKu},
       tagline_en = ${input.taglineEn}, tagline_ar = ${input.taglineAr}, tagline_ku = ${input.taglineKu},
       description_en = ${input.descriptionEn}, description_ar = ${input.descriptionAr},
       description_ku = ${input.descriptionKu},
-      hero_image = ${jsonb(heroImage)},
+      hero_image = ${jsonb(images[0])},
       hero_images = ${jsonb(images)},
       video_url = ${input.videoUrl},
       text_align_en = ${input.textAlignEn},
