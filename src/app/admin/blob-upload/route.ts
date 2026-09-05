@@ -3,7 +3,7 @@ import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import { isAuthenticated } from "@/lib/admin/auth";
 import { findBlobToken } from "@/lib/admin/blob-token";
 
-const MAX_BYTES = 20 * 1024 * 1024; // 20MB
+const MAX_BYTES = 80 * 1024 * 1024; // 80MB
 const ALLOWED_TYPES = [
   "video/mp4",
   "video/webm",

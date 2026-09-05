@@ -409,7 +409,7 @@ export default function CollectionForm({
         <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Video</h2>
         <p className="mb-3 text-xs text-slate-400 dark:text-slate-500">
           Optional. When set, the video replaces the photo rotation on the collection page —
-          customers can play or pause it. Max 20MB; compress longer clips first.
+          customers can play or pause it. Max 80MB; compress longer clips first.
         </p>
         <div className="flex items-center gap-3">
           <button
