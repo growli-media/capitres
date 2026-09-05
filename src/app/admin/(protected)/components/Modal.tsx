@@ -23,16 +23,23 @@ import { glassPanel, glassIconButton } from "../../glass";
  * the sidebar, not a descendant) escapes that clip while still landing
  * inside .admin-dark.
  */
+const SIZE_CLASS = {
+  md: "max-w-md",
+  lg: "max-w-2xl",
+} as const;
+
 export default function Modal({
   open,
   onClose,
   title,
   children,
+  size = "md",
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
   children: React.ReactNode;
+  size?: keyof typeof SIZE_CLASS;
 }) {
   useEffect(() => {
     if (!open) return;
@@ -61,7 +68,7 @@ export default function Modal({
         onClick={onClose}
         aria-hidden="true"
       />
-      <div className={`relative w-full max-w-md rounded-2xl border p-6 ${glassPanel}`}>
+      <div className={`relative w-full ${SIZE_CLASS[size]} rounded-2xl border p-6 ${glassPanel}`}>
         <div className="mb-4 flex items-center justify-between gap-4">
           <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">{title}</h2>
           <button

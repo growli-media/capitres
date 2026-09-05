@@ -14,8 +14,8 @@ import {
 } from "@phosphor-icons/react";
 import type { AdminCollectionRow } from "@/lib/admin/collections";
 import { createCollectionAction, updateCollectionAction, type FormState } from "./actions";
-import { uploadProductImage } from "../../upload-image-action";
 import { useActionToast } from "../components/useActionToast";
+import ImageCropModal from "../components/ImageCropModal";
 import { glassInput, glassTextarea, glassButtonPrimary, glassButtonSecondary, glassTone } from "../../glass";
 
 interface ImageRow {
@@ -84,6 +84,7 @@ export default function CollectionForm({
   );
   const [uploadingId, setUploadingId] = useState<number | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [cropQueue, setCropQueue] = useState<{ id: number; file: File }[]>([]);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dropIndex, setDropIndex] = useState<number | null>(null);
   const [addDragOver, setAddDragOver] = useState(false);
@@ -113,27 +114,53 @@ export default function CollectionForm({
     });
   }
 
-  async function uploadFile(id: number, file: File) {
+  /** Every picked/dropped photo goes through the crop modal before it
+   * uploads — queued so dropping several files at once still crops them
+   * one at a time instead of stacking modals. */
+  function queueCrop(id: number, file: File) {
     if (!file.type.startsWith("image/")) {
       setUploadError("That doesn't look like an image file.");
       return;
     }
+    setUploadError(null);
+    setCropQueue((q) => [...q, { id, file }]);
+  }
+
+  /** Upload goes straight from the browser to Blob storage (not a Server
+   * Action) — Vercel Serverless Functions cap request bodies around
+   * 4.5MB regardless of Next.js config, and an unresized marketing photo
+   * easily lands above that. Bypassing the server entirely, the same way
+   * the video upload below already does, removes that ceiling. */
+  async function uploadBlob(id: number, blob: Blob, filename: string) {
     setUploadingId(id);
     setUploadError(null);
-    const fd = new FormData();
-    fd.set("file", file);
-    const result = await uploadProductImage(fd);
-    setUploadingId(null);
-    if (result.error) {
-      setUploadError(result.error);
-      return;
+    try {
+      const result = await upload(filename, blob, {
+        access: "public",
+        handleUploadUrl: "/api/admin/blob-upload",
+      });
+      updateImage(id, { url: result.url });
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "Upload failed.");
+    } finally {
+      setUploadingId(null);
     }
-    if (result.url) updateImage(id, { url: result.url });
+  }
+
+  function handleCropApply(blob: Blob, filename: string) {
+    const target = cropQueue[0];
+    setCropQueue((q) => q.slice(1));
+    if (target) uploadBlob(target.id, blob, filename);
+  }
+
+  function handleCropCancel() {
+    setCropQueue((q) => q.slice(1));
   }
 
   function handleFileChange(id: number, e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (file) uploadFile(id, file);
+    if (file) queueCrop(id, file);
+    e.target.value = "";
   }
 
   /** A drop on a photo row: an external image file uploads into that row;
@@ -142,7 +169,7 @@ export default function CollectionForm({
     e.preventDefault();
     const file = e.dataTransfer.files?.[0];
     if (file) {
-      uploadFile(id, file);
+      queueCrop(id, file);
     } else if (dragIndex !== null) {
       moveImage(dragIndex, index);
     }
@@ -160,7 +187,7 @@ export default function CollectionForm({
     for (const file of files) {
       const id = nextRowId();
       setImages((rows) => [...rows, { id, url: "", altEn: "", altAr: "", altKu: "" }]);
-      uploadFile(id, file);
+      queueCrop(id, file);
     }
   }
 
@@ -192,6 +219,12 @@ export default function CollectionForm({
 
   return (
     <form action={formAction} className="space-y-8">
+      <ImageCropModal
+        file={cropQueue[0]?.file ?? null}
+        defaultAspect={16 / 9}
+        onApply={handleCropApply}
+        onCancel={handleCropCancel}
+      />
       {/* Photos */}
       <section>
         <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Photos</h2>
