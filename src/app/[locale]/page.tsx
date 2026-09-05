@@ -1,37 +1,21 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
 import { catalog } from "@/lib/catalog";
-import { pick } from "@/lib/content";
 import { routing } from "@/i18n/routing";
-import type { ImageProps } from "next/image";
 import type { Product } from "@/lib/catalog/types";
-import HeroMedia from "@/components/layout/HeroMedia";
-import FullBleedPanel from "@/components/layout/FullBleedPanel";
+import FullBleedVideoPanel from "@/components/layout/FullBleedVideoPanel";
 import SplitPanel from "@/components/layout/SplitPanel";
 import AlbumScroll from "@/components/layout/AlbumScroll";
 import { Reveal } from "@/components/motion/Reveal";
 import ProductCard from "@/components/product/ProductCard";
 import ProductMarqueeRow from "@/components/product/ProductMarqueeRow";
 import heroImage from "@/images/brand/hero-editorial.jpg";
+import royalEraPoster from "@/images/brand/hero-royal-era-poster.jpg";
+import eightiesImage from "@/images/brand/collection-80s.jpg";
+import fortyYearsImage from "@/images/brand/collection-40-years.jpg";
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
-
-type PanelSpec = {
-  image: ImageProps["src"];
-  alt: string;
-  eyebrow?: string;
-  title: string;
-  ctaLabel: string;
-  href: string;
-};
-
-type Slot =
-  | { kind: "split"; left: PanelSpec; right: PanelSpec }
-  | { kind: "panel"; spec: PanelSpec };
-
-const PANEL_COUNT = 8; // + hero + closing shop-all panel = 10 full-screen sections to the footer
 
 export default async function HomePage({
   params,
@@ -41,139 +25,11 @@ export default async function HomePage({
   const { locale } = await params;
   setRequestLocale(locale);
 
-  const [t, tHome, tNav, collections, newArrivals, heritageProducts, allProducts] =
-    await Promise.all([
-      getTranslations({ locale, namespace: "hero" }),
-      getTranslations({ locale, namespace: "home" }),
-      getTranslations({ locale, namespace: "nav" }),
-      catalog.getCollections(),
-      catalog.getProducts({ isNew: true }, "newest"),
-      catalog.getProducts({ collection: "heritage-capsule" }, "featured"),
-      catalog.getProducts({}, "featured"),
-    ]);
-
-  const liveCollections = collections.filter((c) => !c.archived);
-  const heritage = collections.find((c) => c.slug === "heritage-capsule");
-  const collectionPanels = liveCollections.filter(
-    (c) => c.slug !== "heritage-capsule",
-  );
-  const heritageImage =
-    heritage?.heroImage.src ?? heritageProducts[0]?.images[0]?.src;
-
-  // Build a fixed-length sequence of panel slots so the album is always the
-  // same length regardless of how much real catalog content exists yet: the
-  // first two collections become a side-by-side "two tiles" moment (one
-  // slot), then remaining collections, new arrivals, heritage, and the brand
-  // story fill the rest — padded with heritage products if the catalog is
-  // still sparse.
-  const pool = [...collectionPanels];
-  const slots: Slot[] = [];
-
-  if (pool.length >= 2) {
-    const [a, b] = pool.splice(0, 2);
-    slots.push({
-      kind: "split",
-      left: {
-        image: a.heroImage.src,
-        alt: pick(a.heroImage.alt, locale),
-        title: pick(a.title, locale),
-        ctaLabel: tHome("viewAll"),
-        href: `/collections/${a.slug}`,
-      },
-      right: {
-        image: b.heroImage.src,
-        alt: pick(b.heroImage.alt, locale),
-        title: pick(b.title, locale),
-        ctaLabel: tHome("viewAll"),
-        href: `/collections/${b.slug}`,
-      },
-    });
-  }
-
-  for (const c of pool) {
-    slots.push({
-      kind: "panel",
-      spec: {
-        image: c.heroImage.src,
-        alt: pick(c.heroImage.alt, locale),
-        eyebrow: pick(c.tagline, locale),
-        title: pick(c.title, locale),
-        ctaLabel: tHome("viewAll"),
-        href: `/collections/${c.slug}`,
-      },
-    });
-  }
-
-  if (newArrivals[0]?.images[0]) {
-    slots.push({
-      kind: "panel",
-      spec: {
-        image: newArrivals[0].images[0].src,
-        alt: pick(newArrivals[0].images[0].alt, locale),
-        eyebrow: tHome("newEyebrow"),
-        title: tHome("newTitle"),
-        ctaLabel: tHome("viewAll"),
-        href: "/shop?new=1",
-      },
-    });
-  }
-
-  if (heritage && heritageImage) {
-    slots.push({
-      kind: "panel",
-      spec: {
-        image: heritageImage,
-        alt: pick(heritage.heroImage.alt, locale),
-        eyebrow: tHome("heritageEyebrow"),
-        title: tHome("heritageTitle"),
-        ctaLabel: tHome("heritageCta"),
-        href: "/collections/heritage-capsule",
-      },
-    });
-  }
-
-  slots.push({
-    kind: "panel",
-    spec: {
-      image: heroImage.src,
-      alt: "",
-      eyebrow: tHome("storyEyebrow"),
-      title: tHome("storyTitle"),
-      ctaLabel: tHome("storyCta"),
-      href: "/about",
-    },
-  });
-
-  // Still short of the target? Draw more individual product looks — heritage
-  // pieces first, then anything else in the catalog — each its own panel
-  // with a link straight to that product.
-  const usedProductSlugs = new Set<string>(
-    newArrivals[0] ? [newArrivals[0].slug] : [],
-  );
-  for (const p of [...heritageProducts, ...allProducts]) {
-    if (slots.length >= PANEL_COUNT) break;
-    if (usedProductSlugs.has(p.slug) || p.giftCard) continue;
-    const img = p.images[0];
-    if (!img) continue;
-    usedProductSlugs.add(p.slug);
-    const inHeritage = p.collectionSlugs.includes("heritage-capsule");
-    slots.push({
-      kind: "panel",
-      spec: {
-        image: img.src,
-        alt: pick(img.alt, locale),
-        eyebrow:
-          inHeritage && heritage
-            ? pick(heritage.title, locale)
-            : tHome("newEyebrow"),
-        title: pick(p.title, locale),
-        ctaLabel: tHome("viewAll"),
-        href: `/products/${p.slug}`,
-      },
-    });
-  }
-
-  const finalSlots = slots.slice(0, PANEL_COUNT);
+  const [tHome, tNav, allProducts] = await Promise.all([
+    getTranslations({ locale, namespace: "home" }),
+    getTranslations({ locale, namespace: "nav" }),
+    catalog.getProducts({}, "featured"),
+  ]);
 
   // Two shoppable strips for the closing panel — same catalog, second row
   // reversed so the two don't read as mirrors of each other. Short
@@ -209,61 +65,51 @@ export default async function HomePage({
 
   return (
     <AlbumScroll className="-mt-16 md:-mt-[4.75rem]">
-      {/* ---------------- Hero: full-screen film ----------------
-          Pulled up under the sticky header so the transparent bar overlays
-          the media (negative margin lives on AlbumScroll's viewport now).
-          AlbumScroll clips this and the panels below into one stack: each
-          photo slides up and lands completely on top of the one before it. */}
-      <section className="relative h-[100svh] overflow-hidden bg-ink text-paper">
-        <HeroMedia poster={heroImage} videoSrc="/hero.mp4" />
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 bg-gradient-to-t from-ink/55 via-ink/5 to-transparent"
-        />
-        <div className="pointer-events-none absolute inset-x-0 bottom-9 flex flex-col items-center gap-4">
-          <Link
-            href="/collections"
-            className="hero-enter text-eyebrow link-underline pointer-events-auto text-paper/85 hover:text-paper"
-          >
-            {t("discover")}
-          </Link>
-          <span aria-hidden="true" className="scroll-cue" />
-        </div>
-      </section>
+      {/* ---------------- Scroll 1: Royal Era ----------------
+          Opening moment — the same full-bleed video treatment as every
+          other panel here, just first, with its own scroll-cue since
+          nothing before it has taught the visitor to keep going yet. */}
+      <FullBleedVideoPanel
+        poster={royalEraPoster}
+        videoSrc="/hero-royal-era.mp4"
+        title={tHome("royalTitle")}
+        sub={tHome("royalSub")}
+        ctaLabel={tHome("royalCta")}
+        href="/collections/royal-era"
+        showScrollCue
+      />
 
-      {/* ---------------- Five album panels ---------------- */}
-      {finalSlots.map((slot, i) =>
-        slot.kind === "split" ? (
-          <SplitPanel
-            key={`split-${i}`}
-            left={{
-              image: slot.left.image,
-              alt: slot.left.alt,
-              label: slot.left.title,
-              cta: slot.left.ctaLabel,
-              href: slot.left.href,
-            }}
-            right={{
-              image: slot.right.image,
-              alt: slot.right.alt,
-              label: slot.right.title,
-              cta: slot.right.ctaLabel,
-              href: slot.right.href,
-            }}
-          />
-        ) : (
-          <FullBleedPanel
-            key={`panel-${i}`}
-            image={slot.spec.image}
-            alt={slot.spec.alt}
-            eyebrow={slot.spec.eyebrow}
-            title={slot.spec.title}
-            ctaLabel={slot.spec.ctaLabel}
-            href={slot.spec.href}
-            priority={i === 0}
-          />
-        ),
-      )}
+      {/* ---------------- Scroll 2: two collections, side by side ---------------- */}
+      <SplitPanel
+        left={{
+          image: fortyYearsImage,
+          alt: tHome("fortyAlt"),
+          label: tHome("fortyTitle"),
+          sub: tHome("fortySub"),
+          cta: tHome("fortyCta"),
+          href: "/collections/40s-journey",
+        }}
+        right={{
+          image: eightiesImage,
+          alt: tHome("eightiesAlt"),
+          label: tHome("eightiesTitle"),
+          sub: tHome("eightiesSub"),
+          cta: tHome("eightiesCta"),
+          href: "/collections/80s-heritage",
+        }}
+      />
+
+      {/* ---------------- Scroll 3: our story ----------------
+          Not tied to any collection — the same footage and poster the
+          hero used to open on, now closing the album on the brand itself. */}
+      <FullBleedVideoPanel
+        poster={heroImage}
+        videoSrc="/hero.mp4"
+        title={tHome("storyTitle")}
+        sub={tHome("storySub")}
+        ctaLabel={tHome("storyCta")}
+        href="/about"
+      />
 
       {/* ---------------- Closing panel: shop, in motion ----------------
           Last stop before the footer — plain white, like the shop itself,

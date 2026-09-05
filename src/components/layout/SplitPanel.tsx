@@ -6,6 +6,8 @@ type Half = {
   image: ImageProps["src"];
   alt: string;
   label: string;
+  /** Optional line between the title and the CTA. */
+  sub?: string;
   cta: string;
   href: string;
 };
@@ -43,6 +45,7 @@ export default function SplitPanel({
           />
           <Reveal className="relative z-10 flex flex-col items-center text-center text-paper">
             <h2 className="text-display text-3xl md:text-5xl">{h.label}</h2>
+            {h.sub && <p className="mt-3 text-paper/80 md:text-lg">{h.sub}</p>}
             <span className="text-eyebrow link-underline mt-4">{h.cta}</span>
           </Reveal>
         </Link>
