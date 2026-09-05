@@ -2,7 +2,7 @@
 
 import { useId, useState } from "react";
 import { ArrowUpRight, ArrowDownRight, ArrowRight } from "@phosphor-icons/react";
-import { formatIQD } from "@/lib/money";
+import { formatIqdAs } from "@/lib/money";
 import type { RevenuePoint } from "@/lib/admin/revenue";
 
 /** Stock-ticker style: a trend-colored line + gradient area instead of
@@ -15,7 +15,13 @@ import type { RevenuePoint } from "@/lib/admin/revenue";
  * a point (not just hover) to pin its exact numbers — hover still works
  * for a quick scan, but click is what sticks around and what works on
  * touch, where there's no hover at all. */
-export default function RevenueChart({ points }: { points: RevenuePoint[] }) {
+export default function RevenueChart({
+  points,
+  currency = "IQD",
+}: {
+  points: RevenuePoint[];
+  currency?: "IQD" | "USD";
+}) {
   const [hover, setHover] = useState<number | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
   const gradientId = useId();
@@ -131,7 +137,7 @@ export default function RevenueChart({ points }: { points: RevenuePoint[] }) {
                 role="button"
                 aria-pressed={selected === i}
                 className="cursor-pointer"
-                aria-label={`${bucketLabel(p.bucket)}: ${formatIQD(p.revenue, "en")}, ${p.orders} order${p.orders === 1 ? "" : "s"}`}
+                aria-label={`${bucketLabel(p.bucket)}: ${formatIqdAs(p.revenue, currency, "en")}, ${p.orders} order${p.orders === 1 ? "" : "s"}`}
               />
             </g>
           );
@@ -151,7 +157,7 @@ export default function RevenueChart({ points }: { points: RevenuePoint[] }) {
             }`}
           >
             <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-              {formatIQD(points[active].revenue, "en")}
+              {formatIqdAs(points[active].revenue, currency, "en")}
             </p>
             <p className="text-slate-500 dark:text-slate-400">
               {points[active].orders} order{points[active].orders === 1 ? "" : "s"}

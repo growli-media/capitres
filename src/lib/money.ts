@@ -57,6 +57,18 @@ export function convertFromIqd(amountIqd: number, currency: Currency): number {
   return Math.round((amountIqd / rate) * 100);
 }
 
+/** Formats a whole-IQD amount either as-is or converted to USD, for admin
+ * views (revenue dashboard) that let staff switch the display currency.
+ * Always the reference rate above — never anything actually charged. */
+export function formatIqdAs(
+  amountIqd: number,
+  currency: "IQD" | "USD",
+  locale: string,
+): string {
+  if (currency === "IQD") return formatIQD(amountIqd, locale);
+  return formatCurrency(convertFromIqd(amountIqd, "USD"), "USD", locale);
+}
+
 /** amount is cents for USD/EUR, whole units for IQD. */
 export function formatCurrency(
   amount: number,
