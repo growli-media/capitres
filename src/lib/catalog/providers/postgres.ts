@@ -95,6 +95,17 @@ interface CollectionRow {
   sort_order: number;
 }
 
+/** Body blocks as stored in the `posts.body` jsonb column — image/video
+ * blocks carry a plain `{url, alt}` there, same as `cover` does, not the
+ * `ProductImage` (`{src, alt}`) shape the public Post type uses. */
+type RawPostBlock =
+  | { type: "p"; text: LocalizedString }
+  | { type: "h2"; text: LocalizedString }
+  | { type: "quote"; text: LocalizedString; attribution?: LocalizedString }
+  | { type: "image"; image: { url: string; alt: LocalizedString } }
+  | { type: "video"; url: string; poster?: { url: string; alt: LocalizedString } }
+  | { type: "link"; url: string; label: LocalizedString };
+
 interface PostRow {
   slug: string;
   title_en: string;
@@ -107,7 +118,7 @@ interface PostRow {
   post_date: string | Date;
   reading_minutes: number;
   author: string;
-  body: PostBlock[];
+  body: RawPostBlock[];
   related_product_slugs: string[];
 }
 
@@ -227,6 +238,18 @@ function toCollection(row: CollectionRow): Collection {
   };
 }
 
+/** image/video blocks are stored as plain {url, alt} (see RawPostBlock) —
+ * run them through the same toImage() the cover uses so the renderer's
+ * block.image.src / block.poster.src reads actually resolve, instead of
+ * silently rendering a broken image (the bug this fixes). */
+function toPostBlock(b: RawPostBlock): PostBlock {
+  if (b.type === "image") return { type: "image", image: toImage(b.image) };
+  if (b.type === "video") {
+    return { type: "video", url: b.url, poster: b.poster ? toImage(b.poster) : undefined };
+  }
+  return b;
+}
+
 function toPost(row: PostRow): Post {
   return {
     slug: row.slug,
@@ -236,7 +259,7 @@ function toPost(row: PostRow): Post {
     date: dateOnly(row.post_date),
     readingMinutes: row.reading_minutes,
     author: row.author,
-    body: row.body ?? [],
+    body: (row.body ?? []).map(toPostBlock),
     relatedProductSlugs: row.related_product_slugs ?? [],
   };
 }
@@ -318,14 +341,14 @@ export const postgresProvider: CatalogProvider = {
 
   async getPosts() {
     const rows = await sql<PostRow[]>`
-      select * from posts order by post_date desc
+      select * from posts where published = true order by post_date desc
     `;
     return rows.map(toPost);
   },
 
   async getPost(slug: string) {
     const rows = await sql<PostRow[]>`
-      select * from posts where slug = ${slug} limit 1
+      select * from posts where slug = ${slug} and published = true limit 1
     `;
     return rows[0] ? toPost(rows[0]) : undefined;
   },

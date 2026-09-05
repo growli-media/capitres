@@ -264,3 +264,9 @@ CREATE TABLE IF NOT EXISTS admin_activity_log (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_admin_activity_log_created_at ON admin_activity_log (created_at DESC);
+
+-- Draft/publish state for the Journal admin — defaults true so the
+-- existing seeded posts stay visible on /blog the moment this column
+-- appears; the admin's create/edit form always passes an explicit value
+-- going forward (drafts start false, see posts/actions.ts).
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS published boolean NOT NULL DEFAULT true;

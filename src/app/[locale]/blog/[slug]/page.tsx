@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { CaretLeft } from "@phosphor-icons/react/dist/ssr";
+import { ArrowSquareOut, CaretLeft } from "@phosphor-icons/react/dist/ssr";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { catalog } from "@/lib/catalog";
-import { pick } from "@/lib/content";
+import { imageSrcKey, pick } from "@/lib/content";
 import { formatDateNumeric } from "@/lib/dates";
 import ProductCard from "@/components/product/ProductCard";
 import ShareButtons from "@/components/blog/ShareButtons";
@@ -69,6 +69,34 @@ function Block({ block, locale }: { block: PostBlock; locale: string }) {
             />
           </div>
         </figure>
+      );
+    case "video":
+      return (
+        <figure className="my-10">
+          <div className="relative aspect-[16/9] overflow-hidden bg-studio">
+            {/* A poster (a plain string URL) is what a native <video>
+                attribute needs — see imageSrcKey()'s own doc comment and
+                CollectionHero.tsx for the identical reason. */}
+            <video
+              src={block.url}
+              poster={block.poster ? imageSrcKey(block.poster.src) : undefined}
+              controls
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          </div>
+        </figure>
+      );
+    case "link":
+      return (
+        <a
+          href={block.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="my-8 flex items-center justify-between gap-4 border border-line px-5 py-4 transition-colors hover:border-ink"
+        >
+          <span className="text-eyebrow">{pick(block.label, locale)}</span>
+          <ArrowSquareOut size={16} aria-hidden="true" />
+        </a>
       );
     default:
       return (

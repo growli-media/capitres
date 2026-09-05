@@ -135,7 +135,9 @@ export type PostBlock =
   | { type: "p"; text: LocalizedString }
   | { type: "h2"; text: LocalizedString }
   | { type: "quote"; text: LocalizedString; attribution?: LocalizedString }
-  | { type: "image"; image: ProductImage };
+  | { type: "image"; image: ProductImage }
+  | { type: "video"; url: string; poster?: ProductImage }
+  | { type: "link"; url: string; label: LocalizedString };
 
 export interface Post {
   slug: string;
