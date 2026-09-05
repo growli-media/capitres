@@ -34,8 +34,17 @@ function getClient(): SqlClient {
 }
 
 function isConnectionError(err: unknown): boolean {
-  const code = (err as { code?: string } | undefined)?.code;
-  return code === "ECONNRESET" || code === "CONNECTION_CLOSED" || code === "CONNECTION_ENDED";
+  const e = err as { code?: string; message?: string } | undefined;
+  if (e?.code === "ECONNRESET" || e?.code === "CONNECTION_CLOSED" || e?.code === "CONNECTION_ENDED") {
+    return true;
+  }
+  // Neon's pooler can hand this client a backend connection that still has
+  // a prepared-statement plan cached from before a schema migration (an
+  // ALTER TABLE changes the result shape of an already-prepared query on
+  // that same backend). Postgres refuses to reuse it; a fresh connection
+  // reprepares cleanly against the current schema — same recovery as a
+  // dropped connection, just a different trigger (RevalidateCachedQuery).
+  return e?.code === "0A000" && !!e?.message?.includes("cached plan must not change result type");
 }
 
 /**
