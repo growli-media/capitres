@@ -23,6 +23,14 @@ function createClient(): SqlClient {
     ssl: isLocal ? false : "require",
     max: 5,
     idle_timeout: 20,
+    // Neon's connection string routes through a PgBouncer-style pooler
+    // that multiplexes many client sessions onto a small set of backend
+    // connections. A server-side prepared plan can outlive the client
+    // that made it, so the next session sharing that backend gets
+    // "cached plan must not change result type" as soon as the
+    // referenced table's schema has changed since — this is postgres.js's
+    // documented fix for pooled/transaction-mode connections.
+    prepare: false,
   });
 }
 
