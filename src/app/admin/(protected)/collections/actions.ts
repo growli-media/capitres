@@ -75,7 +75,10 @@ function parseInput(formData: FormData, fallbackSlug: string): CollectionInput |
 
   const heroImages = heroImagesOf(formData).filter((img) => img.url);
   if (heroImages.length === 0) {
-    return { error: "Add at least one photo (upload or paste a URL)." };
+    return {
+      error:
+        "Add at least one photo (upload or paste a URL) — needed even with a video set, since it's the video's poster and what the collections list and homepage show.",
+    };
   }
   // An untitled photo falls back to the collection's own title, same
   // convention as the old single-photo field used.

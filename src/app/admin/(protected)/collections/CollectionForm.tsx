@@ -409,7 +409,10 @@ export default function CollectionForm({
         <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Video</h2>
         <p className="mb-3 text-xs text-slate-400 dark:text-slate-500">
           Optional. When set, the video replaces the photo rotation on the collection page —
-          customers can play or pause it. Max 80MB; compress longer clips first.
+          customers can play or pause it. Max 80MB; compress longer clips first. A photo above is
+          still required even with a video set — it&rsquo;s the video&rsquo;s poster while it
+          loads, the fallback shown to visitors with reduced motion enabled, and what the
+          collections list and homepage panels show (they never play video).
         </p>
         <div className="flex items-center gap-3">
           <button
@@ -439,6 +442,14 @@ export default function CollectionForm({
           )}
         </div>
         {videoError && <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">{videoError}</p>}
+        {videoUrl && (
+          <video
+            key={videoUrl}
+            src={videoUrl}
+            controls
+            className="mt-3 h-40 w-auto max-w-full rounded-lg border border-slate-200 bg-black dark:border-slate-800"
+          />
+        )}
         <div className="mt-3">
           <Field label="Or paste a video URL">
             <input
