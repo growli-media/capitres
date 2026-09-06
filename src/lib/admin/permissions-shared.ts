@@ -22,6 +22,7 @@ export const PERMISSIONS = [
   "abandoned_carts",
   "orders",
   "reviews",
+  "contact_messages",
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
@@ -36,6 +37,7 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   abandoned_carts: "Abandoned carts",
   orders: "Orders",
   reviews: "Reviews",
+  contact_messages: "Messages",
 };
 
 export function isPermission(value: string): value is Permission {
