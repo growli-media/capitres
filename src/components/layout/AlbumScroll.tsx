@@ -7,6 +7,20 @@ const EASE = "cubic-bezier(0.65, 0, 0.35, 1)";
 const WHEEL_THRESHOLD = 42; // accumulated wheel delta needed to trigger an advance
 const TOUCH_THRESHOLD = 60; // px of drag needed to trigger an advance
 
+/** Fired whenever the panel at rest changes, so Header.tsx can pick a
+ * light/dark nav to match — window.scrollY never moves on this page (see
+ * applyClipping()/onWheel's preventDefault below), so a scroll listener
+ * could never learn this any other way. Each panel opts in via a
+ * data-nav-theme="dark"|"light" attribute; anything unmarked (including
+ * the footer, grabbed from outside this component's own children) reads
+ * as "light". */
+export const NAV_THEME_CHANGE_EVENT = "capitres:nav-theme-change";
+
+function dispatchNavTheme(panel: HTMLElement) {
+  const theme = panel.dataset.navTheme === "dark" ? "dark" : "light";
+  window.dispatchEvent(new CustomEvent(NAV_THEME_CHANGE_EVENT, { detail: { theme } }));
+}
+
 /**
  * Homepage "photo album": each full-screen section — the hero, every panel,
  * and finally the footer — sits at rest either fully visible (translateY 0%)
@@ -84,6 +98,7 @@ export default function AlbumScroll({
         el.style.willChange = "transform";
         setResting(el, i <= index);
       });
+      dispatchNavTheme(panels[index]);
     };
 
     const settle = () => {
@@ -101,6 +116,7 @@ export default function AlbumScroll({
       animating = true;
       const el = dir > 0 ? panels[next] : panels[index];
       index = next;
+      dispatchNavTheme(panels[next]);
       el.style.transform = dir > 0 ? "translateY(0%)" : "translateY(100%)";
       const onEnd = (e: TransitionEvent) => {
         if (e.propertyName !== "transform") return;

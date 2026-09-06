@@ -687,6 +687,73 @@ body.admin-font-inter {
   }
 }
 
+/* Same "highlight running through a line" mechanic as .scroll-cue above,
+   rotated horizontal and switched to currentColor (rather than a
+   hardcoded paper) so it reads correctly over both the dark hero panels
+   and light sections a CTA might sit on. Runs continuously — an ambient
+   "this is clickable" cue, not a hover reward — used on the homepage
+   hero CTAs in place of .link-underline. */
+.cta-underline {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 4px;
+}
+
+.cta-underline::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  bottom: 0;
+  width: 100%;
+  height: 1px;
+  background: color-mix(in srgb, currentColor 28%, transparent);
+}
+
+.cta-underline::after {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  bottom: 0;
+  width: 45%;
+  height: 1px;
+  background: currentColor;
+  animation: cta-underline-run 2.2s var(--ease-editorial) infinite;
+}
+
+@keyframes cta-underline-run {
+  0% {
+    transform: translateX(-110%);
+  }
+  100% {
+    transform: translateX(310%);
+  }
+}
+
+/* A distinct reversed keyframe, not animation-direction: reverse — the
+   translateX values are physical, not logical, so reusing the LTR
+   keyframe backwards would fight inset-inline-start's own RTL flip
+   instead of complementing it. */
+@keyframes cta-underline-run-rtl {
+  0% {
+    transform: translateX(310%);
+  }
+  100% {
+    transform: translateX(-110%);
+  }
+}
+
+[dir="rtl"] .cta-underline::after {
+  animation-name: cta-underline-run-rtl;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cta-underline::after {
+    animation: none;
+    width: 100%;
+    opacity: 0.6;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hero-enter {
     animation: none;

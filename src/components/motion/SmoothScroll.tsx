@@ -7,7 +7,7 @@ import { usePathname } from "@/i18n/navigation";
 /**
  * Site-wide smooth momentum scrolling. Disabled for prefers-reduced-motion and
  * on the homepage, which runs its own locked "photo album" controller
- * (<FullPageScroll>) that owns the wheel.
+ * (<AlbumScroll>) that owns the wheel.
  */
 export default function SmoothScroll() {
   const pathname = usePathname();

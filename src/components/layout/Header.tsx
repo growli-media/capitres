@@ -15,6 +15,7 @@ import { pick, type LocalizedString } from "@/lib/content";
 import { useCart, useCartCount } from "@/lib/cart/store";
 import type { ImageSource } from "@/lib/catalog/types";
 import { GIFT_CARDS_ENABLED, GIFT_CARD_CATEGORY } from "@/lib/commerce/config";
+import { NAV_THEME_CHANGE_EVENT } from "./AlbumScroll";
 import LanguageSwitcher from "./LanguageSwitcher";
 import CurrencySwitcher from "@/components/currency/CurrencySwitcher";
 
@@ -53,17 +54,28 @@ export default function Header({
   const openCart = useCart((s) => s.open);
   const count = useCartCount();
 
-  const [scrolled, setScrolled] = useState(false);
   const [panel, setPanel] = useState<MegaPanel>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // AlbumScroll (currently just the homepage) owns this signal — it
+  // dispatches whenever the panel at rest changes, since window.scrollY
+  // never moves on that page (a plain scroll listener would never fire;
+  // see AlbumScroll.tsx). Pages with no AlbumScroll never dispatch, so
+  // they simply keep the initial guess below — identical to every
+  // non-homepage page's previous always-light behavior.
+  const [navTheme, setNavTheme] = useState<"dark" | "light">(
+    pathname === "/" ? "dark" : "light",
+  );
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+    setNavTheme(pathname === "/" ? "dark" : "light");
+    function onThemeChange(e: Event) {
+      const detail = (e as CustomEvent<{ theme: "dark" | "light" }>).detail;
+      setNavTheme(detail.theme);
+    }
+    window.addEventListener(NAV_THEME_CHANGE_EVENT, onThemeChange);
+    return () => window.removeEventListener(NAV_THEME_CHANGE_EVENT, onThemeChange);
+  }, [pathname]);
 
   // Close menus on navigation and lock body scroll for the mobile overlay.
   useEffect(() => {
@@ -123,14 +135,15 @@ export default function Header({
 
   const featured = collections[0];
 
-  // Transparent, light-on-dark over the homepage hero; solid on scroll or
-  // whenever a menu is open. Every other page keeps a solid bar.
-  const overHero = pathname === "/" && !scrolled && !panel && !mobileOpen;
+  // Transparent, light-on-dark over whatever data-nav-theme="dark" section
+  // is currently at rest, or whenever a menu is open — a page with no
+  // marked sections just stays solid, matching every other page.
+  const dark = navTheme === "dark" && !panel && !mobileOpen;
 
   return (
     <header
       className={`sticky top-0 z-40 border-b transition-colors duration-300 ${
-        overHero
+        dark
           ? "border-transparent bg-transparent text-paper"
           : "border-line bg-paper/95 text-ink backdrop-blur-md"
       }`}
@@ -212,7 +225,7 @@ export default function Header({
           className="flex cursor-pointer items-center justify-center"
         >
           <Image
-            src={overHero ? "/brand/logo-white.svg" : "/brand/logo-black.svg"}
+            src={dark ? "/brand/logo-white.svg" : "/brand/logo-black.svg"}
             alt="Capitres"
             width={867}
             height={99}
@@ -245,8 +258,8 @@ export default function Header({
             </ul>
           </nav>
           <div className="hidden items-center ps-3 sm:flex">
-            <CurrencySwitcher tone={overHero ? "paper" : "ink"} />
-            <LanguageSwitcher tone={overHero ? "paper" : "ink"} />
+            <CurrencySwitcher tone={dark ? "paper" : "ink"} />
+            <LanguageSwitcher tone={dark ? "paper" : "ink"} />
           </div>
           <button
             type="button"

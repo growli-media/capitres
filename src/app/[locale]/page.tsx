@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { catalog } from "@/lib/catalog";
 import { routing } from "@/i18n/routing";
+import { Link } from "@/i18n/navigation";
 import type { Product } from "@/lib/catalog/types";
 import FullBleedVideoPanel from "@/components/layout/FullBleedVideoPanel";
 import SplitPanel from "@/components/layout/SplitPanel";
@@ -117,11 +118,16 @@ export default async function HomePage({
           scroll containers underneath, so a drag, swipe, or wheel takes
           over instantly and autoplay resumes once the visitor lets go. */}
       {marqueeRowA.length > 0 && (
-        <section className="flex h-[100svh] w-full flex-col justify-center gap-6 overflow-hidden bg-paper py-6 text-ink md:gap-8 md:py-8">
+        <section
+          data-nav-theme="light"
+          className="flex h-[100svh] w-full flex-col justify-center gap-6 overflow-hidden bg-paper py-6 text-ink md:gap-8 md:py-8"
+        >
           <Reveal className="container-x">
-            <h2 className="text-display text-center text-3xl sm:text-4xl md:text-5xl">
-              {tNav("shopAll")}
-            </h2>
+            <Link href="/shop" className="block text-center transition-opacity hover:opacity-70">
+              <h2 className="text-display text-3xl sm:text-4xl md:text-5xl">
+                {tNav("shopAll")}
+              </h2>
+            </Link>
           </Reveal>
           <div className="flex flex-col gap-3">
             <ProductMarqueeRow

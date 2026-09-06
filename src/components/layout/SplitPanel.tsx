@@ -25,7 +25,7 @@ export default function SplitPanel({
   right: Half;
 }) {
   return (
-    <section className="relative grid h-[100svh] w-full grid-cols-1 md:grid-cols-2">
+    <section data-nav-theme="dark" className="relative grid h-[100svh] w-full grid-cols-1 md:grid-cols-2">
       {[left, right].map((h, i) => (
         <Link
           key={i}
@@ -46,7 +46,7 @@ export default function SplitPanel({
           <Reveal className="relative z-10 flex flex-col items-center text-center text-paper">
             <h2 className="text-display text-3xl md:text-5xl">{h.label}</h2>
             {h.sub && <p className="mt-3 text-paper/80 md:text-lg">{h.sub}</p>}
-            <span className="text-eyebrow link-underline mt-4">{h.cta}</span>
+            <span className="text-eyebrow cta-underline mt-4">{h.cta}</span>
           </Reveal>
         </Link>
       ))}

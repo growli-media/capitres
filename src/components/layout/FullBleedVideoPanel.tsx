@@ -31,7 +31,7 @@ export default function FullBleedVideoPanel({
   showScrollCue?: boolean;
 }) {
   return (
-    <section className="relative h-[100svh] w-full overflow-hidden bg-ink">
+    <section data-nav-theme="dark" className="relative h-[100svh] w-full overflow-hidden bg-ink">
       <HeroMedia poster={poster} videoSrc={videoSrc} />
       <div
         aria-hidden="true"
@@ -41,7 +41,7 @@ export default function FullBleedVideoPanel({
         {eyebrow && <p className="text-eyebrow mb-3 text-paper/75">{eyebrow}</p>}
         <h2 className="text-display max-w-4xl text-4xl md:text-6xl">{title}</h2>
         {sub && <p className="mt-4 max-w-xl text-paper/80 md:text-lg">{sub}</p>}
-        <Link href={href} className="text-eyebrow link-underline mt-6 text-paper/90">
+        <Link href={href} className="text-eyebrow cta-underline mt-6 text-paper/90">
           {ctaLabel}
         </Link>
         {showScrollCue && (
