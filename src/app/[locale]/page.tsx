@@ -124,7 +124,7 @@ export default async function HomePage({
         >
           <Reveal className="container-x">
             <Link href="/shop" className="block text-center transition-opacity hover:opacity-70">
-              <h2 className="text-display text-3xl sm:text-4xl md:text-5xl">
+              <h2 className="cta-underline text-display text-3xl sm:text-4xl md:text-5xl">
                 {tNav("shopAll")}
               </h2>
             </Link>
