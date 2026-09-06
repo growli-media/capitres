@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { setRequestLocale } from "next-intl/server";
+import { notFound } from "next/navigation";
 import PolicyShell from "@/components/policy/PolicyShell";
+import { getLegalPage, legalPageBody, legalPageTitle } from "@/lib/legal-pages";
 
 export async function generateMetadata({
   params,
@@ -8,8 +10,8 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "policies" });
-  return { title: t("privacyTitle") };
+  const page = await getLegalPage("privacy");
+  return { title: page ? legalPageTitle(page, locale) : "Privacy Policy" };
 }
 
 export default async function PrivacyPage({
@@ -19,12 +21,22 @@ export default async function PrivacyPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const t = await getTranslations({ locale, namespace: "policies" });
+  const page = await getLegalPage("privacy");
+  if (!page) notFound();
 
   return (
-    <PolicyShell title={t("privacyTitle")}>
-      <p className="leading-[1.85] text-ink/75">{t("privacyBody1")}</p>
-      <p className="leading-[1.85] text-ink/75">{t("privacyBody2")}</p>
+    <PolicyShell title={legalPageTitle(page, locale)}>
+      {legalPageBody(page, locale).map((block, i) =>
+        block.type === "heading" ? (
+          <h2 key={i} className="text-display text-xl md:text-2xl">
+            {block.text}
+          </h2>
+        ) : (
+          <p key={i} className="whitespace-pre-line leading-[1.85] text-ink/75">
+            {block.text}
+          </p>
+        ),
+      )}
     </PolicyShell>
   );
 }

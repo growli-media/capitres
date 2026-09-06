@@ -1,12 +1,8 @@
 import type { Metadata } from "next";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { setRequestLocale } from "next-intl/server";
+import { notFound } from "next/navigation";
 import PolicyShell from "@/components/policy/PolicyShell";
-import { formatIQD } from "@/lib/money";
-import {
-  SHIPPING_RATE_IQ,
-  SHIPPING_RATE_INTL,
-  FREE_SHIPPING_THRESHOLD,
-} from "@/lib/commerce/config";
+import { getLegalPage, legalPageBody, legalPageTitle } from "@/lib/legal-pages";
 
 export async function generateMetadata({
   params,
@@ -14,8 +10,8 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "policies" });
-  return { title: t("shippingTitle") };
+  const page = await getLegalPage("shipping-returns");
+  return { title: page ? legalPageTitle(page, locale) : "Shipping & Returns" };
 }
 
 export default async function ShippingReturnsPage({
@@ -25,34 +21,22 @@ export default async function ShippingReturnsPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const t = await getTranslations({ locale, namespace: "policies" });
-
-  const sections = [
-    {
-      title: t("shippingDomesticTitle"),
-      body: t("shippingDomesticBody", {
-        flat: formatIQD(SHIPPING_RATE_IQ, locale),
-        threshold: formatIQD(FREE_SHIPPING_THRESHOLD, locale),
-      }),
-    },
-    {
-      title: t("shippingIntlTitle"),
-      body: t("shippingIntlBody", {
-        flat: formatIQD(SHIPPING_RATE_INTL, locale),
-        threshold: formatIQD(FREE_SHIPPING_THRESHOLD, locale),
-      }),
-    },
-    { title: t("returnsTitle"), body: t("returnsBody") },
-  ];
+  const page = await getLegalPage("shipping-returns");
+  if (!page) notFound();
 
   return (
-    <PolicyShell title={t("shippingTitle")} intro={t("shippingIntro")}>
-      {sections.map((s) => (
-        <section key={s.title}>
-          <h2 className="text-display mb-3 text-xl md:text-2xl">{s.title}</h2>
-          <p className="leading-[1.85] text-ink/75">{s.body}</p>
-        </section>
-      ))}
+    <PolicyShell title={legalPageTitle(page, locale)}>
+      {legalPageBody(page, locale).map((block, i) =>
+        block.type === "heading" ? (
+          <h2 key={i} className="text-display text-xl md:text-2xl">
+            {block.text}
+          </h2>
+        ) : (
+          <p key={i} className="whitespace-pre-line leading-[1.85] text-ink/75">
+            {block.text}
+          </p>
+        ),
+      )}
     </PolicyShell>
   );
 }

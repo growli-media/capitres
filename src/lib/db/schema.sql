@@ -270,3 +270,27 @@ CREATE INDEX IF NOT EXISTS idx_admin_activity_log_created_at ON admin_activity_l
 -- appears; the admin's create/edit form always passes an explicit value
 -- going forward (drafts start false, see posts/actions.ts).
 ALTER TABLE posts ADD COLUMN IF NOT EXISTS published boolean NOT NULL DEFAULT true;
+
+-- Per-product size chart — an array of { size, chest?, length?, sleeve?,
+-- waist?, shoulder? }, every number stored canonically in centimeters
+-- regardless of which unit the admin typed it in (see src/lib/measurements.ts).
+-- Empty by default: admins fill it in per product, nothing is required.
+ALTER TABLE products ADD COLUMN IF NOT EXISTS size_chart jsonb NOT NULL DEFAULT '[]';
+
+-- Admin-editable legal/help pages — a fixed 4-row set (privacy, terms,
+-- shipping-returns, size-guide), not an open collection: no create/delete
+-- action exists for this table, only edit. Body is plain text per locale;
+-- the public renderer treats a line starting with "## " as a heading and
+-- splits everything else into paragraphs on blank lines — just enough
+-- structure for shipping-returns' three subsections without a rich-text
+-- editor (this codebase has none anywhere else either).
+CREATE TABLE IF NOT EXISTS legal_pages (
+  slug       text PRIMARY KEY,
+  title_en   text NOT NULL,
+  title_ar   text NOT NULL,
+  title_ku   text NOT NULL,
+  body_en    text NOT NULL,
+  body_ar    text NOT NULL,
+  body_ku    text NOT NULL,
+  updated_at timestamptz NOT NULL DEFAULT now()
+);

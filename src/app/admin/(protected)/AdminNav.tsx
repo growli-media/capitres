@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   ChartLineUp,
   CurrencyCircleDollar,
+  FileText,
   MagnifyingGlass,
   Newspaper,
   Receipt,
@@ -75,6 +76,7 @@ const NAV_GROUPS = [
     label: "More",
     items: [
       { href: "/admin/posts", label: "Journal", icon: Newspaper, exact: false, permission: "posts" },
+      { href: "/admin/legal", label: "Pages", icon: FileText, exact: false, permission: "legal_pages" },
       { href: "/admin/team", label: "Team", icon: UsersThree, exact: false, permission: null },
     ],
   },

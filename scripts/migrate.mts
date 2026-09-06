@@ -13,6 +13,12 @@ import { readFileSync, existsSync, mkdirSync, copyFileSync } from "node:fs";
 import path from "node:path";
 import postgres from "postgres";
 import { seedProducts, seedCollections, seedPosts, type SeedImage } from "./seed-data";
+import { formatIQD, localizeDigits } from "../src/lib/money";
+import {
+  FREE_SHIPPING_THRESHOLD,
+  SHIPPING_RATE_IQ,
+  SHIPPING_RATE_INTL,
+} from "../src/lib/commerce/config";
 
 try {
   process.loadEnvFile(".env.local");
@@ -34,8 +40,9 @@ if (!DATABASE_URL) {
 // is guarded by the `server-only` package, which throws when imported
 // from a plain script outside Next's server runtime (this one).
 const ROOT = path.resolve(import.meta.dirname, "..");
+const isLocal = /localhost|127\.0\.0\.1/.test(DATABASE_URL);
 const sql = postgres(DATABASE_URL, {
-  ssl: /localhost|127\.0\.0\.1/.test(DATABASE_URL) ? false : "require",
+  ssl: isLocal ? false : "require",
 });
 function jsonb(value: unknown) {
   return sql.json(value as postgres.JSONValue);
@@ -82,6 +89,169 @@ async function resolveImage(img: SeedImage) {
   return { url: await resolveImageUrl(img.key), alt: img.alt };
 }
 
+/**
+ * Seed content for the 4 admin-editable legal pages — flattened from the
+ * exact copy that used to live in messages/{en,ar,ku}.json's "policies"
+ * namespace (now owned by the admin going forward), using the same
+ * "## Heading" line convention the public renderer understands. Only
+ * runs once per slug (ON CONFLICT DO NOTHING below), so editing these
+ * from the admin is never overwritten by a later migrate.
+ */
+type Locale = "en" | "ar" | "ku";
+
+function privacyBody(locale: Locale): string {
+  const copy: Record<Locale, [string, string]> = {
+    en: [
+      "We collect only what an order needs: your name, contact details and delivery address. Payment details go directly to Wayl and never touch our servers.",
+      "We never sell your data. Newsletter emails go out only if you opted in, and every one carries an unsubscribe link.",
+    ],
+    ar: [
+      "نجمع فقط ما يحتاجه الطلب: اسمك وبيانات التواصل وعنوان التوصيل. بيانات الدفع تذهب مباشرة إلى ويل ولا تمر بخوادمنا.",
+      "لا نبيع بياناتك أبداً. رسائل القائمة البريدية تصلك فقط إن اشتركت، وكل رسالة تحمل رابط إلغاء الاشتراك.",
+    ],
+    ku: [
+      "تەنیا ئەوە کۆدەکەینەوە کە داواکارییەکە پێویستی پێیەتی: ناوت، زانیاری پەیوەندی و ناونیشانی گەیاندن. زانیاری پارەدان ڕاستەوخۆ دەچێتە لای وەیل و بە سێرڤەرەکانماندا تێناپەڕێت.",
+      "هەرگیز زانیاریت نافرۆشین. ئیمەیڵی خەبەرنامە تەنیا ئەگەر بەشداربوویت بۆت دێت، و هەموو نامەیەک لینکی وازهێنانی تێدایە.",
+    ],
+  };
+  return copy[locale].join("\n\n");
+}
+
+function termsBody(locale: Locale): string {
+  const copy: Record<Locale, [string, string]> = {
+    en: [
+      "Prices are listed in Iraqi Dinar (IQD). Orders are confirmed once payment completes through Wayl and you receive an order reference.",
+      "Heritage releases are limited editions; quantities per customer may be capped during drops. All imagery and designs are the property of Capitres.",
+    ],
+    ar: [
+      "الأسعار بالدينار العراقي. يُؤكَّد الطلب بعد اكتمال الدفع عبر ويل واستلامك رقم الطلب.",
+      "إصدارات التراث محدودة الكمية؛ وقد تُحدَّد الكمية لكل عميل أثناء الإصدارات. كل الصور والتصاميم ملك لكابتريس.",
+    ],
+    ku: [
+      "نرخەکان بە دیناری عێراقین. داواکاری دوای تەواوبوونی پارەدان لە ڕێگەی وەیلەوە و وەرگرتنی ژمارەی داواکاری پشتڕاستدەکرێتەوە.",
+      "بەرهەمەکانی میرات ژمارەیان سنووردارە؛ لە کاتی بڵاوکردنەوەدا لەوانەیە ژمارە بۆ هەر کڕیارێک دیاریبکرێت. هەموو وێنە و دیزاینەکان موڵکی کاپیترێسن.",
+    ],
+  };
+  return copy[locale].join("\n\n");
+}
+
+function shippingReturnsBody(locale: Locale): string {
+  const flatDomestic = formatIQD(SHIPPING_RATE_IQ, locale);
+  const flatIntl = formatIQD(SHIPPING_RATE_INTL, locale);
+  const threshold = formatIQD(FREE_SHIPPING_THRESHOLD, locale);
+  const copy: Record<
+    Locale,
+    { intro: string; domesticTitle: string; domesticBody: string; intlTitle: string; intlBody: string; returnsTitle: string; returnsBody: string }
+  > = {
+    en: {
+      intro: "We ship across every governorate of Iraq, and worldwide on request.",
+      domesticTitle: "Iraq",
+      domesticBody: `2–5 working days by trusted courier. Flat rate ${flatDomestic}; free on orders over ${threshold}. Cash on delivery is not available — payments are handled securely by Wayl before dispatch.`,
+      intlTitle: "International",
+      intlBody: `Flat rate ${flatIntl} worldwide, calculated automatically at checkout; free on orders over ${threshold}.`,
+      returnsTitle: "Exchanges & returns",
+      returnsBody:
+        "Wrong size? You have 7 days from delivery to exchange, unworn with tags attached. Heritage drops are limited — refunds are issued to your original payment method via Wayl if we can't exchange.",
+    },
+    ar: {
+      intro: "نشحن إلى كل محافظات العراق، وإلى العالم عند الطلب.",
+      domesticTitle: "داخل العراق",
+      domesticBody: `٢–٥ أيام عمل عبر شركات توصيل موثوقة. أجرة ثابتة ${flatDomestic}؛ ومجاناً للطلبات فوق ${threshold}. الدفع عند الاستلام غير متاح — تُعالج المدفوعات بأمان عبر ويل قبل الشحن.`,
+      intlTitle: "خارج العراق",
+      intlBody: `أجرة ثابتة ${flatIntl} إلى أي مكان في العالم، تُحتسب تلقائياً عند إتمام الطلب؛ ومجاناً للطلبات فوق ${threshold}.`,
+      returnsTitle: "الاستبدال والإرجاع",
+      returnsBody:
+        "المقاس غير مناسب؟ لديك ٧ أيام من الاستلام للاستبدال، بشرط عدم الاستخدام وبقاء البطاقات. إصدارات التراث محدودة — يُعاد المبلغ إلى وسيلة الدفع الأصلية عبر ويل إذا تعذّر الاستبدال.",
+    },
+    ku: {
+      intro: "بۆ هەموو پارێزگاکانی عێراق دەگەیەنین، و بە داواکاری بۆ هەموو جیهان.",
+      domesticTitle: "ناو عێراق",
+      domesticBody: `٢–٥ ڕۆژی کار بە گەیاندنی متمانەپێکراو. کرێی جێگیر ${flatDomestic}؛ بەخۆڕایی بۆ داواکاری سەرووی ${threshold}. پارەدان لە کاتی وەرگرتن بەردەست نییە — پارەدانەکان پێش ناردن بە پارێزراوی لە ڕێگەی وەیلەوە جێبەجێدەکرێن.`,
+      intlTitle: "دەرەوەی عێراق",
+      intlBody: `کرێی جێگیر ${flatIntl} بۆ هەموو جیهان، لە کاتی تەواوکردنی داواکاری بە شێوەیەکی ئۆتۆماتیکی دەژمێردرێت؛ بەخۆڕایی بۆ داواکاری سەرووی ${threshold}.`,
+      returnsTitle: "گۆڕینەوە و گەڕاندنەوە",
+      returnsBody:
+        "قەبارەکە نەگونجا؟ ٧ ڕۆژت هەیە لە گەیشتنەوە بۆ گۆڕینەوە، بە مەرجی لەبەرنەکردن و مانەوەی تاگەکان. بەرهەمەکانی میرات سنووردارن — ئەگەر گۆڕینەوە نەکرا، پارەکە لە ڕێگەی وەیلەوە دەگەڕێتەوە بۆ هەمان شێوازی پارەدان.",
+    },
+  };
+  const c = copy[locale];
+  return `${c.intro}\n\n## ${c.domesticTitle}\n\n${c.domesticBody}\n\n## ${c.intlTitle}\n\n${c.intlBody}\n\n## ${c.returnsTitle}\n\n${c.returnsBody}`;
+}
+
+const SIZE_GUIDE_TEES: [string, number, number, number][] = [
+  ["S", 54, 68, 20],
+  ["M", 57, 70, 21],
+  ["L", 60, 72, 22],
+  ["XL", 63, 74, 23],
+  ["2XL", 66, 76, 24],
+];
+const SIZE_GUIDE_OUTERWEAR: [string, number, number, number][] = [
+  ["M", 60, 68, 62],
+  ["L", 63, 70, 63.5],
+  ["XL", 66, 72, 65],
+  ["2XL", 69, 74, 66.5],
+];
+
+function sizeGuideBody(locale: Locale): string {
+  const cm = locale === "en" ? "cm" : "سم";
+  const copy: Record<
+    Locale,
+    { intro: string; teesTitle: string; outerwearTitle: string; chest: string; length: string; sleeve: string; fitNote: string }
+  > = {
+    en: {
+      intro:
+        "Measurements are garment measurements in centimetres, taken flat. Between sizes? Size up — our heritage fits are cut relaxed.",
+      teesTitle: "Tees & Jerseys",
+      outerwearTitle: "Outerwear",
+      chest: "chest",
+      length: "length",
+      sleeve: "sleeve",
+      fitNote: "Model wears size L. Heritage tees are boxy through the chest with a dropped shoulder.",
+    },
+    ar: {
+      intro: "القياسات بالسنتيمتر مأخوذة للقطعة مفرودة. بين مقاسين؟ اختر الأكبر — قصّات التراث لدينا مريحة.",
+      teesTitle: "التيشيرتات والقمصان",
+      outerwearTitle: "الجاكيتات",
+      chest: "الصدر",
+      length: "الطول",
+      sleeve: "الكم",
+      fitNote: "العارض يرتدي مقاس L. تيشيرتات التراث واسعة عند الصدر مع كتف نازل.",
+    },
+    ku: {
+      intro: "پێوانەکان بە سەنتیمەترن و بۆ پارچەی ڕاخراو وەرگیراون. لە نێوان دوو قەبارەدای؟ گەورەکە هەڵبژێرە — بڕینەکانی میراتمان بەرفراوانن.",
+      teesTitle: "تیشێرت و کراسی وەرزشی",
+      outerwearTitle: "چاکەت",
+      chest: "سنگ",
+      length: "درێژی",
+      sleeve: "قۆڵ",
+      fitNote: "مۆدێلەکە قەبارەی L لەبەرکردووە. تیشێرتەکانی میرات لە سنگدا بەرفراوانن و شانیان شۆڕبووەوەیە.",
+    },
+  };
+  const c = copy[locale];
+  const rows = (data: [string, number, number, number][]) =>
+    data
+      .map(
+        ([size, chest, length, sleeve]) =>
+          `${size} — ${c.chest} ${localizeDigits(chest, locale)}${cm}, ${c.length} ${localizeDigits(length, locale)}${cm}, ${c.sleeve} ${localizeDigits(sleeve, locale)}${cm}`,
+      )
+      .join("\n");
+  return `${c.intro}\n\n## ${c.teesTitle}\n\n${rows(SIZE_GUIDE_TEES)}\n\n## ${c.outerwearTitle}\n\n${rows(SIZE_GUIDE_OUTERWEAR)}\n\n${c.fitNote}`;
+}
+
+const LEGAL_PAGE_TITLES: Record<string, Record<Locale, string>> = {
+  privacy: { en: "Privacy Policy", ar: "سياسة الخصوصية", ku: "سیاسەتی تایبەتمەندێتی" },
+  terms: { en: "Terms of Service", ar: "شروط الخدمة", ku: "مەرجەکانی خزمەتگوزاری" },
+  "shipping-returns": { en: "Shipping & Returns", ar: "الشحن والإرجاع", ku: "گەیاندن و گەڕاندنەوە" },
+  "size-guide": { en: "Size Guide", ar: "دليل المقاسات", ku: "ڕێبەری قەبارە" },
+};
+
+const LEGAL_PAGE_BODIES: Record<string, (locale: Locale) => string> = {
+  privacy: privacyBody,
+  terms: termsBody,
+  "shipping-returns": shippingReturnsBody,
+  "size-guide": sizeGuideBody,
+};
+
 /* ------------------------------------------------------------------ */
 
 async function main() {
@@ -102,8 +272,26 @@ async function main() {
     console.log("[migrate] admin allowlist: ADMIN_OWNER_EMAIL not set, skipping seed");
   }
 
+  // The demo catalog (seedProducts/seedCollections) is a local-dev bootstrap
+  // fixture only — it exists so a fresh `db:dev` has something to look at,
+  // not as real inventory. It's local-only rather than just "run once"
+  // because ON CONFLICT DO NOTHING keys on slug: a real collection/product
+  // an admin later creates under a *different* slug never collides with
+  // it, so running this against a production database that already has
+  // its own real catalog re-inserts the demo rows right alongside it every
+  // time (this has happened twice — see git history). seedPosts is exempt:
+  // those 3 posts are genuine launch content, not throwaway demo data.
+  if (!isLocal) {
+    console.log(
+      `[migrate] products: skipped (demo catalog is local-dev only, ${seedProducts.length} available)`,
+    );
+    console.log(
+      `[migrate] collections: skipped (demo catalog is local-dev only, ${seedCollections.length} available)`,
+    );
+  }
+
   let productsInserted = 0;
-  for (const p of seedProducts) {
+  for (const p of isLocal ? seedProducts : []) {
     const images = await Promise.all(p.images.map(resolveImage));
     const id = `p_${p.slug.replace(/-/g, "_")}`;
 
@@ -146,10 +334,12 @@ async function main() {
       `;
     }
   }
-  console.log(`[migrate] products: ${productsInserted} inserted, ${seedProducts.length - productsInserted} already present`);
+  if (isLocal) {
+    console.log(`[migrate] products: ${productsInserted} inserted, ${seedProducts.length - productsInserted} already present`);
+  }
 
   let collectionsInserted = 0;
-  for (const c of seedCollections) {
+  for (const c of isLocal ? seedCollections : []) {
     const heroImage = await resolveImage(c.heroImage);
     const inserted = await sql`
       insert into collections (
@@ -167,7 +357,9 @@ async function main() {
     `;
     if (inserted.length > 0) collectionsInserted++;
   }
-  console.log(`[migrate] collections: ${collectionsInserted} inserted, ${seedCollections.length - collectionsInserted} already present`);
+  if (isLocal) {
+    console.log(`[migrate] collections: ${collectionsInserted} inserted, ${seedCollections.length - collectionsInserted} already present`);
+  }
 
   let postsInserted = 0;
   for (const p of seedPosts) {
@@ -193,6 +385,24 @@ async function main() {
     if (inserted.length > 0) postsInserted++;
   }
   console.log(`[migrate] posts: ${postsInserted} inserted, ${seedPosts.length - postsInserted} already present`);
+
+  let legalPagesInserted = 0;
+  const legalSlugs = Object.keys(LEGAL_PAGE_TITLES);
+  for (const slug of legalSlugs) {
+    const titles = LEGAL_PAGE_TITLES[slug];
+    const bodyFor = LEGAL_PAGE_BODIES[slug];
+    const inserted = await sql`
+      insert into legal_pages (slug, title_en, title_ar, title_ku, body_en, body_ar, body_ku)
+      values (
+        ${slug}, ${titles.en}, ${titles.ar}, ${titles.ku},
+        ${bodyFor("en")}, ${bodyFor("ar")}, ${bodyFor("ku")}
+      )
+      on conflict (slug) do nothing
+      returning slug
+    `;
+    if (inserted.length > 0) legalPagesInserted++;
+  }
+  console.log(`[migrate] legal pages: ${legalPagesInserted} inserted, ${legalSlugs.length - legalPagesInserted} already present`);
 
   console.log("[migrate] done");
   await sql.end();
