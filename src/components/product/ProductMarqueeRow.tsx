@@ -6,12 +6,12 @@ const SPEED_PX_PER_S = 26; // slow, ambient drift
 const RESUME_DELAY_MS = 1500; // idle time before autoplay picks back up
 
 /**
- * One self-scrolling row of products. Drifts on its own via rAF, but it's a
- * real overflow-x scroll container underneath — a drag, swipe, or wheel
- * takes over instantly using the browser's native scroll, and autoplay
- * resumes a beat after the user lets go (see the scroll-event debounce
- * below). The strip is force-`dir="ltr"`: it's decorative and looped, so it
- * doesn't need to mirror for RTL pages the way real reading content does,
+ * One self-scrolling row of products. Drifts on its own via rAF and never
+ * stops for hovering, mouse movement, or an incidental wheel tick — only a
+ * real click-and-drag takes over, using the browser's native scroll, with
+ * autoplay resuming a beat after the user lets go (see the scroll-event
+ * debounce below). The strip is force-`dir="ltr"`: it's decorative and
+ * looped, so it doesn't need to mirror for RTL pages the way real reading content does,
  * and pinning the direction keeps scrollLeft math identical on every locale
  * instead of chasing RTL's inverted-sign scrollLeft behaviour.
  *
@@ -81,28 +81,21 @@ export default function ProductMarqueeRow({
     return () => cancelAnimationFrame(raf);
   }, [direction]);
 
-  // Pause only for a real attempt to scroll *this* strip — a drag (real
-  // pointerdown-and-move, not just a click) or a horizontally-dominant
-  // wheel/trackpad gesture. A vertical mouse-wheel tick just passing
-  // through on its way down the page also lands a "wheel" event here
-  // (the strip is directly under the cursor), which used to pause it for
-  // no reason the user asked for — comparing deltaX to deltaY tells the
-  // two apart. The trailing scroll event (native drag, momentum, or our
-  // own drag-to-scroll below) restarts the resume countdown, so it only
-  // reads as "idle" once movement fully stops.
+  // Only an actual drag (below) ever pauses this — hovering, moving the
+  // mouse, or a stray wheel tick passing over the strip must never stop
+  // it. Wheel is deliberately NOT wired to pause: a mouse's tilt-wheel or
+  // a trackpad's natural diagonal jitter can report a horizontal delta
+  // even during an ordinary vertical scroll, which used to pause the
+  // strip for no reason the user asked for. The resume countdown here is
+  // purely for the drag path below — its own scrollLeft writes fire
+  // native "scroll" events, which keep pushing the countdown out so
+  // autoplay doesn't creep back in mid-drag.
   useEffect(() => {
     const el = scrollerRef.current;
     if (!el) return;
-    const onWheel = (e: WheelEvent) => {
-      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) pause();
-    };
-    el.addEventListener("wheel", onWheel, { passive: true });
     el.addEventListener("scroll", scheduleResume, { passive: true });
-    return () => {
-      el.removeEventListener("wheel", onWheel);
-      el.removeEventListener("scroll", scheduleResume);
-    };
-  }, [pause, scheduleResume]);
+    return () => el.removeEventListener("scroll", scheduleResume);
+  }, [scheduleResume]);
 
   // Click-and-drag for mouse/pen users (touch already scrolls natively).
   // Pointer capture is only claimed once the pointer actually crosses the
@@ -134,7 +127,8 @@ export default function ProductMarqueeRow({
     if (!draggingRef.current) return;
     draggingRef.current = false;
     const el = scrollerRef.current;
-    if (el?.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
+    if (el?.hasPointerCapture(e.pointerId))
+      el.releasePointerCapture(e.pointerId);
   };
   const onClickCapture = (e: React.MouseEvent) => {
     if (draggedRef.current) {
