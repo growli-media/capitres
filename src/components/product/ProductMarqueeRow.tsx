@@ -81,23 +81,35 @@ export default function ProductMarqueeRow({
     return () => cancelAnimationFrame(raf);
   }, [direction]);
 
-  // Pause the instant the user touches the strip; the trailing scroll event
-  // (native drag, momentum, or our own drag-to-scroll below) restarts the
-  // resume countdown, so it only reads as "idle" once movement fully stops.
+  // Pause only for a real attempt to scroll *this* strip — a drag (real
+  // pointerdown-and-move, not just a click) or a horizontally-dominant
+  // wheel/trackpad gesture. A vertical mouse-wheel tick just passing
+  // through on its way down the page also lands a "wheel" event here
+  // (the strip is directly under the cursor), which used to pause it for
+  // no reason the user asked for — comparing deltaX to deltaY tells the
+  // two apart. The trailing scroll event (native drag, momentum, or our
+  // own drag-to-scroll below) restarts the resume countdown, so it only
+  // reads as "idle" once movement fully stops.
   useEffect(() => {
     const el = scrollerRef.current;
     if (!el) return;
-    el.addEventListener("pointerdown", pause);
-    el.addEventListener("wheel", pause, { passive: true });
+    const onWheel = (e: WheelEvent) => {
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) pause();
+    };
+    el.addEventListener("wheel", onWheel, { passive: true });
     el.addEventListener("scroll", scheduleResume, { passive: true });
     return () => {
-      el.removeEventListener("pointerdown", pause);
-      el.removeEventListener("wheel", pause);
+      el.removeEventListener("wheel", onWheel);
       el.removeEventListener("scroll", scheduleResume);
     };
   }, [pause, scheduleResume]);
 
   // Click-and-drag for mouse/pen users (touch already scrolls natively).
+  // Pointer capture is only claimed once the pointer actually crosses the
+  // drag threshold below — claiming it eagerly on every pointerdown made
+  // Chrome retarget the resulting click event to this div instead of the
+  // product <Link> underneath the cursor, silently swallowing every plain
+  // click (drag or not) before it could navigate anywhere.
   const onPointerDown = (e: React.PointerEvent) => {
     if (e.pointerType === "touch") return;
     const el = scrollerRef.current;
@@ -105,20 +117,24 @@ export default function ProductMarqueeRow({
     draggingRef.current = true;
     draggedRef.current = false;
     dragStart.current = { x: e.clientX, scrollLeft: el.scrollLeft };
-    el.setPointerCapture(e.pointerId);
   };
   const onPointerMove = (e: React.PointerEvent) => {
     if (!draggingRef.current) return;
     const el = scrollerRef.current;
     if (!el) return;
     const dx = e.clientX - dragStart.current.x;
-    if (Math.abs(dx) > 4) draggedRef.current = true;
-    el.scrollLeft = dragStart.current.scrollLeft - dx;
+    if (Math.abs(dx) > 4 && !draggedRef.current) {
+      draggedRef.current = true;
+      el.setPointerCapture(e.pointerId);
+      pause();
+    }
+    if (draggedRef.current) el.scrollLeft = dragStart.current.scrollLeft - dx;
   };
   const endDrag = (e: React.PointerEvent) => {
     if (!draggingRef.current) return;
     draggingRef.current = false;
-    scrollerRef.current?.releasePointerCapture(e.pointerId);
+    const el = scrollerRef.current;
+    if (el?.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
   };
   const onClickCapture = (e: React.MouseEvent) => {
     if (draggedRef.current) {
