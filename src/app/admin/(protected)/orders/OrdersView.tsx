@@ -37,7 +37,17 @@ function formatDate(iso: string): string {
   });
 }
 
-export default function OrdersView({ initial }: { initial: Order[] }) {
+export default function OrdersView({
+  initial,
+  openOnly = false,
+}: {
+  initial: Order[];
+  /** True for the dashboard's "Open orders" bubble link (?status=open) —
+   * this view isn't time-scoped, so the range slider (which would
+   * silently replace it with a range-filtered fetch) is hidden rather
+   * than shown alongside a list it doesn't control. */
+  openOnly?: boolean;
+}) {
   const [range, setRange] = useState<TimeRangeValue>(DEFAULT_TIME_RANGE_VALUE);
   const [orders, setOrders] = useState<Order[]>(initial);
   const [isPending, startTransition] = useTransition();
@@ -59,6 +69,15 @@ export default function OrdersView({ initial }: { initial: Order[] }) {
   }
 
   function handleMarkDelivered(ref: string) {
+    // Optimistic, matching handleDelete below: in the "open orders" view
+    // a delivered order no longer belongs in the list at all; in the
+    // normal view it stays put but its badge should flip immediately
+    // rather than waiting on a manual refresh.
+    setOrders((prev) =>
+      openOnly
+        ? prev.filter((o) => o.ref !== ref)
+        : prev.map((o) => (o.ref === ref ? { ...o, status: "Delivered" } : o)),
+    );
     startTransition(async () => {
       await markOrderDeliveredAction(ref);
       showToast("Order marked as delivered");
@@ -73,9 +92,20 @@ export default function OrdersView({ initial }: { initial: Order[] }) {
 
   return (
     <div>
-      <TimeRangeSlider value={range} onChange={handleChange} pending={isPending} />
+      {openOnly ? (
+        <Link
+          href="/admin/orders"
+          className="text-sm font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+        >
+          ← All orders
+        </Link>
+      ) : (
+        <TimeRangeSlider value={range} onChange={handleChange} pending={isPending} />
+      )}
       <div className="mt-3 flex items-center justify-between gap-3">
-        <p className="text-sm text-slate-500 dark:text-slate-400">{orders.length} in this range.</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">
+          {openOnly ? `${orders.length} awaiting delivery.` : `${orders.length} in this range.`}
+        </p>
         {orders.length > 0 && (
           <button
             type="button"
@@ -103,7 +133,9 @@ export default function OrdersView({ initial }: { initial: Order[] }) {
 
       {orders.length === 0 ? (
         <div className="mt-6 rounded-xl border border-dashed border-slate-300 py-16 text-center dark:border-slate-700">
-          <p className="text-sm text-slate-500 dark:text-slate-400">No orders in this range.</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            {openOnly ? "Nothing awaiting delivery — you're all caught up." : "No orders in this range."}
+          </p>
         </div>
       ) : (
         <div className={`transition-opacity ${isPending ? "opacity-60" : ""}`}>

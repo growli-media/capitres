@@ -37,18 +37,47 @@ const navIconButton =
 /** `permission: null` means always visible — Team included: every team
  * member can now reach the page (it shows their own profile card unless
  * they have full control, see team/page.tsx's canManage split), so
- * there's no longer any reason to hide the nav link itself. */
-const NAV_ITEMS = [
-  { href: "/admin", label: "Dashboard", icon: ChartLineUp, exact: true, permission: null },
-  { href: "/admin/revenue", label: "Revenue", icon: CurrencyCircleDollar, exact: false, permission: "revenue" },
-  { href: "/admin/products", label: "Products", icon: TShirt, exact: false, permission: "products" },
-  { href: "/admin/collections", label: "Collections", icon: Stack, exact: false, permission: "collections" },
-  { href: "/admin/categories", label: "Categories", icon: Tag, exact: false, permission: "categories" },
-  { href: "/admin/posts", label: "Journal", icon: Newspaper, exact: false, permission: "posts" },
-  { href: "/admin/abandoned", label: "Abandoned carts", icon: ShoppingCartSimple, exact: false, permission: "abandoned_carts" },
-  { href: "/admin/orders", label: "Orders", icon: Receipt, exact: false, permission: "orders" },
-  { href: "/admin/reviews", label: "Reviews", icon: Star, exact: false, permission: "reviews" },
-  { href: "/admin/team", label: "Team", icon: UsersThree, exact: false, permission: null },
+ * there's no longer any reason to hide the nav link itself.
+ *
+ * Grouped by how often each section gets touched, not alphabetically or
+ * by when it was built: Dashboard stands alone as the entry point: Orders
+ * and Abandoned carts lead the next group since they're the things that
+ * need daily attention, with Revenue and Reviews alongside them; Products/
+ * Collections/Categories (catalog upkeep, not a daily task) come after;
+ * Journal and Team sit last. A group with zero visible items (a team
+ * member missing every permission in it) is dropped entirely rather than
+ * rendering an empty labeled section. */
+const NAV_GROUPS = [
+  {
+    label: null,
+    items: [
+      { href: "/admin", label: "Dashboard", icon: ChartLineUp, exact: true, permission: null },
+    ],
+  },
+  {
+    label: "Daily",
+    items: [
+      { href: "/admin/orders", label: "Orders", icon: Receipt, exact: false, permission: "orders" },
+      { href: "/admin/abandoned", label: "Abandoned carts", icon: ShoppingCartSimple, exact: false, permission: "abandoned_carts" },
+      { href: "/admin/revenue", label: "Revenue", icon: CurrencyCircleDollar, exact: false, permission: "revenue" },
+      { href: "/admin/reviews", label: "Reviews", icon: Star, exact: false, permission: "reviews" },
+    ],
+  },
+  {
+    label: "Catalog",
+    items: [
+      { href: "/admin/products", label: "Products", icon: TShirt, exact: false, permission: "products" },
+      { href: "/admin/collections", label: "Collections", icon: Stack, exact: false, permission: "collections" },
+      { href: "/admin/categories", label: "Categories", icon: Tag, exact: false, permission: "categories" },
+    ],
+  },
+  {
+    label: "More",
+    items: [
+      { href: "/admin/posts", label: "Journal", icon: Newspaper, exact: false, permission: "posts" },
+      { href: "/admin/team", label: "Team", icon: UsersThree, exact: false, permission: null },
+    ],
+  },
 ] as const;
 
 export default function AdminNav({
@@ -74,10 +103,15 @@ export default function AdminNav({
   sidebarToggleVariant?: "collapse" | "close";
 }) {
   const pathname = usePathname();
-  const visibleItems = NAV_ITEMS.filter((item) => {
-    if (item.permission === null) return true;
-    return access.isOwner || access.fullAccess || (access.permissions as readonly string[]).includes(item.permission);
-  });
+  const canSee = (permission: string | null) =>
+    permission === null ||
+    access.isOwner ||
+    access.fullAccess ||
+    (access.permissions as readonly string[]).includes(permission);
+  const visibleGroups = NAV_GROUPS.map((group) => ({
+    ...group,
+    items: group.items.filter((item) => canSee(item.permission)),
+  })).filter((group) => group.items.length > 0);
 
   return (
     <nav className="flex h-full flex-col">
@@ -135,38 +169,49 @@ export default function AdminNav({
         </button>
       </div>
 
-      <ul className="mt-4 flex-1 space-y-2 overflow-y-auto px-4">
-        {visibleItems.map((item) => {
-          const active = item.exact
-            ? pathname === item.href
-            : pathname.startsWith(item.href);
-          const Icon = item.icon;
-          return (
-            <li key={item.href}>
-              <Link
-                href={item.href}
-                onClick={onNavigate}
-                aria-current={active ? "page" : undefined}
-                className={`flex min-h-11 items-center justify-between gap-3 rounded-full border px-3 text-sm font-medium backdrop-blur-md transition-all ${
-                  active
-                    ? "border-[#8FC7EF]/60 bg-gradient-to-b from-[#8FC7EF]/30 to-[#8FC7EF]/10 text-[#1B3445] shadow-[inset_0_1px_0_rgba(255,255,255,0.5)] dark:text-white dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]"
-                    : "border-[#1B3445]/10 bg-[#1B3445]/[0.03] text-[#5A7387] shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] hover:border-[#1B3445]/20 hover:bg-[#1B3445]/[0.06] hover:text-[#1B3445] dark:border-white/12 dark:bg-white/5 dark:text-[#aebfce] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] dark:hover:border-white/25 dark:hover:bg-white/12 dark:hover:text-white dark:hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]"
-                }`}
-              >
-                <span className="flex items-center gap-3">
-                  <Icon size={18} aria-hidden="true" />
-                  {item.label}
-                </span>
-                {!!badgeCounts[item.href] && (
-                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold text-white">
-                    {badgeCounts[item.href]}
-                  </span>
-                )}
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
+      <div className="mt-4 flex-1 space-y-4 overflow-y-auto px-4">
+        {visibleGroups.map((group, gi) => (
+          <div key={group.label ?? `group-${gi}`}>
+            {group.label && (
+              <p className="mb-1.5 px-3 text-[10px] font-semibold tracking-wider text-[#5A7387]/70 uppercase dark:text-[#aebfce]/60">
+                {group.label}
+              </p>
+            )}
+            <ul className="space-y-2">
+              {group.items.map((item) => {
+                const active = item.exact
+                  ? pathname === item.href
+                  : pathname.startsWith(item.href);
+                const Icon = item.icon;
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      onClick={onNavigate}
+                      aria-current={active ? "page" : undefined}
+                      className={`flex min-h-11 items-center justify-between gap-3 rounded-full border px-3 text-sm font-medium backdrop-blur-md transition-all ${
+                        active
+                          ? "border-[#8FC7EF]/60 bg-gradient-to-b from-[#8FC7EF]/30 to-[#8FC7EF]/10 text-[#1B3445] shadow-[inset_0_1px_0_rgba(255,255,255,0.5)] dark:text-white dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]"
+                          : "border-[#1B3445]/10 bg-[#1B3445]/[0.03] text-[#5A7387] shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] hover:border-[#1B3445]/20 hover:bg-[#1B3445]/[0.06] hover:text-[#1B3445] dark:border-white/12 dark:bg-white/5 dark:text-[#aebfce] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] dark:hover:border-white/25 dark:hover:bg-white/12 dark:hover:text-white dark:hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]"
+                      }`}
+                    >
+                      <span className="flex items-center gap-3">
+                        <Icon size={18} aria-hidden="true" />
+                        {item.label}
+                      </span>
+                      {!!badgeCounts[item.href] && (
+                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold text-white">
+                          {badgeCounts[item.href]}
+                        </span>
+                      )}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+      </div>
 
       <div className="border-t border-[#1B3445]/10 px-4 pt-3 pb-4 dark:border-white/15">
         <div className="flex items-center gap-2">

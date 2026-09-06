@@ -7,6 +7,7 @@ import {
   Receipt,
   ChartLineUp,
   ShoppingCartSimple,
+  Truck,
   CaretRight,
   TrendUp,
   TrendDown,
@@ -105,7 +106,16 @@ function formatDate(iso: string): string {
 /** Same slider-scopes-everything-below pattern as RevenueView.tsx — one
  * Server Action call per range change, previous render dimmed while
  * pending instead of a skeleton. */
-export default function DashboardView({ initial }: { initial: DashboardRangeResult }) {
+export default function DashboardView({
+  initial,
+  openOrdersCount,
+}: {
+  initial: DashboardRangeResult;
+  /** Cash on Delivery orders still awaiting the "Mark as delivered"
+   * action — a live to-do count, not scoped to the time-range slider
+   * below (an old undelivered order is just as "still to do" today). */
+  openOrdersCount: number;
+}) {
   const [range, setRange] = useState<TimeRangeValue>(DEFAULT_TIME_RANGE_VALUE);
   const [data, setData] = useState<DashboardRangeResult>(initial);
   const [isPending, startTransition] = useTransition();
@@ -123,7 +133,14 @@ export default function DashboardView({ initial }: { initial: DashboardRangeResu
     <div>
       <TimeRangeSlider value={range} onChange={handleChange} pending={isPending} />
 
-      <div className={`mt-6 grid grid-cols-2 gap-4 transition-opacity lg:grid-cols-4 ${isPending ? "opacity-60" : ""}`}>
+      <div className={`mt-6 grid grid-cols-2 gap-4 transition-opacity lg:grid-cols-5 ${isPending ? "opacity-60" : ""}`}>
+        <KpiCard
+          icon={Truck}
+          label="Open orders"
+          value={String(openOrdersCount)}
+          href="/admin/orders?status=open"
+          tone={openOrdersCount > 0 ? "alert" : undefined}
+        />
         <KpiCard
           icon={CurrencyCircleDollar}
           label="Revenue"

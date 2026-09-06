@@ -34,6 +34,21 @@ export async function getAbandonedCount(start: Date | null = null, end: Date = n
   return Number(rows[0]?.count ?? 0);
 }
 
+/** Cash on Delivery orders are the one order type that needs a manual
+ * admin action (OrdersView's "Mark as delivered" button) — every other
+ * status resolves itself via the Wayl webhook. Not time-scoped like the
+ * dashboard's other KPIs: an order placed weeks ago and still undelivered
+ * is exactly as "still to do" today as one placed this morning. */
+export async function getOpenOrdersCount(): Promise<number> {
+  if (!process.env.DATABASE_URL) return 0;
+  const rows = await sql<{ count: string }[]>`
+    select count(*)::text as count
+    from orders
+    where status = 'CashOnDelivery' and deleted_at is null
+  `;
+  return Number(rows[0]?.count ?? 0);
+}
+
 export interface AbandonedOrder {
   ref: string;
   createdAt: string;
