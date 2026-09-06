@@ -261,6 +261,11 @@ function parseInput(
     featured: formData.get("featured") === "on",
     giftcardDenominations: isGiftCard ? giftcardDenominations : null,
     variants: isGiftCard ? [{ size: "DIGITAL", stock: 9999 }] : variants,
+    // Only createProductAction below actually uses this — the create form's
+    // "Save draft"/"Publish" buttons set intent; the edit form has no such
+    // field (updateProduct() never touches archived), so this harmlessly
+    // defaults to "publish" and goes unused there.
+    archived: String(formData.get("intent") ?? "publish") === "draft",
   };
 }
 
@@ -281,7 +286,7 @@ export async function createProductAction(
   }
 
   const id = await createProduct(parsed);
-  await logAdminActivity(`Created product "${parsed.titleEn}"`);
+  await logAdminActivity(`${parsed.archived ? "Drafted" : "Created"} product "${parsed.titleEn}"`);
   revalidateStorefront();
   redirect(`/admin/products/${id}/edit?created=1`);
 }

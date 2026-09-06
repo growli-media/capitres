@@ -1030,14 +1030,46 @@ export default function ProductForm({
         )}
       </div>
 
-      <div className="flex items-center gap-3 border-t border-slate-200 pt-6 dark:border-slate-800">
-        <button
-          type="submit"
-          disabled={pending}
-          className={`flex h-11 cursor-pointer items-center px-6 text-sm font-semibold disabled:cursor-not-allowed ${glassButtonPrimary}`}
-        >
-          {pending ? "Saving…" : mode === "create" ? "Create product" : "Save changes"}
-        </button>
+      <div className="flex flex-wrap items-center gap-3 border-t border-slate-200 pt-6 dark:border-slate-800">
+        {mode === "edit" && product && (
+          <span
+            className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+              product.archived ? glassTone.neutral : glassTone.info
+            }`}
+          >
+            {product.archived ? "Draft — hidden from store" : "Live on the store"}
+          </span>
+        )}
+        {mode === "create" ? (
+          <>
+            <button
+              type="submit"
+              name="intent"
+              value="draft"
+              disabled={pending}
+              className={`flex h-11 cursor-pointer items-center px-5 text-sm font-semibold disabled:cursor-not-allowed ${glassButtonSecondary} text-slate-700 dark:text-slate-300`}
+            >
+              {pending ? "Saving…" : "Save as draft"}
+            </button>
+            <button
+              type="submit"
+              name="intent"
+              value="publish"
+              disabled={pending}
+              className={`flex h-11 cursor-pointer items-center px-6 text-sm font-semibold disabled:cursor-not-allowed ${glassButtonPrimary}`}
+            >
+              {pending ? "Saving…" : "Publish"}
+            </button>
+          </>
+        ) : (
+          <button
+            type="submit"
+            disabled={pending}
+            className={`flex h-11 cursor-pointer items-center px-6 text-sm font-semibold disabled:cursor-not-allowed ${glassButtonPrimary}`}
+          >
+            {pending ? "Saving…" : "Save changes"}
+          </button>
+        )}
       </div>
     </form>
   );

@@ -248,6 +248,12 @@ export interface ProductInput {
   featured: boolean;
   giftcardDenominations: number[] | null;
   variants: { size: string; stock: number }[];
+  /** Only consulted by createProduct() — a brand-new product's "Save
+   * draft"/"Publish" choice. updateProduct() deliberately never touches
+   * this column; once created, archived state changes only through
+   * setProductArchived() (the list page's row-action toggle), so editing
+   * an existing product can never silently flip its visibility. */
+  archived: boolean;
 }
 
 function buildDetails(input: ProductInput) {
@@ -304,7 +310,7 @@ export async function createProduct(input: ProductInput): Promise<string> {
       details, category, gender, price_amount, compare_at_amount,
       price_amount_usd_cents, compare_at_amount_usd_cents,
       price_amount_eur_cents, compare_at_amount_eur_cents,
-      colors, images, size_chart, collection_slugs, related_product_slugs, is_new, featured, giftcard_denominations
+      colors, images, size_chart, collection_slugs, related_product_slugs, is_new, featured, giftcard_denominations, archived
     ) values (
       ${id}, ${input.slug}, ${input.titleEn}, ${input.titleAr}, ${input.titleKu},
       ${input.descriptionEn}, ${input.descriptionAr}, ${input.descriptionKu},
@@ -315,7 +321,8 @@ export async function createProduct(input: ProductInput): Promise<string> {
       ${jsonb(buildColors(input))}, ${jsonb(buildImages(input))}, ${jsonb(buildSizeChart(input))},
       ${jsonb(input.collectionSlugs)}, ${jsonb(input.relatedProductSlugs)},
       ${input.isNew}, ${input.featured},
-      ${input.giftcardDenominations ? jsonb(input.giftcardDenominations) : null}
+      ${input.giftcardDenominations ? jsonb(input.giftcardDenominations) : null},
+      ${input.archived}
     )
   `;
   for (const v of input.variants) {

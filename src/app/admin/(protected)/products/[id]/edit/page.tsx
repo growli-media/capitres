@@ -44,7 +44,9 @@ export default async function EditProductPage({
       {created === "1" && (
         <div className={`mb-6 flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium ${glassTone.success}`}>
           <Check size={16} aria-hidden="true" />
-          Product created and live on the site.
+          {result.product.archived
+            ? "Product saved as a draft — hidden from the store until you unarchive it."
+            : "Product created and live on the site."}
         </div>
       )}
 
