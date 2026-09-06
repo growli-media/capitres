@@ -83,18 +83,24 @@ export default function ProductMarqueeRow({
 
   // Only an actual drag (below) ever pauses this — hovering, moving the
   // mouse, or a stray wheel tick passing over the strip must never stop
-  // it. Wheel is deliberately NOT wired to pause: a mouse's tilt-wheel or
-  // a trackpad's natural diagonal jitter can report a horizontal delta
-  // even during an ordinary vertical scroll, which used to pause the
-  // strip for no reason the user asked for. The resume countdown here is
-  // purely for the drag path below — its own scrollLeft writes fire
-  // native "scroll" events, which keep pushing the countdown out so
-  // autoplay doesn't creep back in mid-drag.
+  // it. Wheel is blocked outright (preventDefault, non-passive) rather
+  // than just left unpaused: letting the browser natively wheel-scroll
+  // this element would still fight the autoplay loop's own scrollLeft
+  // writes every frame — same visible stall, just from a second writer
+  // instead of a pause flag. The resume countdown here is purely for the
+  // drag path below — its own scrollLeft writes fire native "scroll"
+  // events, which keep pushing the countdown out so autoplay doesn't
+  // creep back in mid-drag.
   useEffect(() => {
     const el = scrollerRef.current;
     if (!el) return;
+    const onWheel = (e: WheelEvent) => e.preventDefault();
+    el.addEventListener("wheel", onWheel, { passive: false });
     el.addEventListener("scroll", scheduleResume, { passive: true });
-    return () => el.removeEventListener("scroll", scheduleResume);
+    return () => {
+      el.removeEventListener("wheel", onWheel);
+      el.removeEventListener("scroll", scheduleResume);
+    };
   }, [scheduleResume]);
 
   // Click-and-drag for mouse/pen users (touch already scrolls natively).
