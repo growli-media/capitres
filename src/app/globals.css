@@ -155,6 +155,21 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Storefront only — html.storefront is set by [locale]/layout.tsx; admin
+   has its own separate root layout (outside [locale]) and never gets this
+   class. The native scrollbar reads as dated next to the rest of the
+   editorial design, so it's hidden here. Scroll itself is untouched:
+   wheel, touch, and keyboard scrolling all still work identically, this
+   only removes the visible track/thumb chrome. */
+html.storefront {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html.storefront::-webkit-scrollbar {
+  display: none;
+}
+
 body {
   background: var(--color-paper);
   color: var(--color-ink);

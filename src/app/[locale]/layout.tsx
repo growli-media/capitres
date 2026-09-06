@@ -132,7 +132,7 @@ export default async function LocaleLayout({
     <html
       lang={locale}
       dir={isRtl(locale) ? "rtl" : "ltr"}
-      className={`${schrifted.variable} ${notoArabic.variable}`}
+      className={`storefront ${schrifted.variable} ${notoArabic.variable}`}
     >
       <body>
         <AnalyticsScripts />
