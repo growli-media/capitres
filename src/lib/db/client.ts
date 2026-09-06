@@ -21,7 +21,17 @@ function createClient(): SqlClient {
   const isLocal = /localhost|127\.0\.0\.1/.test(url);
   return postgres(url, {
     ssl: isLocal ? false : "require",
-    max: 5,
+    // Local pglite's single embedded instance (scripts/dev-db.mjs) can't
+    // truly run queries from separate client connections concurrently —
+    // several *simultaneous* connections each mid-Parse/Bind/Execute
+    // corrupts pglite-socket's shared extended-query-protocol state (seen
+    // as "bind message supplies N parameters, but prepared statement \"\"
+    // requires 0" on any page that fires more than one query via
+    // Promise.all, e.g. every product page: getProduct + variants +
+    // reviews). Capping the pool at 1 forces postgres.js to queue those
+    // client-side instead of opening concurrent sockets — real Postgres
+    // hosts handle true concurrency fine, so this is local-only.
+    max: isLocal ? 1 : 5,
     idle_timeout: 20,
     // Neon's connection string routes through a PgBouncer-style pooler
     // that multiplexes many client sessions onto a small set of backend
@@ -29,8 +39,9 @@ function createClient(): SqlClient {
     // that made it, so the next session sharing that backend gets
     // "cached plan must not change result type" as soon as the
     // referenced table's schema has changed since — this is postgres.js's
-    // documented fix for pooled/transaction-mode connections.
-    prepare: false,
+    // documented fix for pooled/transaction-mode connections. Not needed
+    // locally (no pooler in front of pglite).
+    prepare: isLocal ? undefined : false,
   });
 }
 
