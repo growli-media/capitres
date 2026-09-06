@@ -11,6 +11,25 @@ import { formatCurrency, formatIQD } from "@/lib/money";
 import { isValidEmailClient } from "@/lib/validate";
 import { trackAddToCart, trackViewContent } from "@/lib/analytics/track";
 import { useCurrency } from "@/components/currency/CurrencyProvider";
+import { cmToIn } from "@/lib/measurements";
+import type { SizeChartRow } from "@/lib/catalog/types";
+
+const SIZE_CHART_FIELDS = ["chest", "length", "sleeve", "waist", "shoulder"] as const;
+type SizeChartField = (typeof SIZE_CHART_FIELDS)[number];
+
+/** Only columns at least one size actually has a value for — most
+ * products won't use every measurement. */
+function activeSizeChartFields(rows: SizeChartRow[]) {
+  return SIZE_CHART_FIELDS.filter((f) => rows.some((r) => r[f] != null));
+}
+
+const SIZE_CHART_FIELD_KEYS: Record<SizeChartField, "sizeChartChest" | "sizeChartLength" | "sizeChartSleeve" | "sizeChartWaist" | "sizeChartShoulder"> = {
+  chest: "sizeChartChest",
+  length: "sizeChartLength",
+  sleeve: "sizeChartSleeve",
+  waist: "sizeChartWaist",
+  shoulder: "sizeChartShoulder",
+};
 
 /** Buy box: size selection with live stock, quantity, add-to-cart. */
 export default function AddToCart({ product }: { product: Product }) {
@@ -32,6 +51,7 @@ export default function AddToCart({ product }: { product: Product }) {
   );
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
+  const [chartUnit, setChartUnit] = useState<"cm" | "in">("cm");
 
   const selectedColor = product.colors.find((c) => c.key === colorKey);
 
@@ -183,6 +203,65 @@ export default function AddToCart({ product }: { product: Product }) {
           >
             {t("sizeGuide")}
           </Link>
+
+          {product.sizeChart && product.sizeChart.length > 0 && (
+            <details className="group mt-3">
+              <summary className="flex min-h-9 w-fit cursor-pointer list-none items-center gap-1.5 text-xs font-semibold text-ink/60 hover:text-ink">
+                {t("sizeChartTitle")}
+                <span
+                  aria-hidden="true"
+                  className="text-sm transition-transform duration-300 group-open:rotate-45"
+                >
+                  +
+                </span>
+              </summary>
+              <div className="mt-3">
+                <div className="mb-2 flex items-center gap-1 rounded-full border border-line p-0.5 w-fit">
+                  {(["cm", "in"] as const).map((u) => (
+                    <button
+                      key={u}
+                      type="button"
+                      onClick={() => setChartUnit(u)}
+                      className={`cursor-pointer rounded-full px-3 py-1 text-[11px] font-semibold transition-colors ${
+                        chartUnit === u ? "bg-ink text-paper" : "text-ink/50 hover:text-ink"
+                      }`}
+                    >
+                      {u === "cm" ? t("sizeChartCm") : t("sizeChartIn")}
+                    </button>
+                  ))}
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-line text-start">
+                        <th className="px-2 py-2 text-start font-semibold">{t("sizeChartSize")}</th>
+                        {activeSizeChartFields(product.sizeChart).map((f) => (
+                          <th key={f} className="px-2 py-2 text-start font-semibold">
+                            {t(SIZE_CHART_FIELD_KEYS[f])}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {product.sizeChart.map((row) => (
+                        <tr key={row.size} className="border-b border-line/60 last:border-0">
+                          <td className="px-2 py-2 font-medium">{row.size}</td>
+                          {activeSizeChartFields(product.sizeChart!).map((f) => {
+                            const cm = row[f];
+                            return (
+                              <td key={f} className="px-2 py-2 text-ink/70">
+                                {cm == null ? "—" : chartUnit === "in" ? cmToIn(cm) : cm}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </details>
+          )}
         </fieldset>
       )}
 

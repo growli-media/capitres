@@ -1,6 +1,6 @@
 import "server-only";
 import { sql, jsonb } from "@/lib/db/client";
-import type { Category, Gender } from "@/lib/catalog/types";
+import type { Category, Gender, SizeChartRow } from "@/lib/catalog/types";
 
 /** Flat, admin-facing view of a product row — no locale picking, no
  * variant/review joins beyond what the list/edit screens need. */
@@ -25,6 +25,7 @@ export interface AdminProductRow {
   compareAtAmountEurCents: number | null;
   images: { url: string; alt: { en: string; ar: string; ku: string } }[];
   colors: { key: string; hex: string; name: { en: string; ar: string; ku: string } }[];
+  sizeChart: SizeChartRow[];
   collectionSlugs: string[];
   /** Admin-curated "frequently bought together" — other products' slugs,
    * in picked order. */
@@ -63,6 +64,7 @@ interface ProductListRow {
   compare_at_amount_eur_cents: number | null;
   images: AdminProductRow["images"];
   colors: AdminProductRow["colors"];
+  size_chart: SizeChartRow[];
   collection_slugs: string[];
   related_product_slugs: string[];
   details: AdminProductRow["details"];
@@ -102,6 +104,7 @@ export async function listAdminProducts(): Promise<AdminProductRow[]> {
     compareAtAmountEurCents: r.compare_at_amount_eur_cents,
     images: r.images ?? [],
     colors: r.colors ?? [],
+    sizeChart: r.size_chart ?? [],
     collectionSlugs: r.collection_slugs ?? [],
     relatedProductSlugs: r.related_product_slugs ?? [],
     details: r.details ?? [],
@@ -142,6 +145,7 @@ export async function getAdminProduct(
         compare_at_amount_eur_cents: number | null;
         images: AdminProductRow["images"];
         colors: AdminProductRow["colors"];
+        size_chart: SizeChartRow[];
         collection_slugs: string[];
         related_product_slugs: string[];
         details: AdminProductRow["details"];
@@ -178,6 +182,7 @@ export async function getAdminProduct(
       compareAtAmountEurCents: row.compare_at_amount_eur_cents,
       images: row.images ?? [],
       colors: row.colors ?? [],
+      sizeChart: row.size_chart ?? [],
       collectionSlugs: row.collection_slugs ?? [],
       relatedProductSlugs: row.related_product_slugs ?? [],
       details: row.details ?? [],
@@ -236,6 +241,7 @@ export interface ProductInput {
   compareAtAmountEurCents: number | null;
   colors: ColorInput[];
   images: ImageInput[];
+  sizeChart: SizeChartRow[];
   collectionSlugs: string[];
   relatedProductSlugs: string[];
   isNew: boolean;
@@ -283,6 +289,12 @@ function buildImages(input: ProductInput) {
     }));
 }
 
+/** Rows with no size label are dropped, same "the real field is the
+ * signal of intent" filter buildColors() uses for its name field. */
+function buildSizeChart(input: ProductInput) {
+  return input.sizeChart.filter((row) => row.size.trim());
+}
+
 export async function createProduct(input: ProductInput): Promise<string> {
   const id = `p_${crypto.randomUUID().replace(/-/g, "").slice(0, 20)}`;
   await sql`
@@ -292,7 +304,7 @@ export async function createProduct(input: ProductInput): Promise<string> {
       details, category, gender, price_amount, compare_at_amount,
       price_amount_usd_cents, compare_at_amount_usd_cents,
       price_amount_eur_cents, compare_at_amount_eur_cents,
-      colors, images, collection_slugs, related_product_slugs, is_new, featured, giftcard_denominations
+      colors, images, size_chart, collection_slugs, related_product_slugs, is_new, featured, giftcard_denominations
     ) values (
       ${id}, ${input.slug}, ${input.titleEn}, ${input.titleAr}, ${input.titleKu},
       ${input.descriptionEn}, ${input.descriptionAr}, ${input.descriptionKu},
@@ -300,7 +312,7 @@ export async function createProduct(input: ProductInput): Promise<string> {
       ${input.priceAmount}, ${input.compareAtAmount},
       ${input.priceAmountUsdCents}, ${input.compareAtAmountUsdCents},
       ${input.priceAmountEurCents}, ${input.compareAtAmountEurCents},
-      ${jsonb(buildColors(input))}, ${jsonb(buildImages(input))},
+      ${jsonb(buildColors(input))}, ${jsonb(buildImages(input))}, ${jsonb(buildSizeChart(input))},
       ${jsonb(input.collectionSlugs)}, ${jsonb(input.relatedProductSlugs)},
       ${input.isNew}, ${input.featured},
       ${input.giftcardDenominations ? jsonb(input.giftcardDenominations) : null}
@@ -329,6 +341,7 @@ export async function updateProduct(id: string, input: ProductInput): Promise<vo
       price_amount_eur_cents = ${input.priceAmountEurCents},
       compare_at_amount_eur_cents = ${input.compareAtAmountEurCents},
       colors = ${jsonb(buildColors(input))}, images = ${jsonb(buildImages(input))},
+      size_chart = ${jsonb(buildSizeChart(input))},
       collection_slugs = ${jsonb(input.collectionSlugs)},
       related_product_slugs = ${jsonb(input.relatedProductSlugs)},
       is_new = ${input.isNew}, featured = ${input.featured},

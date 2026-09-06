@@ -16,6 +16,7 @@ import { createProductAction, updateProductAction, type FormState } from "./acti
 import RelatedProductsPicker, { type PickableProduct } from "./RelatedProductsPicker";
 import { useActionToast } from "../components/useActionToast";
 import ImageCropModal from "../components/ImageCropModal";
+import { cmToIn, inToCm } from "@/lib/measurements";
 import { glassInput, glassTextarea, glassButtonSecondary, glassButtonPrimary, glassTone } from "../../glass";
 
 interface ImageRow {
@@ -41,6 +42,41 @@ function nextRowId() {
 }
 
 const GENDERS = ["men", "women", "unisex"] as const;
+
+const SIZE_CHART_FIELDS = ["chest", "length", "sleeve", "waist", "shoulder"] as const;
+type SizeChartField = (typeof SIZE_CHART_FIELDS)[number];
+const SIZE_CHART_LABELS: Record<SizeChartField, string> = {
+  chest: "Chest",
+  length: "Length",
+  sleeve: "Sleeve",
+  waist: "Waist",
+  shoulder: "Shoulder",
+};
+type SizeChartRowValues = Record<SizeChartField, string>;
+const EMPTY_SIZE_CHART_ROW: SizeChartRowValues = { chest: "", length: "", sleeve: "", waist: "", shoulder: "" };
+
+/** Size labels come from the "Sizes & stock" textarea, parsed the same
+ * way the server does (src/app/admin/(protected)/products/actions.ts) —
+ * everything before the first comma, one per line. */
+function parseSizeLabels(text: string): string[] {
+  return text
+    .split("\n")
+    .map((line) => line.split(",")[0]?.trim() ?? "")
+    .filter(Boolean);
+}
+
+/** Reparses whatever's currently typed and reformats it — used both to
+ * convert a field's displayed value when the unit toggle flips, and to
+ * compute the canonical-cm value at submit time. Leaves blank/malformed
+ * input untouched rather than guessing. */
+function convertMeasurement(text: string, from: "cm" | "in", to: "cm" | "in"): string {
+  const trimmed = text.trim();
+  if (!trimmed) return "";
+  const num = Number(trimmed);
+  if (!Number.isFinite(num)) return text;
+  if (from === to) return String(num);
+  return String(from === "cm" ? cmToIn(num) : inToCm(num));
+}
 
 function Field({
   label,
@@ -127,6 +163,54 @@ export default function ProductForm({
     .filter((v) => v.size !== "DIGITAL")
     .map((v) => `${v.size}, ${v.stock}`)
     .join("\n");
+
+  // Controlled (not just defaultValue) so the size chart below can derive
+  // its rows from whatever's currently typed here, live.
+  const [sizesText, setSizesText] = useState(sizesDefault);
+  const sizeLabels = parseSizeLabels(sizesText);
+
+  const [chartUnit, setChartUnit] = useState<"cm" | "in">("cm");
+  const [chartValues, setChartValues] = useState<Record<string, SizeChartRowValues>>(() => {
+    const map: Record<string, SizeChartRowValues> = {};
+    for (const row of product?.sizeChart ?? []) {
+      map[row.size] = {
+        chest: row.chest != null ? String(row.chest) : "",
+        length: row.length != null ? String(row.length) : "",
+        sleeve: row.sleeve != null ? String(row.sleeve) : "",
+        waist: row.waist != null ? String(row.waist) : "",
+        shoulder: row.shoulder != null ? String(row.shoulder) : "",
+      };
+    }
+    return map;
+  });
+
+  function updateChartValue(size: string, field: SizeChartField, value: string) {
+    setChartValues((prev) => ({
+      ...prev,
+      [size]: { ...(prev[size] ?? EMPTY_SIZE_CHART_ROW), [field]: value },
+    }));
+  }
+
+  /** Only the display changes — every value is reparsed from whatever's
+   * currently shown (in the old unit) and reformatted in the new one, so
+   * toggling back and forth never drifts beyond normal rounding. */
+  function toggleChartUnit(next: "cm" | "in") {
+    if (next === chartUnit) return;
+    setChartValues((prev) => {
+      const converted: Record<string, SizeChartRowValues> = {};
+      for (const [size, values] of Object.entries(prev)) {
+        converted[size] = {
+          chest: convertMeasurement(values.chest, chartUnit, next),
+          length: convertMeasurement(values.length, chartUnit, next),
+          sleeve: convertMeasurement(values.sleeve, chartUnit, next),
+          waist: convertMeasurement(values.waist, chartUnit, next),
+          shoulder: convertMeasurement(values.shoulder, chartUnit, next),
+        };
+      }
+      return converted;
+    });
+    setChartUnit(next);
+  }
 
   function updateImage(id: number, patch: Partial<ImageRow>) {
     setImages((rows) => rows.map((r) => (r.id === id ? { ...r, ...patch } : r)));
@@ -716,10 +800,95 @@ export default function ProductForm({
           <textarea
             name="sizes"
             rows={5}
-            defaultValue={sizesDefault}
+            value={sizesText}
+            onChange={(e) => setSizesText(e.target.value)}
             placeholder={"S, 5\nM, 10\nL, 8"}
             className={`${textareaClass} font-mono`}
           />
+        </section>
+      )}
+
+      {/* Size chart — rows follow whatever sizes are typed above */}
+      {!isGiftCard && sizeLabels.length > 0 && (
+        <section>
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Size chart</h2>
+            <div className="flex items-center gap-1 rounded-full border border-slate-300 p-0.5 dark:border-slate-700">
+              {(["cm", "in"] as const).map((u) => (
+                <button
+                  key={u}
+                  type="button"
+                  onClick={() => toggleChartUnit(u)}
+                  className={`cursor-pointer rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
+                    chartUnit === u
+                      ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
+                      : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+                  }`}
+                >
+                  {u === "cm" ? "Centimeters" : "Inches"}
+                </button>
+              ))}
+            </div>
+          </div>
+          <p className="mb-3 text-xs text-slate-400 dark:text-slate-500">
+            Optional — leave any measurement blank if it doesn&rsquo;t apply. Values are stored in
+            centimeters and shown to customers in whichever unit they prefer; switch the toggle
+            above to enter in inches instead.
+          </p>
+          <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 text-start text-xs font-semibold uppercase tracking-wide text-slate-400 dark:border-slate-800 dark:text-slate-500">
+                  <th className="px-3 py-2 text-start">Size</th>
+                  {SIZE_CHART_FIELDS.map((f) => (
+                    <th key={f} className="px-3 py-2 text-start">
+                      {SIZE_CHART_LABELS[f]} ({chartUnit})
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {sizeLabels.map((size) => {
+                  const values = chartValues[size] ?? EMPTY_SIZE_CHART_ROW;
+                  return (
+                    <tr key={size} className="border-b border-slate-100 last:border-0 dark:border-slate-800/60">
+                      <td className="px-3 py-2 font-medium text-slate-700 dark:text-slate-300">{size}</td>
+                      {SIZE_CHART_FIELDS.map((f) => (
+                        <td key={f} className="px-3 py-2">
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            value={values[f]}
+                            onChange={(e) => updateChartValue(size, f, e.target.value)}
+                            className={`h-9 w-20 px-2 ${glassInput}`}
+                          />
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          {/* Submitted separately from the visible (possibly inches)
+              inputs above — always converted to canonical centimeters
+              here, regardless of which unit is currently displayed. */}
+          {sizeLabels.map((size) => {
+            const values = chartValues[size] ?? EMPTY_SIZE_CHART_ROW;
+            return (
+              <span key={size}>
+                <input type="hidden" name="sizeChartSize" value={size} />
+                {SIZE_CHART_FIELDS.map((f) => (
+                  <input
+                    key={f}
+                    type="hidden"
+                    name={`sizeChart${f[0].toUpperCase()}${f.slice(1)}`}
+                    value={convertMeasurement(values[f], chartUnit, "cm")}
+                  />
+                ))}
+              </span>
+            );
+          })}
         </section>
       )}
 

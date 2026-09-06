@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import type { Category, Gender } from "@/lib/catalog/types";
+import type { Category, Gender, SizeChartRow } from "@/lib/catalog/types";
 import { catalog } from "@/lib/catalog";
 import {
   createProduct,
@@ -53,6 +53,35 @@ function imagesOf(formData: FormData): ImageInput[] {
     altEn: (altEn[i] ?? "").trim(),
     altAr: (altAr[i] ?? "").trim(),
     altKu: (altKu[i] ?? "").trim(),
+  }));
+}
+
+/** Every value already arrives converted to centimeters (see
+ * SizeChartField in ProductForm.tsx — the admin's cm/in toggle only
+ * governs display, the form always submits canonical cm). Blank stays
+ * blank rather than becoming 0, since most products don't need every
+ * measurement. */
+function optionalCm(raw: string | undefined): number | undefined {
+  const trimmed = (raw ?? "").trim();
+  if (!trimmed) return undefined;
+  const num = Number(trimmed);
+  return Number.isFinite(num) ? num : undefined;
+}
+
+function sizeChartOf(formData: FormData): SizeChartRow[] {
+  const sizes = allOf(formData, "sizeChartSize");
+  const chest = allOf(formData, "sizeChartChest");
+  const length = allOf(formData, "sizeChartLength");
+  const sleeve = allOf(formData, "sizeChartSleeve");
+  const waist = allOf(formData, "sizeChartWaist");
+  const shoulder = allOf(formData, "sizeChartShoulder");
+  return sizes.map((size, i) => ({
+    size: size.trim(),
+    chest: optionalCm(chest[i]),
+    length: optionalCm(length[i]),
+    sleeve: optionalCm(sleeve[i]),
+    waist: optionalCm(waist[i]),
+    shoulder: optionalCm(shoulder[i]),
   }));
 }
 
@@ -225,6 +254,7 @@ function parseInput(
       altAr: img.altAr || titleAr,
       altKu: img.altKu || titleKu,
     })),
+    sizeChart: sizeChartOf(formData),
     collectionSlugs: formData.getAll("collectionSlugs").map(String),
     relatedProductSlugs: formData.getAll("relatedProductSlugs").map(String),
     isNew: formData.get("isNew") === "on",

@@ -14,6 +14,7 @@ import type {
   ProductSort,
   ProductVariant,
   Review,
+  SizeChartRow,
 } from "../types";
 import type { CatalogProvider } from "../index";
 import type { LocalizedString } from "@/lib/content";
@@ -46,6 +47,7 @@ interface ProductRow {
   compare_at_amount_eur_cents: number | null;
   colors: ProductColor[];
   images: { url: string; alt: LocalizedString }[];
+  size_chart: SizeChartRow[];
   collection_slugs: string[];
   related_product_slugs: string[];
   is_new: boolean;
@@ -198,6 +200,7 @@ function toProduct(
       .filter((v) => v.product_id === row.id)
       .map((v): ProductVariant => ({ id: v.id, size: v.size, stock: v.stock })),
     images: (row.images ?? []).map(toImage),
+    sizeChart: row.size_chart ?? [],
     collectionSlugs: row.collection_slugs ?? [],
     relatedProductSlugs: row.related_product_slugs ?? [],
     isNew: row.is_new,

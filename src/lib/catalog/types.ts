@@ -52,6 +52,18 @@ export interface ProductVariant {
   stock: number;
 }
 
+/** One row of a product's size chart — all measurements in centimeters,
+ * converted for display only (see src/lib/measurements.ts). Every field
+ * but `size` is optional since not every product needs every measurement. */
+export interface SizeChartRow {
+  size: string;
+  chest?: number;
+  length?: number;
+  sleeve?: number;
+  waist?: number;
+  shoulder?: number;
+}
+
 export interface Review {
   id: string;
   author: string;
@@ -84,6 +96,9 @@ export interface Product {
   compareAtPriceByCurrency?: Partial<Record<Currency, number>>;
   colors: ProductColor[];
   variants: ProductVariant[];
+  /** Optional so the static local-provider seed data doesn't need every
+   * entry touched, matching relatedProductSlugs' own convention below. */
+  sizeChart?: SizeChartRow[];
   images: ProductImage[];
   collectionSlugs: string[];
   /** Admin-curated "frequently bought together" — other products' slugs,
