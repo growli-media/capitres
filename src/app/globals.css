@@ -712,38 +712,30 @@ body.admin-font-inter {
 .cta-underline::after {
   content: "";
   position: absolute;
-  inset-inline-start: 0;
   bottom: 0;
   width: 45%;
   height: 1px;
   background: currentColor;
-  animation: cta-underline-run 2.2s var(--ease-editorial) infinite;
+  animation: cta-underline-run 2.2s var(--ease-editorial) infinite alternate;
 }
 
+/* Animates inset-inline-start (a logical position, resolved as a % of the
+   track's own width), not transform: translateX() — a transform's %
+   is relative to the moving element's *own* box, not its container, so
+   the segment (45% wide) overshot the track by more than its own width
+   in each direction. inset-inline-start: 0% -> 55% keeps its right edge
+   (0%/55% + 45% width) exactly within the track at both ends, sweeping
+   flush edge-to-edge. Being a logical property, this also already
+   reads correctly under [dir="rtl"] with no separate keyframe needed —
+   :start flips sides on its own. `alternate` gives the back-and-forth
+   motion instead of a hard reset each loop. */
 @keyframes cta-underline-run {
   0% {
-    transform: translateX(-110%);
+    inset-inline-start: 0%;
   }
   100% {
-    transform: translateX(310%);
+    inset-inline-start: 55%;
   }
-}
-
-/* A distinct reversed keyframe, not animation-direction: reverse — the
-   translateX values are physical, not logical, so reusing the LTR
-   keyframe backwards would fight inset-inline-start's own RTL flip
-   instead of complementing it. */
-@keyframes cta-underline-run-rtl {
-  0% {
-    transform: translateX(310%);
-  }
-  100% {
-    transform: translateX(-110%);
-  }
-}
-
-[dir="rtl"] .cta-underline::after {
-  animation-name: cta-underline-run-rtl;
 }
 
 @media (prefers-reduced-motion: reduce) {
