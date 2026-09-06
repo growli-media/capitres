@@ -33,7 +33,7 @@ interface CheckoutInput {
    * (Cash on Delivery, Iraq-only, collected directly on our form). */
   paymentMethod?: "wayl" | "cod";
   /** The region choice made at the top of checkout — drives the shipping
-   * rate (5,000 IQD domestic vs. 50,000 IQD international). Required for
+   * rate (5,000 IQD domestic vs. flat $30 international). Required for
    * "wayl" (the only signal we have, since that path collects no address
    * on our side); ignored for "cod", which is always "IQ" by construction. */
   region?: "IQ" | "INTL";

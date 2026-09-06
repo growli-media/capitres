@@ -13,11 +13,11 @@ import { readFileSync, existsSync, mkdirSync, copyFileSync } from "node:fs";
 import path from "node:path";
 import postgres from "postgres";
 import { seedProducts, seedCollections, seedPosts, type SeedImage } from "./seed-data";
-import { formatIQD, localizeDigits } from "../src/lib/money";
+import { formatIQD, formatCurrency, localizeDigits } from "../src/lib/money";
 import {
   FREE_SHIPPING_THRESHOLD,
   SHIPPING_RATE_IQ,
-  SHIPPING_RATE_INTL,
+  SHIPPING_RATE_INTL_USD,
 } from "../src/lib/commerce/config";
 
 try {
@@ -137,7 +137,7 @@ function termsBody(locale: Locale): string {
 
 function shippingReturnsBody(locale: Locale): string {
   const flatDomestic = formatIQD(SHIPPING_RATE_IQ, locale);
-  const flatIntl = formatIQD(SHIPPING_RATE_INTL, locale);
+  const flatIntl = formatCurrency(SHIPPING_RATE_INTL_USD * 100, "USD", locale);
   const threshold = formatIQD(FREE_SHIPPING_THRESHOLD, locale);
   const copy: Record<
     Locale,
@@ -148,7 +148,7 @@ function shippingReturnsBody(locale: Locale): string {
       domesticTitle: "Iraq",
       domesticBody: `2–5 working days by trusted courier. Flat rate ${flatDomestic}; free on orders over ${threshold}. Cash on delivery is not available — payments are handled securely by Wayl before dispatch.`,
       intlTitle: "International",
-      intlBody: `Flat rate ${flatIntl} worldwide, calculated automatically at checkout; free on orders over ${threshold}.`,
+      intlBody: `Flat rate ${flatIntl} worldwide, calculated automatically at checkout — this rate applies no matter the order value or destination country.`,
       returnsTitle: "Exchanges & returns",
       returnsBody:
         "Wrong size? You have 7 days from delivery to exchange, unworn with tags attached. Heritage drops are limited — refunds are issued to your original payment method via Wayl if we can't exchange.",
@@ -158,7 +158,7 @@ function shippingReturnsBody(locale: Locale): string {
       domesticTitle: "داخل العراق",
       domesticBody: `٢–٥ أيام عمل عبر شركات توصيل موثوقة. أجرة ثابتة ${flatDomestic}؛ ومجاناً للطلبات فوق ${threshold}. الدفع عند الاستلام غير متاح — تُعالج المدفوعات بأمان عبر ويل قبل الشحن.`,
       intlTitle: "خارج العراق",
-      intlBody: `أجرة ثابتة ${flatIntl} إلى أي مكان في العالم، تُحتسب تلقائياً عند إتمام الطلب؛ ومجاناً للطلبات فوق ${threshold}.`,
+      intlBody: `أجرة ثابتة ${flatIntl} إلى أي مكان في العالم، تُحتسب تلقائياً عند إتمام الطلب — وتُطبَّق هذه الأجرة بغض النظر عن قيمة الطلب أو بلد الوجهة.`,
       returnsTitle: "الاستبدال والإرجاع",
       returnsBody:
         "المقاس غير مناسب؟ لديك ٧ أيام من الاستلام للاستبدال، بشرط عدم الاستخدام وبقاء البطاقات. إصدارات التراث محدودة — يُعاد المبلغ إلى وسيلة الدفع الأصلية عبر ويل إذا تعذّر الاستبدال.",
@@ -168,7 +168,7 @@ function shippingReturnsBody(locale: Locale): string {
       domesticTitle: "ناو عێراق",
       domesticBody: `٢–٥ ڕۆژی کار بە گەیاندنی متمانەپێکراو. کرێی جێگیر ${flatDomestic}؛ بەخۆڕایی بۆ داواکاری سەرووی ${threshold}. پارەدان لە کاتی وەرگرتن بەردەست نییە — پارەدانەکان پێش ناردن بە پارێزراوی لە ڕێگەی وەیلەوە جێبەجێدەکرێن.`,
       intlTitle: "دەرەوەی عێراق",
-      intlBody: `کرێی جێگیر ${flatIntl} بۆ هەموو جیهان، لە کاتی تەواوکردنی داواکاری بە شێوەیەکی ئۆتۆماتیکی دەژمێردرێت؛ بەخۆڕایی بۆ داواکاری سەرووی ${threshold}.`,
+      intlBody: `کرێی جێگیر ${flatIntl} بۆ هەموو جیهان، لە کاتی تەواوکردنی داواکاری بە شێوەیەکی ئۆتۆماتیکی دەژمێردرێت — ئەم کرێیە بەبێ گوێدانە بڕی داواکاری یان وڵاتی مەبەست جێبەجێ دەکرێت.`,
       returnsTitle: "گۆڕینەوە و گەڕاندنەوە",
       returnsBody:
         "قەبارەکە نەگونجا؟ ٧ ڕۆژت هەیە لە گەیشتنەوە بۆ گۆڕینەوە، بە مەرجی لەبەرنەکردن و مانەوەی تاگەکان. بەرهەمەکانی میرات سنووردارن — ئەگەر گۆڕینەوە نەکرا، پارەکە لە ڕێگەی وەیلەوە دەگەڕێتەوە بۆ هەمان شێوازی پارەدان.",

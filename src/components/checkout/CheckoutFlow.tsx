@@ -128,7 +128,7 @@ export default function CheckoutFlow() {
   // linear step machine, since which screen comes next depends on both.
   const [region, setRegion] = useState<"IQ" | "INTL" | null>(null);
   const [method, setMethod] = useState<"card" | "cod" | null>(null);
-  // Shipping is region-dependent (5,000 IQD domestic, 50,000 IQD
+  // Shipping is region-dependent (5,000 IQD domestic, flat $30
   // international) — defaults to domestic before a region is chosen,
   // matching computeTotals' own default, then updates once picked.
   const totals = useCartTotals(region ?? "IQ");

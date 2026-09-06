@@ -1,7 +1,7 @@
 /** Commerce rules shared by the cart, checkout and policy pages. */
 
 import type { Currency } from "@/lib/catalog/types";
-import { convertFromIqd } from "@/lib/money";
+import { convertFromIqd, IQD_PER_USD } from "@/lib/money";
 
 /**
  * Gift cards are off for now — the feature stays fully built (catalog
@@ -17,9 +17,12 @@ export const GIFT_CARDS_ENABLED = false;
  * categories module) so client components can reference it safely. */
 export const GIFT_CARD_CATEGORY = "gift-cards";
 
-export const FREE_SHIPPING_THRESHOLD = 100_000; // IQD
+export const FREE_SHIPPING_THRESHOLD = 100_000; // IQD — domestic only, see computeTotals
 export const SHIPPING_RATE_IQ = 5_000; // IQD — domestic
-export const SHIPPING_RATE_INTL = 50_000; // IQD — everywhere else
+/** International is a flat $30 regardless of order value or destination
+ * country — converted to IQD since that's what Wayl actually settles. */
+export const SHIPPING_RATE_INTL_USD = 30;
+export const SHIPPING_RATE_INTL = Math.round(SHIPPING_RATE_INTL_USD * IQD_PER_USD);
 
 function shippingRateFor(region: "IQ" | "INTL"): number {
   return region === "INTL" ? SHIPPING_RATE_INTL : SHIPPING_RATE_IQ;
@@ -62,11 +65,14 @@ export function computeTotals(
       ? Math.round((subtotal * (promo.value ?? 0)) / 100)
       : 0;
   const discounted = Math.max(0, subtotal - discount);
+  const region = options.region ?? "IQ";
   const freeShipping =
     !options.physicalItems ||
-    discounted >= FREE_SHIPPING_THRESHOLD ||
-    promo?.type === "free-shipping";
-  const shipping = freeShipping ? 0 : shippingRateFor(options.region ?? "IQ");
+    promo?.type === "free-shipping" ||
+    // The order-value threshold is a domestic perk — international is
+    // always the flat rate below, no matter how large the order is.
+    (region === "IQ" && discounted >= FREE_SHIPPING_THRESHOLD);
+  const shipping = freeShipping ? 0 : shippingRateFor(region);
   return {
     subtotal,
     discount,
