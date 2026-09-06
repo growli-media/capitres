@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation";
 import type { Product } from "@/lib/catalog/types";
 import { isInStock, isOnSale } from "@/lib/catalog";
 import { pick } from "@/lib/content";
+import { BADGE_CLASSES } from "./badge-styles";
 import Price from "./Price";
 
 /**
@@ -56,21 +57,26 @@ export default function ProductCard({
         )}
         <div className="absolute start-3 top-3 flex flex-col items-start gap-2">
           {product.isNew && (
-            <span className="text-eyebrow bg-ink px-2.5 py-1.5 text-paper">
+            <span className={`text-eyebrow px-2.5 py-1.5 ${BADGE_CLASSES.new}`}>
               {t("new")}
             </span>
           )}
+          {!inStock && (
+            <span className={`text-eyebrow px-2.5 py-1.5 ${BADGE_CLASSES.soldOut}`}>
+              {t("soldOut")}
+            </span>
+          )}
           {onSale && (
-            <span className="text-eyebrow bg-red-700 px-2.5 py-1.5 text-white">
+            <span className={`text-eyebrow px-2.5 py-1.5 ${BADGE_CLASSES.sale}`}>
               {t("sale")}
             </span>
           )}
+          {product.gender === "unisex" && (
+            <span className={`text-eyebrow px-2.5 py-1.5 ${BADGE_CLASSES.unisex}`}>
+              {t("unisex")}
+            </span>
+          )}
         </div>
-        {!inStock && (
-          <div className="absolute inset-x-0 bottom-0 bg-ink/85 py-2.5 text-center">
-            <span className="text-eyebrow text-paper">{t("soldOut")}</span>
-          </div>
-        )}
       </div>
       <div className="flex items-start justify-between gap-4 pt-4">
         <h3 className="text-sm font-semibold leading-snug">

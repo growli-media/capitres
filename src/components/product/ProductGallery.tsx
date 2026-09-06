@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { X } from "@phosphor-icons/react";
 import type { ProductImage } from "@/lib/catalog/types";
 import { imageSrcKey, pick } from "@/lib/content";
+import { BADGE_CLASSES, type BadgeTone } from "./badge-styles";
 
 /**
  * PDP gallery — the centre column between the fixed info and buy panels.
@@ -16,10 +17,12 @@ import { imageSrcKey, pick } from "@/lib/content";
  */
 export default function ProductGallery({
   images,
-  badge,
+  badges,
 }: {
   images: ProductImage[];
-  badge?: string;
+  /** Stacked in order, same corner group ProductCard uses — computed by
+   * the caller (products/[slug]/page.tsx) from isNew/isOnSale/stock/gender. */
+  badges?: { label: string; tone: BadgeTone }[];
 }) {
   const locale = useLocale();
   const t = useTranslations("a11y");
@@ -100,10 +103,14 @@ export default function ProductGallery({
                 sizes="100vw"
                 className="object-cover"
               />
-              {badge && i === 0 && (
-                <span className="text-eyebrow absolute start-4 top-4 bg-ink px-2.5 py-1.5 text-paper">
-                  {badge}
-                </span>
+              {badges && badges.length > 0 && i === 0 && (
+                <div className="absolute start-4 top-4 flex flex-col items-start gap-2">
+                  {badges.map((b) => (
+                    <span key={b.tone} className={`text-eyebrow px-2.5 py-1.5 ${BADGE_CLASSES[b.tone]}`}>
+                      {b.label}
+                    </span>
+                  ))}
+                </div>
               )}
             </button>
           ))}
@@ -140,10 +147,14 @@ export default function ProductGallery({
                 sizes="(min-width: 1280px) 34vw, 40vw"
                 className="object-cover transition-transform duration-700 group-hover:scale-[1.02]"
               />
-              {badge && i === 0 && (
-                <span className="text-eyebrow absolute start-4 top-4 z-10 bg-ink px-2.5 py-1.5 text-paper">
-                  {badge}
-                </span>
+              {badges && badges.length > 0 && i === 0 && (
+                <div className="absolute start-4 top-4 z-10 flex flex-col items-start gap-2">
+                  {badges.map((b) => (
+                    <span key={b.tone} className={`text-eyebrow px-2.5 py-1.5 ${BADGE_CLASSES[b.tone]}`}>
+                      {b.label}
+                    </span>
+                  ))}
+                </div>
               )}
             </button>
           ))}

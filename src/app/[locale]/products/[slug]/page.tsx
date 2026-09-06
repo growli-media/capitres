@@ -4,7 +4,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { CaretRight } from "@phosphor-icons/react/dist/ssr";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
-import { catalog } from "@/lib/catalog";
+import { catalog, isInStock, isOnSale } from "@/lib/catalog";
+import type { BadgeTone } from "@/components/product/badge-styles";
 import { pick } from "@/lib/content";
 import { formatIQD } from "@/lib/money";
 import { FREE_SHIPPING_THRESHOLD, GIFT_CARDS_ENABLED } from "@/lib/commerce/config";
@@ -77,11 +78,14 @@ export default async function ProductPage({
         ) / 10
       : null;
 
-  const badge = product.isNew
-    ? tBadges("new")
-    : product.compareAtPrice
-      ? tBadges("sale")
-      : undefined;
+  // Same set/order as ProductCard's corner stack, kept in sync via the
+  // shared BADGE_CLASSES map — PDP and card should never disagree.
+  const badges: { label: string; tone: BadgeTone }[] = [
+    ...(product.isNew ? [{ label: tBadges("new"), tone: "new" as const }] : []),
+    ...(!isInStock(product) ? [{ label: tBadges("soldOut"), tone: "soldOut" as const }] : []),
+    ...(isOnSale(product) ? [{ label: tBadges("sale"), tone: "sale" as const }] : []),
+    ...(product.gender === "unisex" ? [{ label: tBadges("unisex"), tone: "unisex" as const }] : []),
+  ];
 
   return (
     <>
@@ -107,7 +111,7 @@ export default async function ProductPage({
       <section className="container-x grid gap-10 pb-20 lg:grid-cols-[0.85fr_1.3fr_0.85fr] lg:gap-12 xl:gap-16">
         {/* Gallery — centre column, the only thing that scrolls */}
         <div className="order-1 lg:order-2">
-          <ProductGallery images={product.images} badge={badge} />
+          <ProductGallery images={product.images} badges={badges} />
         </div>
 
         {/* Left: the story — sticky + full viewport height + flex-centred
