@@ -6,7 +6,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import localFont from "next/font/local";
 import { routing, isRtl } from "@/i18n/routing";
 import { catalog } from "@/lib/catalog";
-import { isBeforeLaunch, hasPreviewAccess, isMobileRequest } from "@/lib/launch-gate";
+import { isBeforeLaunch, hasPreviewAccess } from "@/lib/launch-gate";
 import LaunchGate from "@/components/launch/LaunchGate";
 import { CurrencyProvider } from "@/components/currency/CurrencyProvider";
 import Header, {
@@ -171,11 +171,7 @@ export default async function LocaleLayout({
   // actually re-evaluated on every request instead of frozen at build
   // time; remove this block (and connection()'s import) once launched.
   await connection();
-  if (
-    isBeforeLaunch() &&
-    !(await hasPreviewAccess()) &&
-    !(await isMobileRequest())
-  ) {
+  if (isBeforeLaunch() && !(await hasPreviewAccess())) {
     return (
       <html
         lang={locale}

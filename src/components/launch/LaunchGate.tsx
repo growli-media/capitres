@@ -39,12 +39,14 @@ export default async function LaunchGate({ locale }: { locale: string }) {
       </Reveal>
       {/* Deliberately near-invisible: same black as the blazer it sits
           over, no visible affordance for an ordinary visitor. Admin-only
-          door in — see the "next=preview" flow in admin/login/page.tsx. */}
+          door in — see the "next=preview" flow in admin/login/page.tsx.
+          Desktop only — hidden below md so there's nothing to tap on
+          mobile at all. */}
       <Link
         href="/admin/login?next=preview"
         aria-label="Preview access"
         title="Preview"
-        className="absolute end-4 bottom-4 z-10 h-9 w-9 rounded-sm bg-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper/60"
+        className="absolute end-4 bottom-4 z-10 hidden h-9 w-9 rounded-sm bg-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper/60 md:block"
       />
     </div>
   );

@@ -1,5 +1,5 @@
 import "server-only";
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
 import { hmac, timingSafeEqual } from "@/lib/admin/auth";
 
 /**
@@ -19,15 +19,6 @@ export const LAUNCH_AT_UTC = "2026-09-07T15:00:00.000Z";
 
 export function isBeforeLaunch(now: Date = new Date()): boolean {
   return now.getTime() < new Date(LAUNCH_AT_UTC).getTime();
-}
-
-const MOBILE_UA = /Mobile|Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i;
-
-/** The lock is desktop-only — a mobile visitor's User-Agent skips it
- * entirely and always sees the real site. */
-export async function isMobileRequest(): Promise<boolean> {
-  const h = await headers();
-  return MOBILE_UA.test(h.get("user-agent") ?? "");
 }
 
 /* ------------------------------------------------------------------ */
