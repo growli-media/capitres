@@ -33,7 +33,7 @@ export default async function LaunchGate({ locale }: { locale: string }) {
         unoptimized
         className="object-cover"
       />
-      <Reveal className="relative z-10 flex flex-col items-center px-6 pb-5 text-center [text-shadow:0_4px_28px_rgba(0,0,0,0.75)] md:pb-8">
+      <Reveal className="relative z-10 flex flex-col items-center px-6 pb-16 text-center [text-shadow:0_4px_28px_rgba(0,0,0,0.75)] md:pb-8">
         <p className="max-w-md text-paper/90 md:text-lg">{t("subtitle")}</p>
         <LaunchCountdown launchAtUtc={LAUNCH_AT_UTC} />
       </Reveal>
