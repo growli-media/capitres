@@ -90,12 +90,12 @@ export default function LaunchCountdown({
 
   if (remaining === null) {
     // Pre-hydration: nothing numeric yet, to avoid a server/client mismatch.
-    return <div className="mt-10 h-28" aria-hidden />;
+    return <div className="mt-5 h-24" aria-hidden />;
   }
 
   if (remaining <= 0) {
     return (
-      <p className="mt-10 text-lg font-medium text-paper/90">{t("opening")}</p>
+      <p className="mt-5 text-lg font-medium text-paper/90">{t("opening")}</p>
     );
   }
 
@@ -106,7 +106,7 @@ export default function LaunchCountdown({
   const digits = localize(`${pad(hours)}:${pad(minutes)}:${pad(seconds)}`);
 
   return (
-    <div className="mt-10 flex flex-col items-center gap-4">
+    <div className="mt-5 flex flex-col items-center gap-4">
       <div
         dir="ltr"
         className="text-display text-5xl tracking-wide tabular-nums sm:text-6xl md:text-7xl"

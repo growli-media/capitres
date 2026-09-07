@@ -4,13 +4,17 @@ import { useActionState } from "react";
 import { verifyLogin } from "./actions";
 import { glassInput, glassButtonPrimary } from "../../glass";
 
-export default function VerifyForm() {
+export default function VerifyForm({ next }: { next?: string }) {
   const [state, formAction, pending] = useActionState(verifyLogin, undefined);
 
   return (
     <form action={formAction} className="space-y-5">
+      {next && <input type="hidden" name="next" value={next} />}
       <div>
-        <label htmlFor="code" className="mb-2 block text-sm font-medium text-slate-700">
+        <label
+          htmlFor="code"
+          className="mb-2 block text-sm font-medium text-slate-700"
+        >
           6-digit code
         </label>
         <input

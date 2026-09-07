@@ -23,6 +23,7 @@ export async function loginWithEmail(
 ): Promise<{ error?: string }> {
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
+  const next = String(formData.get("next") ?? "");
 
   const user = await getUserByEmail(email);
   if (!user || user.disabled) {
@@ -45,7 +46,11 @@ export async function loginWithEmail(
     redirect("/admin/enroll-2fa");
   }
   await setPending2fa(user.id);
-  redirect("/admin/login/verify");
+  redirect(
+    next === "preview"
+      ? "/admin/login/verify?next=preview"
+      : "/admin/login/verify",
+  );
 }
 
 export async function loginLegacy(

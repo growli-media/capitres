@@ -8,14 +8,29 @@ import { glassInput, glassButtonPrimary, glassButtonSecondary } from "../glass";
 const inputClass = `h-11 w-full px-3.5 ${glassInput}`;
 const labelClass = "mb-2 block text-sm font-medium text-slate-700";
 
-export default function LoginForm({ legacyAvailable }: { legacyAvailable: boolean }) {
-  const [state, formAction, pending] = useActionState(loginWithEmail, undefined);
+export default function LoginForm({
+  legacyAvailable,
+  next,
+}: {
+  legacyAvailable: boolean;
+  /** Threaded through to loginWithEmail — see admin/login/page.tsx's doc
+   * comment on the same prop. */
+  next?: string;
+}) {
+  const [state, formAction, pending] = useActionState(
+    loginWithEmail,
+    undefined,
+  );
   const [showLegacy, setShowLegacy] = useState(false);
-  const [legacyState, legacyFormAction, legacyPending] = useActionState(loginLegacy, undefined);
+  const [legacyState, legacyFormAction, legacyPending] = useActionState(
+    loginLegacy,
+    undefined,
+  );
 
   return (
     <div className="space-y-6">
       <form action={formAction} className="space-y-5">
+        {next && <input type="hidden" name="next" value={next} />}
         <div>
           <label htmlFor="email" className={labelClass}>
             Email
@@ -33,10 +48,16 @@ export default function LoginForm({ legacyAvailable }: { legacyAvailable: boolea
 
         <div>
           <div className="mb-2 flex items-center justify-between">
-            <label htmlFor="password" className="block text-sm font-medium text-slate-700">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-slate-700"
+            >
               Password
             </label>
-            <Link href="/admin/forgot-password" className="text-xs font-medium text-slate-500 hover:text-slate-800">
+            <Link
+              href="/admin/forgot-password"
+              className="text-xs font-medium text-slate-500 hover:text-slate-800"
+            >
               Forgot password?
             </Link>
           </div>
@@ -68,7 +89,10 @@ export default function LoginForm({ legacyAvailable }: { legacyAvailable: boolea
 
         <p className="text-center text-sm text-slate-500">
           No account yet?{" "}
-          <Link href="/admin/signup" className="font-semibold text-slate-800 hover:underline">
+          <Link
+            href="/admin/signup"
+            className="font-semibold text-slate-800 hover:underline"
+          >
             Sign up
           </Link>
         </p>
