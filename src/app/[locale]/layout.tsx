@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import localFont from "next/font/local";
 import { routing, isRtl } from "@/i18n/routing";
 import { catalog } from "@/lib/catalog";
+import { isBeforeLaunch } from "@/lib/launch-gate";
+import LaunchGate from "@/components/launch/LaunchGate";
 import { CurrencyProvider } from "@/components/currency/CurrencyProvider";
 import Header, {
   type NavCategory,
@@ -33,11 +36,27 @@ import "../globals.css";
 const schrifted = localFont({
   src: [
     { path: "../../fonts/schrifted/Light.ttf", weight: "300", style: "normal" },
-    { path: "../../fonts/schrifted/Regular.otf", weight: "400", style: "normal" },
-    { path: "../../fonts/schrifted/Medium.ttf", weight: "500", style: "normal" },
-    { path: "../../fonts/schrifted/DemiBold.ttf", weight: "600", style: "normal" },
+    {
+      path: "../../fonts/schrifted/Regular.otf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../../fonts/schrifted/Medium.ttf",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "../../fonts/schrifted/DemiBold.ttf",
+      weight: "600",
+      style: "normal",
+    },
     { path: "../../fonts/schrifted/Bold.ttf", weight: "700", style: "normal" },
-    { path: "../../fonts/schrifted/ExtraBold.ttf", weight: "800", style: "normal" },
+    {
+      path: "../../fonts/schrifted/ExtraBold.ttf",
+      weight: "800",
+      style: "normal",
+    },
     { path: "../../fonts/schrifted/Black.ttf", weight: "900", style: "normal" },
   ],
   variable: "--font-schrifted",
@@ -52,15 +71,51 @@ const schrifted = localFont({
  */
 const notoArabic = localFont({
   src: [
-    { path: "../../fonts/noto-kufi-arabic/Thin.ttf", weight: "100", style: "normal" },
-    { path: "../../fonts/noto-kufi-arabic/ExtraLight.ttf", weight: "200", style: "normal" },
-    { path: "../../fonts/noto-kufi-arabic/Light.ttf", weight: "300", style: "normal" },
-    { path: "../../fonts/noto-kufi-arabic/Regular.ttf", weight: "400", style: "normal" },
-    { path: "../../fonts/noto-kufi-arabic/Medium.ttf", weight: "500", style: "normal" },
-    { path: "../../fonts/noto-kufi-arabic/SemiBold.ttf", weight: "600", style: "normal" },
-    { path: "../../fonts/noto-kufi-arabic/Bold.ttf", weight: "700", style: "normal" },
-    { path: "../../fonts/noto-kufi-arabic/ExtraBold.ttf", weight: "800", style: "normal" },
-    { path: "../../fonts/noto-kufi-arabic/Black.ttf", weight: "900", style: "normal" },
+    {
+      path: "../../fonts/noto-kufi-arabic/Thin.ttf",
+      weight: "100",
+      style: "normal",
+    },
+    {
+      path: "../../fonts/noto-kufi-arabic/ExtraLight.ttf",
+      weight: "200",
+      style: "normal",
+    },
+    {
+      path: "../../fonts/noto-kufi-arabic/Light.ttf",
+      weight: "300",
+      style: "normal",
+    },
+    {
+      path: "../../fonts/noto-kufi-arabic/Regular.ttf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../../fonts/noto-kufi-arabic/Medium.ttf",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "../../fonts/noto-kufi-arabic/SemiBold.ttf",
+      weight: "600",
+      style: "normal",
+    },
+    {
+      path: "../../fonts/noto-kufi-arabic/Bold.ttf",
+      weight: "700",
+      style: "normal",
+    },
+    {
+      path: "../../fonts/noto-kufi-arabic/ExtraBold.ttf",
+      weight: "800",
+      style: "normal",
+    },
+    {
+      path: "../../fonts/noto-kufi-arabic/Black.ttf",
+      weight: "900",
+      style: "normal",
+    },
   ],
   variable: "--font-noto-ar",
   display: "swap",
@@ -109,6 +164,28 @@ export default async function LocaleLayout({
     notFound();
   }
   setRequestLocale(locale);
+
+  // Temporary pre-launch lock — see src/lib/launch-gate.ts. connection()
+  // opts this layout into per-request rendering (it's otherwise fully
+  // static via generateStaticParams below) so isBeforeLaunch() is
+  // actually re-evaluated on every request instead of frozen at build
+  // time; remove this block (and connection()'s import) once launched.
+  await connection();
+  if (isBeforeLaunch()) {
+    return (
+      <html
+        lang={locale}
+        dir={isRtl(locale) ? "rtl" : "ltr"}
+        className={`storefront ${schrifted.variable} ${notoArabic.variable}`}
+      >
+        <body>
+          <NextIntlClientProvider>
+            <LaunchGate locale={locale} />
+          </NextIntlClientProvider>
+        </body>
+      </html>
+    );
+  }
 
   const t = await getTranslations({ locale, namespace: "a11y" });
   const [collections, categories] = await Promise.all([
