@@ -13,8 +13,6 @@
     "checkout": "Checkout"
   },
   "launchGate": {
-    "eyebrow": "CAPITRES",
-    "title": "Kickoff is close.",
     "subtitle": "The wait ends tonight.",
     "baghdad": "Doors open at {time} — Baghdad time.",
     "yourTime": "That's {time} where you are ({zone}).",
