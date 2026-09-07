@@ -9,7 +9,10 @@ import NoteButton from "../orders/NoteButton";
 import TimeRangeSlider from "../components/TimeRangeSlider";
 import { getAbandonedForRangeAction } from "./actions";
 import type { AbandonedOrder } from "@/lib/admin/queries";
-import { DEFAULT_TIME_RANGE_VALUE, type TimeRangeValue } from "@/lib/admin/time-range";
+import {
+  DEFAULT_TIME_RANGE_VALUE,
+  type TimeRangeValue,
+} from "@/lib/admin/time-range";
 import { ABANDONED_GRACE_MINUTES } from "@/lib/admin/queries-shared";
 import { glassCard, glassTone, glassIconButton } from "../../glass";
 
@@ -21,9 +24,21 @@ function timeAgo(minutes: number): string {
   return `${days}d ago`;
 }
 
-export default function AbandonedView({ initial }: { initial: AbandonedOrder[] }) {
+type ContactFilter = "all" | "withContact";
+
+const CONTACT_FILTERS: { value: ContactFilter; label: string }[] = [
+  { value: "all", label: "View all" },
+  { value: "withContact", label: "With contact info" },
+];
+
+export default function AbandonedView({
+  initial,
+}: {
+  initial: AbandonedOrder[];
+}) {
   const [range, setRange] = useState<TimeRangeValue>(DEFAULT_TIME_RANGE_VALUE);
   const [carts, setCarts] = useState<AbandonedOrder[]>(initial);
+  const [contactFilter, setContactFilter] = useState<ContactFilter>("all");
   const [isPending, startTransition] = useTransition();
 
   function handleChange(value: TimeRangeValue) {
@@ -33,48 +48,91 @@ export default function AbandonedView({ initial }: { initial: AbandonedOrder[] }
     });
   }
 
-  const totalValue = carts.reduce((sum, c) => sum + c.total, 0);
+  // "With contact info" means a phone number or an email (or both) —
+  // either is enough to actually reach the customer.
+  const visibleCarts =
+    contactFilter === "withContact"
+      ? carts.filter((c) => c.phone || c.email)
+      : carts;
+  const totalValue = visibleCarts.reduce((sum, c) => sum + c.total, 0);
 
   return (
     <div>
-      <TimeRangeSlider value={range} onChange={handleChange} pending={isPending} />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <TimeRangeSlider
+          value={range}
+          onChange={handleChange}
+          pending={isPending}
+        />
+        <div className="flex gap-1.5">
+          {CONTACT_FILTERS.map((f) => (
+            <button
+              key={f.value}
+              type="button"
+              onClick={() => setContactFilter(f.value)}
+              aria-pressed={contactFilter === f.value}
+              className={`h-8 cursor-pointer rounded-full border px-3 text-xs font-medium transition-colors ${
+                contactFilter === f.value
+                  ? "border-slate-900 bg-slate-900 text-white dark:border-slate-100 dark:bg-slate-100 dark:text-slate-900"
+                  : "border-slate-300 text-slate-600 hover:border-slate-400 dark:border-slate-700 dark:text-slate-400 dark:hover:border-slate-600"
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      </div>
       <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">
-        Checkouts started but never paid, at least {ABANDONED_GRACE_MINUTES} minutes old and within
-        the selected range — reach out while they still remember what they wanted.
+        Checkouts started but never paid, at least {ABANDONED_GRACE_MINUTES}{" "}
+        minutes old and within the selected range — reach out while they still
+        remember what they wanted.
       </p>
 
-      {carts.length > 0 && (
-        <div className={`mt-4 flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium ${glassTone.warning}`}>
-          {carts.length} {carts.length === 1 ? "customer" : "customers"} to follow up
+      {visibleCarts.length > 0 && (
+        <div
+          className={`mt-4 flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium ${glassTone.warning}`}
+        >
+          {visibleCarts.length}{" "}
+          {visibleCarts.length === 1 ? "customer" : "customers"} to follow up
           with — {formatIQD(totalValue, "en")} in unpaid carts.
         </div>
       )}
 
-      {carts.length === 0 ? (
+      {visibleCarts.length === 0 ? (
         <div className="mt-6 rounded-xl border border-dashed border-slate-300 py-16 text-center dark:border-slate-700">
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            No abandoned carts in this range — nice.
+            {carts.length === 0
+              ? "No abandoned carts in this range — nice."
+              : "No abandoned carts with contact info in this range."}
           </p>
         </div>
       ) : (
         <div className={`transition-opacity ${isPending ? "opacity-60" : ""}`}>
           {/* Mobile: stacked cards, no horizontal scroll */}
           <div className="mt-6 space-y-3 md:hidden">
-            {carts.map((c) => (
+            {visibleCarts.map((c) => (
               <div key={c.ref} className={`p-4 ${glassCard}`}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="font-medium text-slate-900 dark:text-slate-100">{c.customerName}</p>
+                    <p className="font-medium text-slate-900 dark:text-slate-100">
+                      {c.customerName}
+                    </p>
                     {c.phone && (
-                      <p className="text-xs text-slate-400 dark:text-slate-500" dir="ltr">
+                      <p
+                        className="text-xs text-slate-400 dark:text-slate-500"
+                        dir="ltr"
+                      >
                         {c.phone}
                       </p>
                     )}
                   </div>
-                  <span className="shrink-0 text-xs text-slate-500 dark:text-slate-400">{timeAgo(c.minutesAgo)}</span>
+                  <span className="shrink-0 text-xs text-slate-500 dark:text-slate-400">
+                    {timeAgo(c.minutesAgo)}
+                  </span>
                 </div>
                 <p className="mt-2 truncate text-sm text-slate-600 dark:text-slate-400">
-                  {c.itemCount} item{c.itemCount === 1 ? "" : "s"} — {c.itemTitles.join(", ")}
+                  {c.itemCount} item{c.itemCount === 1 ? "" : "s"} —{" "}
+                  {c.itemTitles.join(", ")}
                 </p>
                 <p className="price mt-1 font-medium text-slate-900 dark:text-slate-100">
                   {formatIQD(c.total, "en")}
@@ -118,7 +176,9 @@ export default function AbandonedView({ initial }: { initial: AbandonedOrder[] }
                     </a>
                   )}
                   {!c.phone && !c.email && (
-                    <span className="text-xs text-slate-400 dark:text-slate-500">No contact info</span>
+                    <span className="text-xs text-slate-400 dark:text-slate-500">
+                      No contact info
+                    </span>
                   )}
                   <CancelOrderButton orderRef={c.ref} status={c.status} />
                 </div>
@@ -132,20 +192,33 @@ export default function AbandonedView({ initial }: { initial: AbandonedOrder[] }
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400 dark:border-slate-800 dark:text-slate-500">
-                    <th className="px-4 py-3 text-start font-medium whitespace-nowrap">Customer</th>
-                    <th className="px-4 py-3 text-start font-medium whitespace-nowrap">Cart</th>
-                    <th className="px-4 py-3 text-start font-medium whitespace-nowrap">Value</th>
-                    <th className="px-4 py-3 text-start font-medium whitespace-nowrap">Abandoned</th>
+                    <th className="px-4 py-3 text-start font-medium whitespace-nowrap">
+                      Customer
+                    </th>
+                    <th className="px-4 py-3 text-start font-medium whitespace-nowrap">
+                      Cart
+                    </th>
+                    <th className="px-4 py-3 text-start font-medium whitespace-nowrap">
+                      Value
+                    </th>
+                    <th className="px-4 py-3 text-start font-medium whitespace-nowrap">
+                      Abandoned
+                    </th>
                     <th className="px-4 py-3" />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {carts.map((c) => (
+                  {visibleCarts.map((c) => (
                     <tr key={c.ref}>
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <div className="font-medium text-slate-900 dark:text-slate-100">{c.customerName}</div>
+                        <div className="font-medium text-slate-900 dark:text-slate-100">
+                          {c.customerName}
+                        </div>
                         {c.phone && (
-                          <div className="text-xs text-slate-400 dark:text-slate-500" dir="ltr">
+                          <div
+                            className="text-xs text-slate-400 dark:text-slate-500"
+                            dir="ltr"
+                          >
                             {c.phone}
                           </div>
                         )}
@@ -161,10 +234,15 @@ export default function AbandonedView({ initial }: { initial: AbandonedOrder[] }
                           {formatIQD(c.total, "en")}
                         </span>
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-slate-500 dark:text-slate-400">{timeAgo(c.minutesAgo)}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-slate-500 dark:text-slate-400">
+                        {timeAgo(c.minutesAgo)}
+                      </td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         <div className="flex items-center justify-end gap-1.5">
-                          <NoteButton orderRef={c.ref} initialNote={c.adminNote} />
+                          <NoteButton
+                            orderRef={c.ref}
+                            initialNote={c.adminNote}
+                          />
                           {c.phone && (
                             <>
                               <a
@@ -202,9 +280,14 @@ export default function AbandonedView({ initial }: { initial: AbandonedOrder[] }
                             </a>
                           )}
                           {!c.phone && !c.email && (
-                            <span className="text-xs text-slate-400 dark:text-slate-500">No contact info</span>
+                            <span className="text-xs text-slate-400 dark:text-slate-500">
+                              No contact info
+                            </span>
                           )}
-                          <CancelOrderButton orderRef={c.ref} status={c.status} />
+                          <CancelOrderButton
+                            orderRef={c.ref}
+                            status={c.status}
+                          />
                         </div>
                       </td>
                     </tr>
