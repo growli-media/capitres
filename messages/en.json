@@ -15,7 +15,6 @@
   "launchGate": {
     "subtitle": "The wait ends tonight.",
     "baghdad": "Doors open at {time} — Baghdad time.",
-    "yourTime": "That's {time} where you are ({zone}).",
     "opening": "Opening the shop…"
   },
   "nav": {

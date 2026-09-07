@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import { headers } from "next/headers";
 import { getTranslations } from "next-intl/server";
 import { Reveal } from "@/components/motion/Reveal";
 import { LAUNCH_AT_UTC } from "@/lib/launch-gate";
@@ -14,14 +13,14 @@ import LaunchCountdown from "./LaunchCountdown";
  * getting resampled — it already carries the CAPITRES wordmark and its
  * own headline, so the countdown below is bottom-anchored deliberately,
  * to never compete with that text for the same middle of the frame, and
- * only adds what the still doesn't already say. Text gets a drop shadow
- * instead of a scrim for legibility, since the photo's own brightness
- * varies (the wall behind the subject is much lighter than the blazer).
+ * only adds what the still doesn't already say. Text gets a single soft
+ * drop shadow instead of a scrim for legibility, since the photo's own
+ * brightness varies (the wall behind the subject is much lighter than
+ * the blazer) — a wide, low blur reads as an ambient shadow rather than
+ * a hard outline.
  */
 export default async function LaunchGate({ locale }: { locale: string }) {
   const t = await getTranslations({ locale, namespace: "launchGate" });
-  const h = await headers();
-  const ipTimeZone = h.get("x-vercel-ip-timezone");
 
   return (
     <div className="relative flex h-[100svh] w-full items-end justify-center overflow-hidden bg-ink text-paper">
@@ -34,12 +33,9 @@ export default async function LaunchGate({ locale }: { locale: string }) {
         unoptimized
         className="object-cover"
       />
-      <Reveal className="relative z-10 flex flex-col items-center px-6 pb-5 text-center [text-shadow:0_2px_16px_rgba(0,0,0,0.85),0_1px_4px_rgba(0,0,0,0.9)] md:pb-8">
+      <Reveal className="relative z-10 flex flex-col items-center px-6 pb-5 text-center [text-shadow:0_4px_28px_rgba(0,0,0,0.75)] md:pb-8">
         <p className="max-w-md text-paper/90 md:text-lg">{t("subtitle")}</p>
-        <LaunchCountdown
-          launchAtUtc={LAUNCH_AT_UTC}
-          serverTimeZoneHint={ipTimeZone}
-        />
+        <LaunchCountdown launchAtUtc={LAUNCH_AT_UTC} />
       </Reveal>
       {/* Deliberately near-invisible: same black as the blazer it sits
           over, no visible affordance for an ordinary visitor. Admin-only
