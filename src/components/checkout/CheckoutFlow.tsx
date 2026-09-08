@@ -132,11 +132,20 @@ export default function CheckoutFlow() {
   // linear step machine, since which screen comes next depends on both.
   const [region, setRegion] = useState<"IQ" | "INTL" | null>(null);
   const [method, setMethod] = useState<"card" | "cod" | null>(null);
+
+  // A promo applied earlier in the cart drawer (before region was known)
+  // might be restricted to the other region — price the order as if no
+  // promo were applied at all in that case, matching exactly what
+  // checkout will independently enforce server-side, rather than showing
+  // a discount here and rejecting it only at final submit.
+  const regionMismatch = Boolean(promo?.region && region && promo.region !== region);
+  const effectivePromoCode = regionMismatch ? undefined : promoCode;
+
   // Shipping is region-dependent (5,000 IQD domestic, flat $30
   // international) — defaults to domestic before a region is chosen,
   // matching computeTotals' own default, then updates once picked.
-  const totals = useCartTotals(region ?? "IQ");
-  const displayTotals = useCartTotalsByCurrency(currency, region ?? "IQ");
+  const totals = useCartTotals(region ?? "IQ", regionMismatch ? null : undefined);
+  const displayTotals = useCartTotalsByCurrency(currency, region ?? "IQ", regionMismatch ? null : undefined);
   const [info, setInfo] = useState<CodInfo>({
     firstName: "",
     middleName: "",
@@ -251,7 +260,7 @@ export default function CheckoutFlow() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           locale,
-          promoCode,
+          promoCode: effectivePromoCode,
           paymentMethod: "wayl",
           region: region ?? "IQ",
           lines: lines.map((l) => ({
@@ -294,7 +303,7 @@ export default function CheckoutFlow() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           locale,
-          promoCode,
+          promoCode: effectivePromoCode,
           paymentMethod: "cod",
           customer: {
             firstName: info.firstName,
@@ -395,7 +404,13 @@ export default function CheckoutFlow() {
                 {formatCurrency(displayTotals.subtotal, currency, locale)}
               </dd>
             </div>
-            {displayTotals.discount > 0 && promo && (
+            {regionMismatch && promo && (
+              <p className="text-xs text-danger">{t("promoRegionMismatch", { code: promo.code })}</p>
+            )}
+            {!regionMismatch && promo?.type === "bogo" && (
+              <p className="text-xs text-ink/60">{t("promoBogoApplied", { code: promo.code })}</p>
+            )}
+            {!regionMismatch && displayTotals.discount > 0 && promo && (
               <div className="flex justify-between text-green">
                 <dt>
                   {t("discount")} ({promo.code})

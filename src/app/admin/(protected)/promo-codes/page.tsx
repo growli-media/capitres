@@ -13,7 +13,14 @@ export const metadata: Metadata = { title: "Promo codes" };
 function discountLabel(p: AdminPromoCode): string {
   if (p.type === "free-shipping") return "Free shipping";
   if (p.type === "percent") return `${p.value}% off`;
+  if (p.type === "bogo") return `Buy ${p.buyQty} get ${p.getQty} (${p.getDiscountPercent}% off)`;
   return `${(p.value ?? 0).toLocaleString("en-US")} IQD off`;
+}
+
+function regionLabel(p: AdminPromoCode): string | null {
+  if (p.region === "IQ") return "Iraq only";
+  if (p.region === "INTL") return "International only";
+  return null;
 }
 
 /** starts_at/ends_at are stored as UTC day-boundaries (see actions.ts's
@@ -118,6 +125,11 @@ export default async function AdminPromoCodesPage() {
                     <span className="text-xs text-slate-400 dark:text-slate-500">
                       {used} used{p.maxUses ? ` / ${p.maxUses}` : ""}
                     </span>
+                    {regionLabel(p) && (
+                      <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${glassTone.neutral}`}>
+                        {regionLabel(p)}
+                      </span>
+                    )}
                   </div>
                 </div>
               );
@@ -133,6 +145,7 @@ export default async function AdminPromoCodesPage() {
                     <th className="px-4 py-3 text-start font-medium whitespace-nowrap">Code</th>
                     <th className="px-4 py-3 text-start font-medium whitespace-nowrap">Discount</th>
                     <th className="px-4 py-3 text-start font-medium whitespace-nowrap">Window</th>
+                    <th className="px-4 py-3 text-start font-medium whitespace-nowrap">Region</th>
                     <th className="px-4 py-3 text-start font-medium whitespace-nowrap">Uses</th>
                     <th className="px-4 py-3 text-start font-medium whitespace-nowrap">Status</th>
                     <th className="px-4 py-3 text-start font-medium" />
@@ -154,6 +167,9 @@ export default async function AdminPromoCodesPage() {
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-slate-500 dark:text-slate-400">
                           {windowLabel(p)}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-slate-500 dark:text-slate-400">
+                          {regionLabel(p) ?? "All regions"}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-slate-500 dark:text-slate-400">
                           {used}

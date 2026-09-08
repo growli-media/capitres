@@ -288,6 +288,9 @@ export default function CartDrawer() {
                 </div>
               )}
 
+              {promo?.type === "bogo" && (
+                <p className="py-1 text-xs text-ink/60">{t("promoBogoApplied", { code: promo.code })}</p>
+              )}
               {displayTotals.discount > 0 && (
                 <div className="flex items-center justify-between py-1 text-sm">
                   <span className="text-ink/60">{t("discount")}</span>

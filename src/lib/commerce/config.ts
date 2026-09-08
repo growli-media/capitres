@@ -30,16 +30,43 @@ function shippingRateFor(region: "IQ" | "INTL"): number {
 
 export const GIFT_CARD_DENOMINATIONS = [25_000, 50_000, 100_000, 250_000];
 
+/** Buy X (from a pool of products/categories) Get Y (from another pool) at
+ * a % discount — see src/lib/commerce/bogo.ts's computeBogoDiscount() for
+ * the actual allocation algorithm (checkout-only; there's no client-side
+ * preview, see computeTotals/computeDisplayTotals below). Pools are a mix
+ * of exact product slugs and/or whole category slugs. */
+export interface BogoConfig {
+  buyProductSlugs: string[];
+  buyCategories: string[];
+  getProductSlugs: string[];
+  getCategories: string[];
+  buyQty: number;
+  getQty: number;
+  /** 1–100; 100 = fully free. */
+  getDiscountPercent: number;
+}
+
 /** Admin-managed via /admin/promo-codes (src/lib/admin/promo-codes.ts) —
  * resolved server-side by src/lib/promo-codes.ts's validatePromoCode(),
- * which also enforces the campaign date window and max-uses limit before
- * a code ever reaches computeTotals()/computeDisplayTotals() below. */
+ * which also enforces the campaign date window, region, and max-uses limit
+ * before a code ever reaches computeTotals()/computeDisplayTotals() below. */
 export interface PromoCode {
   code: string;
-  type: "percent" | "fixed" | "free-shipping";
+  type: "percent" | "fixed" | "free-shipping" | "bogo";
   /** Percentage points for "percent"; a whole-IQD amount for "fixed".
-   * Unused for "free-shipping". */
+   * Unused for "free-shipping"/"bogo". */
   value?: number;
+  /** "fixed" only — admin-set explicit amounts in USD/EUR cents. Absent
+   * for a currency means computeDisplayTotals falls back to
+   * convertFromIqd(value, currency) instead, same override-else-fallback
+   * pattern as priceByCurrencyOf() in
+   * src/lib/catalog/providers/postgres.ts. */
+  valueByCurrency?: { USD?: number; EUR?: number };
+  /** Restricts the code to one shipping region; undefined/null = usable
+   * from either. Orthogonal to `type`. */
+  region?: "IQ" | "INTL" | null;
+  /** "bogo" only. */
+  bogo?: BogoConfig;
 }
 
 export interface Totals {
@@ -53,14 +80,25 @@ export interface Totals {
 export function computeTotals(
   subtotal: number,
   promo: PromoCode | undefined,
-  options: { physicalItems: boolean; region?: "IQ" | "INTL" },
+  options: {
+    physicalItems: boolean;
+    region?: "IQ" | "INTL";
+    /** The BOGO discount amount, computed separately by
+     * src/lib/commerce/bogo.ts's computeBogoDiscount() — checkout is the
+     * only caller that ever passes this (it needs the full, server-priced
+     * order lines, which this function doesn't have). Additive with the
+     * percent/fixed formula below, though in practice only one of the two
+     * is ever nonzero for a given promo since a code has exactly one type. */
+    extraDiscount?: number;
+  },
 ): Totals {
-  const discount =
+  const formulaDiscount =
     promo?.type === "percent"
       ? Math.round((subtotal * (promo.value ?? 0)) / 100)
       : promo?.type === "fixed"
         ? Math.min(subtotal, promo.value ?? 0)
         : 0;
+  const discount = Math.min(subtotal, formulaDiscount + (options.extraDiscount ?? 0));
   const discounted = Math.max(0, subtotal - discount);
   const region = options.region ?? "IQ";
   const freeShipping =
@@ -101,7 +139,12 @@ export function computeDisplayTotals(
     promo?.type === "percent"
       ? Math.round((displaySubtotal * (promo.value ?? 0)) / 100)
       : promo?.type === "fixed"
-        ? Math.min(displaySubtotal, convertFromIqd(promo.value ?? 0, currency))
+        ? Math.min(
+            displaySubtotal,
+            currency === "IQD"
+              ? (promo.value ?? 0)
+              : (promo.valueByCurrency?.[currency] ?? convertFromIqd(promo.value ?? 0, currency)),
+          )
         : 0;
   const shipping = totals.freeShipping
     ? 0

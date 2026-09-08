@@ -8,6 +8,7 @@ import {
   promoCodeExists,
   updatePromoCode,
   type PromoCodeInput,
+  type PromoCodeRegion,
   type PromoCodeType,
 } from "@/lib/admin/promo-codes";
 import { requirePermission } from "@/lib/admin/permissions";
@@ -17,7 +18,7 @@ export interface FormState {
   error?: string;
 }
 
-const TYPES: PromoCodeType[] = ["percent", "fixed", "free-shipping"];
+const TYPES: PromoCodeType[] = ["percent", "fixed", "free-shipping", "bogo"];
 
 /** Day-only date inputs (no time-of-day, see PromoCodeForm) — starts_at
  * is midnight UTC that day, ends_at is the last instant of that day, so
@@ -25,6 +26,24 @@ const TYPES: PromoCodeType[] = ["percent", "fixed", "free-shipping"];
 function parseDateBoundary(value: string, endOfDay: boolean): string | null {
   if (!value) return null;
   return `${value}T${endOfDay ? "23:59:59.999" : "00:00:00.000"}Z`;
+}
+
+/** Optional admin-set amount, entered as dollars/euros (e.g. "5.00"),
+ * stored in cents. Blank means "not set" (falls back to a computed
+ * conversion for display) — not an error. Mirrors products/actions.ts's
+ * own parseOptionalCents exactly. */
+function parseOptionalCents(raw: string, label: string): { value: number | null } | { error: string } {
+  const trimmed = raw.trim();
+  if (!trimmed) return { value: null };
+  const num = Number(trimmed);
+  if (!Number.isFinite(num) || num <= 0) {
+    return { error: `${label} must be a positive number.` };
+  }
+  return { value: Math.round(num * 100) };
+}
+
+function allOf(formData: FormData, key: string): string[] {
+  return formData.getAll(key).map(String).filter(Boolean);
 }
 
 function parseInput(formData: FormData): PromoCodeInput | { error: string } {
@@ -38,7 +57,9 @@ function parseInput(formData: FormData): PromoCodeInput | { error: string } {
   if (!TYPES.includes(type as PromoCodeType)) return { error: "Choose a valid discount type." };
 
   let value: number | null = null;
-  if (type !== "free-shipping") {
+  let valueUsdCents: number | null = null;
+  let valueEurCents: number | null = null;
+  if (type === "percent" || type === "fixed") {
     value = Number(formData.get("value") ?? "");
     if (!Number.isFinite(value) || value <= 0) {
       return { error: "Enter a discount value greater than 0." };
@@ -47,7 +68,19 @@ function parseInput(formData: FormData): PromoCodeInput | { error: string } {
       return { error: "A percentage discount can't exceed 100." };
     }
     value = Math.round(value);
+
+    if (type === "fixed") {
+      const usd = parseOptionalCents(String(formData.get("valueUsd") ?? ""), "USD amount");
+      if ("error" in usd) return usd;
+      valueUsdCents = usd.value;
+      const eur = parseOptionalCents(String(formData.get("valueEur") ?? ""), "EUR amount");
+      if ("error" in eur) return eur;
+      valueEurCents = eur.value;
+    }
   }
+
+  const regionRaw = String(formData.get("region") ?? "");
+  const region: PromoCodeRegion | null = regionRaw === "IQ" || regionRaw === "INTL" ? regionRaw : null;
 
   const startsAtRaw = String(formData.get("startsAt") ?? "").trim();
   const endsAtRaw = String(formData.get("endsAt") ?? "").trim();
@@ -66,7 +99,57 @@ function parseInput(formData: FormData): PromoCodeInput | { error: string } {
     }
   }
 
-  return { code, type: type as PromoCodeType, value, startsAt, endsAt, maxUses };
+  let buyProductSlugs: string[] = [];
+  let buyCategories: string[] = [];
+  let getProductSlugs: string[] = [];
+  let getCategories: string[] = [];
+  let buyQty: number | null = null;
+  let getQty: number | null = null;
+  let getDiscountPercent: number | null = null;
+  if (type === "bogo") {
+    buyProductSlugs = allOf(formData, "buyProductSlugs");
+    buyCategories = allOf(formData, "buyCategories");
+    getProductSlugs = allOf(formData, "getProductSlugs");
+    getCategories = allOf(formData, "getCategories");
+    if (buyProductSlugs.length === 0 && buyCategories.length === 0) {
+      return { error: "Choose at least one product or category for the \"buy\" side." };
+    }
+    if (getProductSlugs.length === 0 && getCategories.length === 0) {
+      return { error: "Choose at least one product or category for the \"get\" side." };
+    }
+
+    buyQty = Math.round(Number(formData.get("buyQty") ?? ""));
+    if (!Number.isFinite(buyQty) || buyQty <= 0) {
+      return { error: "Buy quantity must be a whole number greater than 0." };
+    }
+    getQty = Math.round(Number(formData.get("getQty") ?? ""));
+    if (!Number.isFinite(getQty) || getQty <= 0) {
+      return { error: "Get quantity must be a whole number greater than 0." };
+    }
+    getDiscountPercent = Math.round(Number(formData.get("getDiscountPercent") ?? ""));
+    if (!Number.isFinite(getDiscountPercent) || getDiscountPercent < 1 || getDiscountPercent > 100) {
+      return { error: "Reward discount must be a whole number between 1 and 100." };
+    }
+  }
+
+  return {
+    code,
+    type: type as PromoCodeType,
+    value,
+    valueUsdCents,
+    valueEurCents,
+    region,
+    startsAt,
+    endsAt,
+    maxUses,
+    buyProductSlugs,
+    buyCategories,
+    getProductSlugs,
+    getCategories,
+    buyQty,
+    getQty,
+    getDiscountPercent,
+  };
 }
 
 function revalidateStorefront() {

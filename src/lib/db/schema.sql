@@ -311,3 +311,87 @@ CREATE TABLE IF NOT EXISTS promo_codes (
   max_uses   integer,
   created_at timestamptz NOT NULL DEFAULT now()
 );
+
+-- Per-currency admin override for 'fixed' promo codes — mirrors
+-- products.price_amount_usd_cents/price_amount_eur_cents exactly. `value`
+-- (IQD) stays required/authoritative for real settlement (computeTotals
+-- always works in IQD); these are optional display-only overrides for
+-- computeDisplayTotals — absent means "convert from IQD instead" (see
+-- priceByCurrencyOf() in src/lib/catalog/providers/postgres.ts).
+ALTER TABLE promo_codes ADD COLUMN IF NOT EXISTS value_usd_cents integer;
+ALTER TABLE promo_codes ADD COLUMN IF NOT EXISTS value_eur_cents integer;
+
+-- Restricts a code to one shipping region; null = usable from either.
+-- Applies to every promo type, orthogonal to 'bogo' below. Enforced
+-- authoritatively only at real checkout (validatePromoCode's optional
+-- `region` param) — never at /api/promo/validate time, since the cart
+-- drawer's "Apply" button runs before the customer has picked a region.
+ALTER TABLE promo_codes ADD COLUMN IF NOT EXISTS region text CHECK (region IN ('IQ', 'INTL'));
+
+-- 'bogo' type — Buy X (from a pool of products/categories) Get Y (from
+-- another pool) at a % discount. Pools are jsonb string arrays, same
+-- convention as products.related_product_slugs — a mix of exact product
+-- slugs and/or whole category slugs, admin's choice per side. buy_qty/
+-- get_qty/get_discount_percent are null for every non-'bogo' row; value/
+-- value_usd_cents/value_eur_cents are unused for 'bogo' (same treatment
+-- as they already get for 'free-shipping').
+ALTER TABLE promo_codes ADD COLUMN IF NOT EXISTS buy_product_slugs jsonb NOT NULL DEFAULT '[]';
+ALTER TABLE promo_codes ADD COLUMN IF NOT EXISTS buy_categories    jsonb NOT NULL DEFAULT '[]';
+ALTER TABLE promo_codes ADD COLUMN IF NOT EXISTS get_product_slugs jsonb NOT NULL DEFAULT '[]';
+ALTER TABLE promo_codes ADD COLUMN IF NOT EXISTS get_categories    jsonb NOT NULL DEFAULT '[]';
+ALTER TABLE promo_codes ADD COLUMN IF NOT EXISTS buy_qty integer;
+ALTER TABLE promo_codes ADD COLUMN IF NOT EXISTS get_qty integer;
+-- 1-100; 100 = fully free.
+ALTER TABLE promo_codes ADD COLUMN IF NOT EXISTS get_discount_percent integer;
+
+-- Confirmed (checked directly against the live DB) this constraint is the
+-- Postgres auto-generated default name "<table>_<column>_check" — not a
+-- guess. Widening it only permits a new value on future rows; it cannot
+-- alter or reinterpret any existing row.
+ALTER TABLE promo_codes DROP CONSTRAINT IF EXISTS promo_codes_type_check;
+ALTER TABLE promo_codes ADD CONSTRAINT promo_codes_type_check
+  CHECK (type IN ('percent', 'fixed', 'free-shipping', 'bogo'));
+
+-- Internal admin notice board — any named admin can post a note or reply;
+-- every admin can see the shared feed and mark a note checked/unchecked
+-- (cross-admin, server-persisted — unlike NotificationBell's client-local
+-- last-seen marker). Unlike admin_activity_log (deliberately FK-less, so
+-- a deleted account's history survives), these use real admin_users.id
+-- FKs because "who has/hasn't checked this" and "is this viewer the
+-- author" must stay queryable and correct even after a name change.
+-- author_name is still stored redundantly for display robustness, same
+-- convention as admin_activity_log's actor_name. deleted_at is a soft
+-- delete, mirroring orders.deleted_at exactly (see orderStore.softDelete/
+-- restore) — author-only restore via the "Recently deleted" panel.
+CREATE TABLE IF NOT EXISTS admin_notes (
+  id          bigserial PRIMARY KEY,
+  author_id   text NOT NULL REFERENCES admin_users(id),
+  author_name text NOT NULL,
+  body        text NOT NULL,
+  created_at  timestamptz NOT NULL DEFAULT now(),
+  updated_at  timestamptz,
+  deleted_at  timestamptz
+);
+CREATE INDEX IF NOT EXISTS idx_admin_notes_created_at ON admin_notes (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_admin_notes_deleted_at ON admin_notes (deleted_at) WHERE deleted_at IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS admin_note_replies (
+  id          bigserial PRIMARY KEY,
+  note_id     bigint NOT NULL REFERENCES admin_notes(id) ON DELETE CASCADE,
+  author_id   text NOT NULL REFERENCES admin_users(id),
+  author_name text NOT NULL,
+  body        text NOT NULL,
+  created_at  timestamptz NOT NULL DEFAULT now(),
+  updated_at  timestamptz,
+  deleted_at  timestamptz
+);
+CREATE INDEX IF NOT EXISTS idx_admin_note_replies_note_id ON admin_note_replies (note_id, created_at);
+
+-- Toggleable: "checked" = a row exists, "unchecked" = it doesn't — check
+-- inserts, uncheck deletes, no separate undo/redo machinery needed.
+CREATE TABLE IF NOT EXISTS admin_note_checks (
+  note_id     bigint NOT NULL REFERENCES admin_notes(id) ON DELETE CASCADE,
+  user_id     text NOT NULL REFERENCES admin_users(id) ON DELETE CASCADE,
+  checked_at  timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (note_id, user_id)
+);

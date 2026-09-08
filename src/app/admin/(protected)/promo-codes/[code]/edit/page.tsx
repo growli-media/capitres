@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { CaretLeft } from "@phosphor-icons/react/dist/ssr";
 import { getAdminPromoCode } from "@/lib/admin/promo-codes";
 import { orderStore } from "@/lib/orders/store";
+import { catalog } from "@/lib/catalog";
+import { listAdminProducts } from "@/lib/admin/products";
 import PromoCodeForm from "../../PromoCodeForm";
 import { requirePermission } from "@/lib/admin/permissions";
 import { glassTone } from "../../../../glass";
@@ -23,7 +25,11 @@ export default async function EditPromoCodePage({
 
   const promoCode = await getAdminPromoCode(code);
   if (!promoCode) notFound();
-  const usageCount = await orderStore.countByPromoCode(promoCode.code);
+  const [usageCount, categories, products] = await Promise.all([
+    orderStore.countByPromoCode(promoCode.code),
+    catalog.getCategories(),
+    listAdminProducts(),
+  ]);
 
   return (
     <div className="max-w-2xl">
@@ -42,7 +48,18 @@ export default async function EditPromoCodePage({
           Promo code created.
         </p>
       )}
-      <PromoCodeForm promoCode={promoCode} usageCount={usageCount} />
+      <PromoCodeForm
+        promoCode={promoCode}
+        usageCount={usageCount}
+        categories={categories.map((c) => ({ slug: c.slug, titleEn: c.title.en }))}
+        products={products.map((p) => ({
+          slug: p.slug,
+          titleEn: p.titleEn,
+          image: p.images[0]?.url ?? null,
+          priceAmount: p.priceAmount,
+          compareAtAmount: p.compareAtAmount,
+        }))}
+      />
     </div>
   );
 }

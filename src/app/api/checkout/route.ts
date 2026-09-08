@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { isValidPhoneNumber } from "libphonenumber-js/min";
 import { catalog } from "@/lib/catalog";
 import { computeTotals } from "@/lib/commerce/config";
+import { computeBogoDiscount, type BogoLine } from "@/lib/commerce/bogo";
 import { validatePromoCode } from "@/lib/promo-codes";
 import {
   createWaylPaymentLink,
@@ -110,6 +111,11 @@ export async function POST(request: NextRequest) {
 
   const orderLines: OrderLine[] = [];
   const waylLineItems: WaylLineItem[] = [];
+  // Parallel to orderLines, physical products only (gift cards have no
+  // meaningful category and are excluded from both BOGO pools) — fed to
+  // computeBogoDiscount() below once every line's real catalog price is
+  // known.
+  const bogoLines: BogoLine[] = [];
 
   for (const line of input.lines) {
     const product = await catalog.getProduct(line.productSlug);
@@ -181,19 +187,27 @@ export async function POST(request: NextRequest) {
       amount: product.price.amount * qty,
       type: "increase",
     });
+    bogoLines.push({
+      productSlug: product.slug,
+      category: product.category,
+      qty,
+      unitAmount: product.price.amount,
+    });
   }
 
   const subtotal = orderLines.reduce((s, l) => s + l.unitAmount * l.qty, 0);
-  const promo = input.promoCode ? await validatePromoCode(input.promoCode) : undefined;
+  const promo = input.promoCode ? await validatePromoCode(input.promoCode, region) : undefined;
   // The customer's cart showed a discount from this code — if it's no
-  // longer valid (expired, used up, or removed since they applied it),
-  // fail the checkout rather than silently charging full price for what
-  // looked like a discounted order.
+  // longer valid (expired, used up, region-mismatched, or removed since
+  // they applied it), fail the checkout rather than silently charging full
+  // price for what looked like a discounted order.
   if (input.promoCode && !promo) {
     return NextResponse.json({ error: "invalid-promo" }, { status: 400 });
   }
+  const bogoDiscount =
+    promo?.type === "bogo" && promo.bogo ? computeBogoDiscount(bogoLines, promo.bogo) : 0;
   const physicalItems = orderLines.some((l) => !l.giftCard);
-  const totals = computeTotals(subtotal, promo, { physicalItems, region });
+  const totals = computeTotals(subtotal, promo, { physicalItems, region, extraDiscount: bogoDiscount });
 
   if (totals.discount > 0) {
     waylLineItems.push({

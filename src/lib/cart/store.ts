@@ -163,22 +163,39 @@ export function useCartPromo(): PromoCode | undefined {
   return promo ?? undefined;
 }
 
+/** `undefined` (the default) means "use the cart's own applied promo";
+ * `null` means "force no promo" — used by CheckoutFlow.tsx to price the
+ * cart as if nothing were applied once it detects the applied code's
+ * region restriction doesn't match the customer's chosen shipping region,
+ * without actually clearing the cart's stored promo (removing it is the
+ * customer's own call, from the cart drawer). */
+function resolvePromo(
+  cartPromo: PromoCode | undefined,
+  override: PromoCode | null | undefined,
+): PromoCode | undefined {
+  return override === undefined ? cartPromo : (override ?? undefined);
+}
+
 /** `region` defaults to "IQ" (domestic shipping rate) — pass "INTL" only
  * where the shipping destination is actually known, e.g. checkout once
  * the customer has picked a region. */
-export function useCartTotals(region?: "IQ" | "INTL") {
+export function useCartTotals(region?: "IQ" | "INTL", promoOverride?: PromoCode | null) {
   const lines = useCart((s) => s.lines);
-  const promo = useCartPromo();
+  const promo = resolvePromo(useCartPromo(), promoOverride);
   const subtotal = lines.reduce((sum, l) => sum + l.unitAmount * l.qty, 0);
   const physicalItems = lines.some((l) => !l.giftCard);
   return computeTotals(subtotal, promo, { physicalItems, region });
 }
 
 /** Display-only totals in the given currency — see computeDisplayTotals. */
-export function useCartTotalsByCurrency(currency: Currency, region?: "IQ" | "INTL") {
+export function useCartTotalsByCurrency(
+  currency: Currency,
+  region?: "IQ" | "INTL",
+  promoOverride?: PromoCode | null,
+) {
   const lines = useCart((s) => s.lines);
-  const promo = useCartPromo();
-  const totals = useCartTotals(region);
+  const promo = resolvePromo(useCartPromo(), promoOverride);
+  const totals = useCartTotals(region, promoOverride);
   const displaySubtotal = lines.reduce(
     (sum, l) => sum + l.unitAmountByCurrency[currency] * l.qty,
     0,
