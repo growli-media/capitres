@@ -65,6 +65,12 @@ export interface Order {
     /** ISO-3166 country code. */
     country?: string;
     street?: string;
+    /** Nearest landmark/point of interest — replaces streetNumber below
+     * for orders placed since Iraqi addresses stopped using a
+     * Western-style street-number field. */
+    landmark?: string;
+    /** Orders placed before the landmark field shipped — kept for
+     * historical orders only, never written by new checkouts. */
     streetNumber?: string;
     zip?: string;
     city?: string;
@@ -110,4 +116,51 @@ export function customerAddress(c: Order["customer"]): string {
   const region = c.country === "IQ" ? c.governorate : c.state;
   const parts = [c.city, region, c.country].filter(Boolean);
   return parts.length > 0 ? parts.join(", ") : (c.address ?? "");
+}
+
+/** Full one-line address — every geographic field the customer entered,
+ * most-specific first (street/landmark/streetNumber included, unlike
+ * customerAddress() above which is just the compact city/region/country
+ * summary used in list views). Falls back to the legacy `address` line. */
+export function customerFullAddress(c: Order["customer"]): string {
+  const region = c.country === "IQ" ? c.governorate : c.state;
+  const parts = [c.street, c.streetNumber, c.landmark, c.city, region, c.country].filter(Boolean);
+  return parts.length > 0 ? parts.join(", ") : (c.address ?? "");
+}
+
+/** Google Maps search link for the customer's address — a plain search
+ * URL rather than an embedded map, so it needs no API key/billing. */
+export function customerMapUrl(c: Order["customer"]): string | undefined {
+  const query = customerFullAddress(c);
+  return query ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}` : undefined;
+}
+
+/** Every individual field the customer entered, labeled — lets the order
+ * detail page show exactly which raw field held which value, alongside
+ * the combined summary above. Skips fields absent for this order's shape
+ * (Wayl orders start with just a country; legacy orders have fullName/
+ * address instead of the split fields). */
+export function customerFields(c: Order["customer"]): { label: string; value: string }[] {
+  const regionLabel = c.country === "IQ" ? "Governorate" : "State";
+  const regionValue = c.country === "IQ" ? c.governorate : c.state;
+  const entries: [string, string | undefined][] = [
+    ["First name", c.firstName],
+    ["Middle name", c.middleName],
+    ["Last name", c.lastName],
+    ["Full name", c.fullName],
+    ["Phone", c.phone],
+    ["Email", c.email],
+    ["Country", c.country],
+    [regionLabel, regionValue],
+    ["City", c.city],
+    ["Street", c.street],
+    ["Landmark", c.landmark],
+    ["Street number", c.streetNumber],
+    ["ZIP", c.zip],
+    ["Address", c.address],
+    ["Notes", c.notes],
+  ];
+  return entries
+    .filter((e): e is [string, string] => Boolean(e[1]?.trim()))
+    .map(([label, value]) => ({ label, value }));
 }

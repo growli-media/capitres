@@ -31,6 +31,33 @@ export async function markOrderDeliveredAction(ref: string): Promise<void> {
   revalidatePath("/admin");
 }
 
+/** Statuses selectable from OrderStatusSelect.tsx, for an order that's
+ * already been paid — deliberately excludes "Cancelled" (same reasoning
+ * as cancelOrderAction below: no refund integration exists, so a paid
+ * order should never look cancelled while the money's still collected). */
+const PAID_ORDER_NEXT_STATUSES = ["Delivered", "Returned", "Rejected", "Complete"] as const;
+
+/**
+ * Lets staff move an already-paid order (Complete/Delivered/MockPaid/Paid)
+ * to Delivered, or flag a problem (Returned/Rejected) — those orders had
+ * no status-changing UI at all before this. Explicitly checks the admin
+ * session (same reasoning as markOrderDeliveredAction) since this also
+ * changes whether the order counts as revenue.
+ */
+export async function setOrderStatusAction(
+  ref: string,
+  status: (typeof PAID_ORDER_NEXT_STATUSES)[number],
+): Promise<void> {
+  if (!(await isAuthenticated())) return;
+  if (!(await can("orders"))) return;
+  if (!PAID_ORDER_NEXT_STATUSES.includes(status)) return;
+  await orderStore.setStatus(ref, status);
+  await logAdminActivity(`Set order ${ref} status to ${status}`);
+  revalidatePath("/admin/orders");
+  revalidatePath(`/admin/orders/${ref}`);
+  revalidatePath("/admin");
+}
+
 /**
  * Cancels an order that hasn't been paid yet (see CANCELABLE_STATUSES in
  * CancelOrderButton.tsx — the button itself is hidden for anything else).

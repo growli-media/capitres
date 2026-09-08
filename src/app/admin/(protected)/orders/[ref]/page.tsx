@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CaretLeft } from "@phosphor-icons/react/dist/ssr";
+import { CaretLeft, MapPin } from "@phosphor-icons/react/dist/ssr";
 import { orderStore } from "@/lib/orders/store";
-import { customerName, customerAddress } from "@/lib/orders/order-helpers";
+import {
+  customerName,
+  customerFullAddress,
+  customerMapUrl,
+  customerFields,
+} from "@/lib/orders/order-helpers";
 import { PAID_STATUSES, FAILED_STATUSES } from "@/lib/admin/queries-shared";
 import { formatIQD } from "@/lib/money";
 import { requirePermission } from "@/lib/admin/permissions";
@@ -35,6 +40,10 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ re
   const isPaid = (PAID_STATUSES as readonly string[]).includes(order.status);
   const isFailed = (FAILED_STATUSES as readonly string[]).includes(order.status);
   const statusTone = isPaid ? glassTone.success : isFailed ? glassTone.danger : glassTone.warning;
+
+  const fullAddress = customerFullAddress(order.customer);
+  const mapUrl = customerMapUrl(order.customer);
+  const fields = customerFields(order.customer);
 
   return (
     <>
@@ -133,15 +142,40 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ re
             {order.customer.email && (
               <p className="text-sm text-slate-500 dark:text-slate-400">{order.customer.email}</p>
             )}
-            {customerAddress(order.customer) && (
-              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                {customerAddress(order.customer)}
-              </p>
+            {fullAddress && (
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{fullAddress}</p>
+            )}
+            {mapUrl && (
+              <a
+                href={mapUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-1.5 inline-flex items-center gap-1 text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+              >
+                <MapPin size={14} aria-hidden="true" />
+                View on map
+              </a>
             )}
             {order.customer.notes && (
               <p className="mt-2 border-t border-slate-200 pt-2 text-sm text-slate-500 italic dark:border-slate-800 dark:text-slate-400">
                 “{order.customer.notes}”
               </p>
+            )}
+
+            {fields.length > 0 && (
+              <div className="mt-4 border-t border-slate-200 pt-3 dark:border-slate-800">
+                <p className="text-xs font-medium tracking-wide text-slate-400 uppercase dark:text-slate-500">
+                  As entered
+                </p>
+                <dl className="mt-2 space-y-1.5 text-sm">
+                  {fields.map(({ label, value }) => (
+                    <div key={label} className="flex items-baseline justify-between gap-3">
+                      <dt className="shrink-0 text-slate-400 dark:text-slate-500">{label}</dt>
+                      <dd className="text-end text-slate-700 dark:text-slate-300">{value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
             )}
           </div>
 

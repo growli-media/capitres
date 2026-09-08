@@ -156,7 +156,12 @@ export default function OrdersView({
                   <StatusBadge status={o.status} />
                 </div>
                 <div className="mt-3">
-                  <div className="font-medium text-slate-900 dark:text-slate-100">{customerName(o.customer)}</div>
+                  <Link
+                    href={`/admin/orders/${o.ref}`}
+                    className="font-medium text-slate-900 hover:underline dark:text-slate-100"
+                  >
+                    {customerName(o.customer)}
+                  </Link>
                   <div className="text-xs text-slate-400 dark:text-slate-500" dir="ltr">
                     {o.customer.phone}
                   </div>
@@ -225,7 +230,12 @@ export default function OrdersView({
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-slate-500 dark:text-slate-400">{formatDate(o.createdAt)}</td>
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <div className="font-medium text-slate-900 dark:text-slate-100">{customerName(o.customer)}</div>
+                        <Link
+                          href={`/admin/orders/${o.ref}`}
+                          className="font-medium text-slate-900 hover:underline dark:text-slate-100"
+                        >
+                          {customerName(o.customer)}
+                        </Link>
                         <div className="text-xs text-slate-400 dark:text-slate-500" dir="ltr">
                           {o.customer.phone}
                         </div>

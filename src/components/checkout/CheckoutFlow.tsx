@@ -54,7 +54,10 @@ interface CodInfo {
   governorate: string;
   city: string;
   street: string;
-  streetNumber: string;
+  /** Nearest landmark/point of interest — Iraqi addresses don't use a
+   * Western-style street-number convention, so this replaces that field
+   * (any number the customer has just goes inline in `street` instead). */
+  landmark: string;
   notes: string;
 }
 
@@ -142,7 +145,7 @@ export default function CheckoutFlow() {
     governorate: "",
     city: "",
     street: "",
-    streetNumber: "",
+    landmark: "",
     notes: "",
   });
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -230,7 +233,7 @@ export default function CheckoutFlow() {
     if (!info.governorate) next.governorate = t("errors.required");
     if (!info.city.trim()) next.city = t("errors.required");
     if (!info.street.trim()) next.street = t("errors.required");
-    if (!info.streetNumber.trim()) next.streetNumber = t("errors.required");
+    if (!info.landmark.trim()) next.landmark = t("errors.required");
     setErrors(next);
     const firstError = Object.entries(next).find(([, v]) => v);
     if (firstError) {
@@ -301,7 +304,7 @@ export default function CheckoutFlow() {
             email: info.email.trim() || undefined,
             phone: phoneE164,
             street: info.street,
-            streetNumber: info.streetNumber,
+            landmark: info.landmark,
             city: info.city,
             governorate: info.governorate,
             notes: info.notes || undefined,
@@ -733,21 +736,21 @@ export default function CheckoutFlow() {
                   )}
                 </div>
                 <div>
-                  <label htmlFor="co-streetNumber" className="mb-2 block text-sm font-semibold">
-                    {t("streetNumber")} *
+                  <label htmlFor="co-landmark" className="mb-2 block text-sm font-semibold">
+                    {t("landmark")} *
                   </label>
                   <input
-                    id="co-streetNumber"
+                    id="co-landmark"
                     type="text"
-                    autoComplete="address-line2"
-                    value={info.streetNumber}
-                    onChange={(e) => setField("streetNumber", e.target.value)}
-                    aria-invalid={Boolean(errors.streetNumber)}
-                    className={inputClass(Boolean(errors.streetNumber))}
+                    placeholder={t("landmarkPlaceholder")}
+                    value={info.landmark}
+                    onChange={(e) => setField("landmark", e.target.value)}
+                    aria-invalid={Boolean(errors.landmark)}
+                    className={inputClass(Boolean(errors.landmark))}
                   />
-                  {errors.streetNumber && (
+                  {errors.landmark && (
                     <p role="alert" className="mt-1.5 text-xs text-danger">
-                      {errors.streetNumber}
+                      {errors.landmark}
                     </p>
                   )}
                 </div>

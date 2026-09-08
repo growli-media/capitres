@@ -49,7 +49,7 @@ interface CheckoutInput {
      * never trusted for a payment-adjacent field. */
     phone: string;
     street: string;
-    streetNumber: string;
+    landmark: string;
     city: string;
     governorate: string;
     notes?: string;
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
       !c?.governorate?.trim() ||
       !c?.city?.trim() ||
       !c?.street?.trim() ||
-      !c?.streetNumber?.trim()
+      !c?.landmark?.trim()
     ) {
       return NextResponse.json({ error: "invalid-customer" }, { status: 400 });
     }
@@ -266,7 +266,7 @@ export async function POST(request: NextRequest) {
             phone: c!.phone.trim(),
             country: "IQ",
             street: c!.street.trim(),
-            streetNumber: c!.streetNumber.trim(),
+            landmark: c!.landmark.trim(),
             city: c!.city.trim(),
             governorate: c!.governorate.trim(),
             notes: c!.notes?.slice(0, 500),

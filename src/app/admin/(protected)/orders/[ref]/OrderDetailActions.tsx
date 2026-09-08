@@ -4,19 +4,33 @@ import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Printer, Trash } from "@phosphor-icons/react";
 import type { Order } from "@/lib/orders/order-helpers";
-import { markOrderDeliveredAction, deleteOrderAction } from "../actions";
+import { PAID_STATUSES } from "@/lib/admin/queries-shared";
+import { markOrderDeliveredAction, deleteOrderAction, setOrderStatusAction } from "../actions";
 import { useAdminToast } from "../../components/AdminToastProvider";
 import { glassButtonSecondary, glassButtonPrimary } from "../../../glass";
+
+/** Kept in sync with PAID_ORDER_NEXT_STATUSES in actions.ts — the server
+ * action re-validates this list itself, this is just what's offered. */
+const PAID_ORDER_NEXT_STATUSES = ["Delivered", "Returned", "Rejected", "Complete"] as const;
 
 export default function OrderDetailActions({ order }: { order: Order }) {
   const [pending, startTransition] = useTransition();
   const showToast = useAdminToast();
   const router = useRouter();
+  const isPaid = (PAID_STATUSES as readonly string[]).includes(order.status);
 
   function markDelivered() {
     startTransition(async () => {
       await markOrderDeliveredAction(order.ref);
       showToast("Order marked as delivered");
+    });
+  }
+
+  function changeStatus(status: (typeof PAID_ORDER_NEXT_STATUSES)[number]) {
+    startTransition(async () => {
+      await setOrderStatusAction(order.ref, status);
+      showToast(`Order marked ${status.toLowerCase()}`);
+      router.refresh();
     });
   }
 
@@ -31,6 +45,31 @@ export default function OrderDetailActions({ order }: { order: Order }) {
 
   return (
     <>
+      {isPaid && (
+        <select
+          disabled={pending}
+          value=""
+          onChange={(e) => {
+            const status = e.target.value as (typeof PAID_ORDER_NEXT_STATUSES)[number];
+            if (status) changeStatus(status);
+          }}
+          aria-label="Change order status"
+          className={`h-10 px-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60 ${glassButtonSecondary}`}
+        >
+          <option value="">Change status…</option>
+          {PAID_ORDER_NEXT_STATUSES.filter((s) => s !== order.status).map((s) => (
+            <option key={s} value={s}>
+              {s === "Delivered"
+                ? "Mark as delivered"
+                : s === "Returned"
+                  ? "Mark as returned"
+                  : s === "Rejected"
+                    ? "Flag a problem (rejected)"
+                    : "Mark as complete"}
+            </option>
+          ))}
+        </select>
+      )}
       <button
         type="button"
         onClick={() => window.print()}
