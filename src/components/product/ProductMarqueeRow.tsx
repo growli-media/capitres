@@ -1,32 +1,41 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
-const SPEED_PX_PER_S = 26; // slow, ambient drift
+const SPEED_PX_PER_S = 26; // slow, ambient drift — same pace as before
 
 /**
- * One self-scrolling row of products. Always drifts via rAF — there is no
- * pause condition at all: no drag-to-scroll (deliberately dropped; a
- * click-and-drag control here was the very thing that kept swallowing
- * clicks — see below), wheel is blocked outright, and touch panning is
- * restricted to the vertical axis. Nothing can interrupt or fight the
- * autoplay tick, so it never visibly stalls no matter what the visitor
- * does with the mouse. The only interaction left is clicking a product,
- * which now works natively — nothing here calls setPointerCapture or
- * intercepts the click event, which is what caused clicks to silently
- * miss their target before.
+ * One self-scrolling row of products. Driven entirely by a compositor CSS
+ * animation (`transform: translateX`) instead of JS writing `scrollLeft`
+ * every frame — there is no scroll container here at all, which is the
+ * point: a native `overflow-x-auto` strip is still subject to the
+ * platform's own scroll machinery (touch/wheel momentum, scroll
+ * anchoring compensating for image-driven layout shifts, an ancestor's
+ * CSS transition suspending the browser's scroll-position updates while
+ * it runs) fighting a JS-driven scrollLeft write, which is what could
+ * make one row visibly stall on some devices while a sibling row kept
+ * moving. A transform-driven track has none of that to fight — the
+ * browser just plays the animation, unconditionally, the same way a CSS
+ * animation anywhere else on the page runs. Wheel/touch have nothing to
+ * grab (this isn't a scroll container), so there's no pause condition to
+ * write in the first place. Clicking a product still works natively —
+ * nothing here intercepts pointer events.
  *
- * The strip is force-`dir="ltr"`: it's decorative and looped, so it
- * doesn't need to mirror for RTL pages the way real reading content
- * does, and pinning the direction keeps scrollLeft math identical on
- * every locale instead of chasing RTL's inverted-sign scrollLeft
- * behaviour.
+ * The track holds two identical copies of the row (`primary` + `clone`)
+ * so a translateX(0 -> -50%) loop is seamless; animation-duration is set
+ * inline from the track's own measured width so every row drifts at the
+ * same constant px/s pace regardless of how many products are in it (a fixed
+ * animation-duration would make a longer row visibly faster/choppier
+ * than a shorter one covering the same duration).
+ *
+ * Force-`dir="ltr"`: decorative and looped, so it doesn't need to mirror
+ * for RTL pages — direction is purely the `direction` prop (which row
+ * drifts which way), independent of the page's own text direction.
  *
  * Purely presentational: the caller (a Server Component, since ProductCard
  * reads the catalog) renders the actual cards and hands them in as
- * `primary`/`clone` — an identical second copy so the loop can wrap
- * seamlessly. This file only ever touches layout/scroll, never product
- * data, so it stays import-safe as a Client Component.
+ * `primary`/`clone`. This file only ever touches layout/animation, never
+ * product data, so it stays import-safe as a Client Component.
  */
 export default function ProductMarqueeRow({
   direction,
@@ -38,58 +47,37 @@ export default function ProductMarqueeRow({
   primary: ReactNode;
   clone: ReactNode;
 }) {
-  const scrollerRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [durationS, setDurationS] = useState<number | null>(null);
 
-  // Autoplay loop — unconditional, every frame, forever.
   useEffect(() => {
-    const el = scrollerRef.current;
-    if (!el) return;
-
-    const sign = direction === "left" ? 1 : -1;
-    if (sign < 0) {
-      // Start mid-strip so it has room to count down before wrapping.
-      el.scrollLeft = el.scrollWidth / 2;
-    }
-
-    let raf = 0;
-    let last = performance.now();
-    const tick = (now: number) => {
-      const dt = Math.min((now - last) / 1000, 0.05);
-      last = now;
-      const half = el.scrollWidth / 2;
-      let next = el.scrollLeft + sign * SPEED_PX_PER_S * dt;
-      if (half > 0) {
-        if (next >= half) next -= half;
-        else if (next < 0) next += half;
-      }
-      el.scrollLeft = next;
-      raf = requestAnimationFrame(tick);
+    const track = trackRef.current;
+    if (!track) return;
+    const measure = () => {
+      const half = track.scrollWidth / 2;
+      if (half > 0) setDurationS(half / SPEED_PX_PER_S);
     };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [direction]);
-
-  // Wheel is a no-op here rather than left alone — letting the browser
-  // natively wheel-scroll the strip would still fight the autoplay loop's
-  // own scrollLeft writes every frame, which looks the same as a stall.
-  useEffect(() => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    const onWheel = (e: WheelEvent) => e.preventDefault();
-    el.addEventListener("wheel", onWheel, { passive: false });
-    return () => el.removeEventListener("wheel", onWheel);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(track);
+    return () => ro.disconnect();
   }, []);
 
+  const animateClass =
+    direction === "left" ? "motion-safe:animate-marquee" : "motion-safe:animate-marquee-reverse";
+
   return (
-    <div
-      ref={scrollerRef}
-      dir="ltr"
-      style={{ touchAction: "pan-y" }}
-      className="no-scrollbar flex gap-4 overflow-x-auto overscroll-x-contain md:gap-6"
-    >
-      <div className="flex shrink-0 gap-4 md:gap-6">{primary}</div>
-      <div className="flex shrink-0 gap-4 md:gap-6" aria-hidden inert>
-        {clone}
+    <div className="overflow-hidden">
+      <div
+        ref={trackRef}
+        dir="ltr"
+        className={`flex w-max gap-4 md:gap-6 ${durationS !== null ? animateClass : ""}`}
+        style={durationS !== null ? { animationDuration: `${durationS}s` } : undefined}
+      >
+        <div className="flex shrink-0 gap-4 md:gap-6">{primary}</div>
+        <div className="flex shrink-0 gap-4 md:gap-6" aria-hidden inert>
+          {clone}
+        </div>
       </div>
     </div>
   );

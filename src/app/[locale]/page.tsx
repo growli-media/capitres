@@ -114,9 +114,9 @@ export default async function HomePage({
 
       {/* ---------------- Closing panel: shop, in motion ----------------
           Last stop before the footer — plain white, like the shop itself,
-          with two strips of the catalog drifting past on their own. Real
-          scroll containers underneath, so a drag, swipe, or wheel takes
-          over instantly and autoplay resumes once the visitor lets go. */}
+          with two strips of the catalog drifting past on their own, each
+          a pure CSS animation (see ProductMarqueeRow.tsx) — nothing can
+          pause or interrupt it, but every product is still clickable. */}
       {marqueeRowA.length > 0 && (
         <section
           data-nav-theme="light"

@@ -70,6 +70,19 @@ html[lang="ku"] {
   --ease-editorial: cubic-bezier(0.22, 1, 0.36, 1);
 
   --animate-marquee: marquee 32s linear infinite;
+  /* Same loop played backward — a pure-CSS way to drift the opposite
+     direction without a second keyframe or depending on page dir="rtl"
+     (see ProductMarqueeRow.tsx's "right"-direction row, which must drift
+     opposite the "left" row on every locale, independent of the page's
+     own text direction). Callers that need a different speed than this
+     default 32s (ProductMarqueeRow measures its own content so the loop
+     keeps a constant px/s pace) set `animation-duration` directly inline
+     — a custom property holding another var() can't be overridden by a
+     descendant the way a plain duration value can: inheritance carries
+     the already-substituted value down from wherever --animate-marquee(-reverse)
+     is declared, so a nested var() only ever sees *that* declaration's
+     own scope, never a consumer's. */
+  --animate-marquee-reverse: marquee 32s linear infinite reverse;
 
   @keyframes marquee {
     from {
