@@ -1,29 +1,14 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { isAuthenticated, legacyLoginAvailable } from "@/lib/admin/auth";
-import { grantPreviewAccess } from "@/lib/launch-gate";
 import { glassCard } from "../glass";
 import AuthLogoMark from "../components/AuthLogoMark";
 import LoginForm from "./LoginForm";
 
 export const metadata: Metadata = { title: "Sign in" };
 
-export default async function AdminLoginPage({
-  searchParams,
-}: {
-  // ?next=preview is the hidden pre-launch bypass link on the storefront's
-  // countdown gate (see src/components/launch/LaunchGate.tsx) — anyone who
-  // completes a real admin login through this page while it's set lands
-  // on the live site instead of /admin. Remove this prop and the two
-  // branches below once launch-gate.ts is deleted post-launch.
-  searchParams: Promise<{ next?: string }>;
-}) {
-  const { next } = await searchParams;
-  const preview = next === "preview";
-  if (await isAuthenticated()) {
-    if (preview) await grantPreviewAccess();
-    redirect(preview ? "/" : "/admin");
-  }
+export default async function AdminLoginPage() {
+  if (await isAuthenticated()) redirect("/admin");
   const legacyAvailable = await legacyLoginAvailable();
 
   return (
@@ -34,15 +19,11 @@ export default async function AdminLoginPage({
           <p className="mt-1 text-sm text-slate-500">Store dashboard</p>
         </div>
         <div className={`rounded-3xl p-7 ${glassCard}`}>
-          <LoginForm legacyAvailable={legacyAvailable} next={next} />
+          <LoginForm legacyAvailable={legacyAvailable} />
         </div>
         <div className="mt-6 flex items-center justify-center gap-1.5 text-center text-[11px] leading-relaxed text-slate-400">
           {/* eslint-disable-next-line @next/next/no-img-element -- tiny footer mark, next/image is overkill */}
-          <img
-            src="/brand/growli-icon.png"
-            alt=""
-            className="h-3.5 w-3.5 opacity-70"
-          />
+          <img src="/brand/growli-icon.png" alt="" className="h-3.5 w-3.5 opacity-70" />
           <p>
             Made by{" "}
             <a

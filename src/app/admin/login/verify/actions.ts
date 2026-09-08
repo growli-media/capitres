@@ -1,19 +1,9 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import {
-  clearPending2fa,
-  createUserSession,
-  readPending2fa,
-} from "@/lib/admin/auth";
-import {
-  getUserById,
-  isLocked,
-  recordFailedAttempt,
-  resetFailedAttempts,
-} from "@/lib/admin/users";
+import { clearPending2fa, createUserSession, readPending2fa } from "@/lib/admin/auth";
+import { getUserById, isLocked, recordFailedAttempt, resetFailedAttempts } from "@/lib/admin/users";
 import { verifyTotpToken } from "@/lib/admin/totp";
-import { grantPreviewAccess } from "@/lib/launch-gate";
 
 export async function verifyLogin(
   _prevState: { error?: string } | undefined,
@@ -37,11 +27,5 @@ export async function verifyLogin(
   await resetFailedAttempts(userId);
   await clearPending2fa();
   await createUserSession(userId, user.tokenVersion);
-
-  // See admin/login/page.tsx's doc comment on this same param.
-  if (String(formData.get("next") ?? "") === "preview") {
-    await grantPreviewAccess();
-    redirect("/");
-  }
   redirect("/admin");
 }

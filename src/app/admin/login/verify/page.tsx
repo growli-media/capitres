@@ -7,13 +7,7 @@ import VerifyForm from "./VerifyForm";
 
 export const metadata: Metadata = { title: "Verify two-factor code" };
 
-export default async function VerifyLoginPage({
-  searchParams,
-}: {
-  // See admin/login/page.tsx's doc comment on the same "next=preview" param.
-  searchParams: Promise<{ next?: string }>;
-}) {
-  const { next } = await searchParams;
+export default async function VerifyLoginPage() {
   const userId = await readPending2fa();
   if (!userId) redirect("/admin/login");
 
@@ -30,7 +24,7 @@ export default async function VerifyLoginPage({
           </p>
         </div>
         <div className={`rounded-3xl p-7 ${glassCard}`}>
-          <VerifyForm next={next} />
+          <VerifyForm />
         </div>
       </div>
     </div>
