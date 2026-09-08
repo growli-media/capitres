@@ -10,6 +10,7 @@ import {
   FileText,
   MagnifyingGlass,
   Newspaper,
+  NotePencil,
   Percent,
   Receipt,
   ShoppingCartSimple,
@@ -81,6 +82,7 @@ const NAV_GROUPS = [
     items: [
       { href: "/admin/posts", label: "Journal", icon: Newspaper, exact: false, permission: "posts" },
       { href: "/admin/legal", label: "Pages", icon: FileText, exact: false, permission: "legal_pages" },
+      { href: "/admin/notes", label: "Notes", icon: NotePencil, exact: false, permission: null },
       { href: "/admin/team", label: "Team", icon: UsersThree, exact: false, permission: null },
     ],
   },
