@@ -110,14 +110,14 @@ export default function CartDrawer() {
   const tCurrency = useTranslations("currency");
   const tA11y = useTranslations("a11y");
   const { currency } = useCurrency();
-  const { lines, isOpen, close, applyPromo, removePromo, promoCode } =
-    useCart();
+  const { lines, isOpen, close, applyPromo, removePromo } = useCart();
   const promo = useCartPromo();
   const totals = useCartTotals();
   const displayTotals = useCartTotalsByCurrency(currency);
   const closeRef = useRef<HTMLButtonElement>(null);
   const [promoInput, setPromoInput] = useState("");
   const [promoError, setPromoError] = useState(false);
+  const [promoPending, setPromoPending] = useState(false);
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "";
@@ -146,9 +146,11 @@ export default function CartDrawer() {
     ),
   );
 
-  function submitPromo() {
-    if (!promoInput.trim()) return;
-    const ok = applyPromo(promoInput);
+  async function submitPromo() {
+    if (!promoInput.trim() || promoPending) return;
+    setPromoPending(true);
+    const ok = await applyPromo(promoInput);
+    setPromoPending(false);
     setPromoError(!ok);
     if (ok) setPromoInput("");
   }
@@ -272,9 +274,10 @@ export default function CartDrawer() {
                     <button
                       type="button"
                       onClick={submitPromo}
-                      className="btn btn-outline h-11 min-h-11 px-4 text-xs"
+                      disabled={promoPending}
+                      className="btn btn-outline h-11 min-h-11 px-4 text-xs disabled:opacity-50"
                     >
-                      {t("promoApply")}
+                      {promoPending ? t("promoApplying") : t("promoApply")}
                     </button>
                   </div>
                   {promoError && (

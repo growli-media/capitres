@@ -184,6 +184,7 @@
     "promoLabel": "کۆدی داشکاندن",
     "promoPlaceholder": "کۆدەکە بنووسە",
     "promoApply": "جێبەجێبکە",
+    "promoApplying": "پشکنین…",
     "promoApplied": "{code} جێبەجێکرا",
     "promoInvalid": "ئەم کۆدە کارناکات.",
     "promoRemove": "کۆدەکە لاببە",

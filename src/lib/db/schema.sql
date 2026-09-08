@@ -294,3 +294,20 @@ CREATE TABLE IF NOT EXISTS legal_pages (
   body_ku    text NOT NULL,
   updated_at timestamptz NOT NULL DEFAULT now()
 );
+
+-- Admin-managed discount codes, replacing the old hardcoded PROMO_CODES
+-- array in src/lib/commerce/config.ts. value is percentage points for
+-- 'percent', a whole-IQD amount for 'fixed', and unused (null) for
+-- 'free-shipping'. starts_at/ends_at bound the campaign window (either
+-- or both may be null — open-ended on that side); max_uses caps total
+-- redemptions (null = unlimited), enforced at checkout by counting
+-- orders.promo_code (see src/lib/orders/store.ts's countByPromoCode).
+CREATE TABLE IF NOT EXISTS promo_codes (
+  code       text PRIMARY KEY,
+  type       text NOT NULL CHECK (type IN ('percent', 'fixed', 'free-shipping')),
+  value      integer,
+  starts_at  timestamptz,
+  ends_at    timestamptz,
+  max_uses   integer,
+  created_at timestamptz NOT NULL DEFAULT now()
+);

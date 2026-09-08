@@ -65,6 +65,12 @@ export interface OrderStore {
   /** Orders soft-deleted at or after `since` — the Recently deleted
    * panel's 60-day window, newest-deleted first. */
   listDeleted(since: Date): Promise<Order[]>;
+  /** How many (non-soft-deleted) orders have used this promo code —
+   * checkout's max-uses enforcement (see src/lib/promo-codes.ts). */
+  countByPromoCode(code: string): Promise<number>;
+  /** Same count, for every code at once — the promo codes admin list, so
+   * it doesn't run one query per row. */
+  countsByPromoCode(): Promise<Record<string, number>>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -225,6 +231,21 @@ const postgresOrderStore: OrderStore = {
     `;
     return rows.map(toOrder);
   },
+  async countByPromoCode(code) {
+    const rows = await sql<{ count: string }[]>`
+      select count(*)::text as count from orders
+      where promo_code = ${code} and deleted_at is null
+    `;
+    return Number(rows[0]?.count ?? 0);
+  },
+  async countsByPromoCode() {
+    const rows = await sql<{ promo_code: string; count: string }[]>`
+      select promo_code, count(*)::text as count from orders
+      where promo_code is not null and deleted_at is null
+      group by promo_code
+    `;
+    return Object.fromEntries(rows.map((r) => [r.promo_code, Number(r.count)]));
+  },
 };
 
 /* ------------------------------------------------------------------ */
@@ -332,6 +353,19 @@ const fileOrderStore: OrderStore = {
     return Object.values(all)
       .filter((o) => o.deletedAt && new Date(o.deletedAt).getTime() >= sinceMs)
       .sort((a, b) => (b.deletedAt ?? "").localeCompare(a.deletedAt ?? ""));
+  },
+  async countByPromoCode(code) {
+    const all = await readAll();
+    return Object.values(all).filter((o) => o.promoCode === code && !o.deletedAt).length;
+  },
+  async countsByPromoCode() {
+    const all = await readAll();
+    const counts: Record<string, number> = {};
+    for (const o of Object.values(all)) {
+      if (!o.promoCode || o.deletedAt) continue;
+      counts[o.promoCode] = (counts[o.promoCode] ?? 0) + 1;
+    }
+    return counts;
   },
 };
 

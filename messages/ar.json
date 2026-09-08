@@ -184,6 +184,7 @@
     "promoLabel": "كود الخصم",
     "promoPlaceholder": "أدخل الكود",
     "promoApply": "تطبيق",
+    "promoApplying": "جارٍ التحقق…",
     "promoApplied": "تم تطبيق {code}",
     "promoInvalid": "هذا الكود غير صالح.",
     "promoRemove": "إزالة الكود",

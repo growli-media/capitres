@@ -3,9 +3,23 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { PromoCode } from "@/lib/commerce/config";
-import { computeDisplayTotals, computeTotals, findPromo } from "@/lib/commerce/config";
+import { computeDisplayTotals, computeTotals } from "@/lib/commerce/config";
 import type { LocalizedString } from "@/lib/content";
 import type { Currency, ProductImage } from "@/lib/catalog/types";
+
+/** Hits the same DB-backed validation checkout ultimately re-checks
+ * (src/lib/promo-codes.ts) — a code is only ever "applied" once this
+ * confirms it's currently active and under its usage limit. */
+async function fetchPromo(code: string): Promise<PromoCode | undefined> {
+  try {
+    const res = await fetch(`/api/promo/validate?code=${encodeURIComponent(code)}`);
+    if (!res.ok) return undefined;
+    const data = (await res.json()) as { promo: PromoCode };
+    return data.promo;
+  } catch {
+    return undefined;
+  }
+}
 
 export interface GiftCardDetails {
   denomination: number;
@@ -45,6 +59,11 @@ export interface CartLine {
 interface CartState {
   lines: CartLine[];
   promoCode?: string;
+  /** The resolved code, kept alongside promoCode so useCartPromo() stays
+   * a synchronous selector — validation itself is async (see fetchPromo
+   * above), so this is set once applyPromo()/revalidatePromo() resolves,
+   * not derived on every render the way the old sync findPromo() was. */
+  promo: PromoCode | null;
   isOpen: boolean;
   hasHydrated: boolean;
   open: () => void;
@@ -52,10 +71,15 @@ interface CartState {
   addLine: (line: Omit<CartLine, "key"> & { key?: string }) => void;
   removeLine: (key: string) => void;
   setQty: (key: string, qty: number) => void;
-  applyPromo: (code: string) => boolean;
+  applyPromo: (code: string) => Promise<boolean>;
   removePromo: () => void;
   clear: () => void;
   setHasHydrated: (v: boolean) => void;
+  /** Re-checks the persisted promoCode against the server on load — a
+   * code applied in an earlier visit may have since expired, hit its
+   * usage limit, or been deleted; this clears it if so rather than
+   * showing a stale "applied" state the server would reject at checkout. */
+  revalidatePromo: () => Promise<void>;
 }
 
 export const useCart = create<CartState>()(
@@ -63,6 +87,7 @@ export const useCart = create<CartState>()(
     (set, get) => ({
       lines: [],
       promoCode: undefined,
+      promo: null,
       isOpen: false,
       hasHydrated: false,
       open: () => set({ isOpen: true }),
@@ -96,15 +121,21 @@ export const useCart = create<CartState>()(
           lines: get().lines.map((l) => (l.key === key ? { ...l, qty } : l)),
         });
       },
-      applyPromo: (code) => {
-        const promo = findPromo(code);
+      applyPromo: async (code) => {
+        const promo = await fetchPromo(code);
         if (!promo) return false;
-        set({ promoCode: promo.code });
+        set({ promoCode: promo.code, promo });
         return true;
       },
-      removePromo: () => set({ promoCode: undefined }),
-      clear: () => set({ lines: [], promoCode: undefined }),
+      removePromo: () => set({ promoCode: undefined, promo: null }),
+      clear: () => set({ lines: [], promoCode: undefined, promo: null }),
       setHasHydrated: (v) => set({ hasHydrated: v }),
+      revalidatePromo: async () => {
+        const code = get().promoCode;
+        if (!code) return;
+        const promo = await fetchPromo(code);
+        set(promo ? { promo } : { promoCode: undefined, promo: null });
+      },
     }),
     {
       name: "capitres-cart-v1",
@@ -114,6 +145,7 @@ export const useCart = create<CartState>()(
       }),
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);
+        void state?.revalidatePromo();
       },
     },
   ),
@@ -127,8 +159,8 @@ export function useCartCount(): number {
 }
 
 export function useCartPromo(): PromoCode | undefined {
-  const code = useCart((s) => s.promoCode);
-  return code ? findPromo(code) : undefined;
+  const promo = useCart((s) => s.promo);
+  return promo ?? undefined;
 }
 
 /** `region` defaults to "IQ" (domestic shipping rate) — pass "INTL" only

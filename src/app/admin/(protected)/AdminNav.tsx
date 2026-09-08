@@ -10,6 +10,7 @@ import {
   FileText,
   MagnifyingGlass,
   Newspaper,
+  Percent,
   Receipt,
   ShoppingCartSimple,
   SidebarSimple,
@@ -72,6 +73,7 @@ const NAV_GROUPS = [
       { href: "/admin/products", label: "Products", icon: TShirt, exact: false, permission: "products" },
       { href: "/admin/collections", label: "Collections", icon: Stack, exact: false, permission: "collections" },
       { href: "/admin/categories", label: "Categories", icon: Tag, exact: false, permission: "categories" },
+      { href: "/admin/promo-codes", label: "Promo codes", icon: Percent, exact: false, permission: "promo_codes" },
     ],
   },
   {

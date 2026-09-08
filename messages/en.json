@@ -184,6 +184,7 @@
     "promoLabel": "Promo code",
     "promoPlaceholder": "Enter code",
     "promoApply": "Apply",
+    "promoApplying": "Checking…",
     "promoApplied": "{code} applied",
     "promoInvalid": "That code didn't work.",
     "promoRemove": "Remove code",

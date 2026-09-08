@@ -30,21 +30,16 @@ function shippingRateFor(region: "IQ" | "INTL"): number {
 
 export const GIFT_CARD_DENOMINATIONS = [25_000, 50_000, 100_000, 250_000];
 
+/** Admin-managed via /admin/promo-codes (src/lib/admin/promo-codes.ts) —
+ * resolved server-side by src/lib/promo-codes.ts's validatePromoCode(),
+ * which also enforces the campaign date window and max-uses limit before
+ * a code ever reaches computeTotals()/computeDisplayTotals() below. */
 export interface PromoCode {
   code: string;
-  type: "percent" | "free-shipping";
-  /** Percentage points for "percent" type. */
+  type: "percent" | "fixed" | "free-shipping";
+  /** Percentage points for "percent"; a whole-IQD amount for "fixed".
+   * Unused for "free-shipping". */
   value?: number;
-}
-
-export const PROMO_CODES: PromoCode[] = [
-  { code: "CAPITRES10", type: "percent", value: 10 },
-  { code: "SHUKRAN", type: "free-shipping" },
-];
-
-export function findPromo(code: string): PromoCode | undefined {
-  const normalized = code.trim().toUpperCase();
-  return PROMO_CODES.find((p) => p.code === normalized);
 }
 
 export interface Totals {
@@ -63,7 +58,9 @@ export function computeTotals(
   const discount =
     promo?.type === "percent"
       ? Math.round((subtotal * (promo.value ?? 0)) / 100)
-      : 0;
+      : promo?.type === "fixed"
+        ? Math.min(subtotal, promo.value ?? 0)
+        : 0;
   const discounted = Math.max(0, subtotal - discount);
   const region = options.region ?? "IQ";
   const freeShipping =
@@ -103,7 +100,9 @@ export function computeDisplayTotals(
   const discount =
     promo?.type === "percent"
       ? Math.round((displaySubtotal * (promo.value ?? 0)) / 100)
-      : 0;
+      : promo?.type === "fixed"
+        ? Math.min(displaySubtotal, convertFromIqd(promo.value ?? 0, currency))
+        : 0;
   const shipping = totals.freeShipping
     ? 0
     : convertFromIqd(shippingRateFor(region ?? "IQ"), currency);

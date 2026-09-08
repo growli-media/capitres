@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isValidPhoneNumber } from "libphonenumber-js/min";
 import { catalog } from "@/lib/catalog";
-import { computeTotals, findPromo } from "@/lib/commerce/config";
+import { computeTotals } from "@/lib/commerce/config";
+import { validatePromoCode } from "@/lib/promo-codes";
 import {
   createWaylPaymentLink,
   isWaylMockMode,
@@ -183,7 +184,14 @@ export async function POST(request: NextRequest) {
   }
 
   const subtotal = orderLines.reduce((s, l) => s + l.unitAmount * l.qty, 0);
-  const promo = input.promoCode ? findPromo(input.promoCode) : undefined;
+  const promo = input.promoCode ? await validatePromoCode(input.promoCode) : undefined;
+  // The customer's cart showed a discount from this code — if it's no
+  // longer valid (expired, used up, or removed since they applied it),
+  // fail the checkout rather than silently charging full price for what
+  // looked like a discounted order.
+  if (input.promoCode && !promo) {
+    return NextResponse.json({ error: "invalid-promo" }, { status: 400 });
+  }
   const physicalItems = orderLines.some((l) => !l.giftCard);
   const totals = computeTotals(subtotal, promo, { physicalItems, region });
 
