@@ -27,6 +27,7 @@ export type WaylStatus =
   | "Created"
   | "Pending"
   | "Processing"
+  | "Paid"
   | "Complete"
   | "Delivered"
   | "Cancelled"

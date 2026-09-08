@@ -7,6 +7,7 @@ import { Link } from "@/i18n/navigation";
 import { useCart } from "@/lib/cart/store";
 import { formatIQD } from "@/lib/money";
 import { trackPurchase } from "@/lib/analytics/track";
+import { PAID_STATUSES, FAILED_STATUSES } from "@/lib/admin/queries-shared";
 
 interface OrderView {
   ref: string;
@@ -27,8 +28,8 @@ interface OrderView {
   hasGiftCards: boolean;
 }
 
-const PAID = ["Complete", "Delivered", "MockPaid"];
-const FAILED = ["Cancelled", "Rejected", "Returned"];
+const PAID: readonly string[] = PAID_STATUSES;
+const FAILED: readonly string[] = FAILED_STATUSES;
 // Cash on Delivery never touches Wayl — it's terminal the instant the
 // order is created, there's no external gateway status to wait for.
 const COD = "CashOnDelivery";

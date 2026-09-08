@@ -6,8 +6,11 @@
  * for plain consts with no DB access.
  */
 
-/** Orders that count as revenue / a completed sale. */
-export const PAID_STATUSES = ["Complete", "Delivered", "MockPaid"] as const;
+/** Orders that count as revenue / a completed sale. "Paid" is a real Wayl
+ * status (confirmed from a live webhook payload) that our own WaylStatus
+ * type didn't originally include — an order can land in exactly this
+ * status and never show as revenue until it's added here. */
+export const PAID_STATUSES = ["Complete", "Delivered", "MockPaid", "Paid"] as const;
 /** Orders that will never be paid — explicitly resolved, not abandoned. */
 export const FAILED_STATUSES = ["Cancelled", "Rejected", "Returned"] as const;
 
