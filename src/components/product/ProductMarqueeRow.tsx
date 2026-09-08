@@ -28,6 +28,13 @@ const SPEED_PX_PER_S = 26; // slow, ambient drift — same pace as before
  * animation-duration would make a longer row visibly faster/choppier
  * than a shorter one covering the same duration).
  *
+ * Both copies are real, clickable links — `clone` is NOT inert. A
+ * "right"-drifting row plays its animation in reverse, which starts (and
+ * spends most of the loop showing) the *second* half of the track, not
+ * the first — so for that row `clone` is usually what's actually in the
+ * viewport. Marking it inert/aria-hidden (as if it were purely
+ * decorative filler) made exactly that row's products unclickable.
+ *
  * Force-`dir="ltr"`: decorative and looped, so it doesn't need to mirror
  * for RTL pages — direction is purely the `direction` prop (which row
  * drifts which way), independent of the page's own text direction.
@@ -75,9 +82,7 @@ export default function ProductMarqueeRow({
         style={durationS !== null ? { animationDuration: `${durationS}s` } : undefined}
       >
         <div className="flex shrink-0 gap-4 md:gap-6">{primary}</div>
-        <div className="flex shrink-0 gap-4 md:gap-6" aria-hidden inert>
-          {clone}
-        </div>
+        <div className="flex shrink-0 gap-4 md:gap-6">{clone}</div>
       </div>
     </div>
   );
