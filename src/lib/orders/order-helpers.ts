@@ -64,10 +64,13 @@ export interface Order {
     phone?: string;
     /** ISO-3166 country code. */
     country?: string;
+    /** Orders placed before checkout dropped the street field — kept for
+     * historical orders only, never written by new checkouts. Iraqi
+     * addresses are governorate + city/district + landmark, no formal
+     * street-naming convention. */
     street?: string;
-    /** Nearest landmark/point of interest — replaces streetNumber below
-     * for orders placed since Iraqi addresses stopped using a
-     * Western-style street-number field. */
+    /** Nearest landmark/point of interest — the sole address-detail field
+     * collected since checkout dropped street/street-number. */
     landmark?: string;
     /** Orders placed before the landmark field shipped — kept for
      * historical orders only, never written by new checkouts. */

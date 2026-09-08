@@ -52,11 +52,12 @@ interface CodInfo {
   email: string;
   phoneNumber: string;
   governorate: string;
+  /** City/district — the neighborhood-level area (المنطقة), the level
+   * Iraqi addresses actually use below governorate. */
   city: string;
-  street: string;
-  /** Nearest landmark/point of interest — Iraqi addresses don't use a
-   * Western-style street-number convention, so this replaces that field
-   * (any number the customer has just goes inline in `street` instead). */
+  /** Nearest landmark/point of interest — Iraqi addresses have no formal
+   * street-naming/numbering convention, so this is the only street-level
+   * detail collected, alongside governorate + city/district. */
   landmark: string;
   notes: string;
 }
@@ -144,7 +145,6 @@ export default function CheckoutFlow() {
     phoneNumber: "",
     governorate: "",
     city: "",
-    street: "",
     landmark: "",
     notes: "",
   });
@@ -232,7 +232,6 @@ export default function CheckoutFlow() {
     }
     if (!info.governorate) next.governorate = t("errors.required");
     if (!info.city.trim()) next.city = t("errors.required");
-    if (!info.street.trim()) next.street = t("errors.required");
     if (!info.landmark.trim()) next.landmark = t("errors.required");
     setErrors(next);
     const firstError = Object.entries(next).find(([, v]) => v);
@@ -303,7 +302,6 @@ export default function CheckoutFlow() {
             lastName: info.lastName,
             email: info.email.trim() || undefined,
             phone: phoneE164,
-            street: info.street,
             landmark: info.landmark,
             city: info.city,
             governorate: info.governorate,
@@ -713,25 +711,6 @@ export default function CheckoutFlow() {
                   {errors.city && (
                     <p role="alert" className="mt-1.5 text-xs text-danger">
                       {errors.city}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="co-street" className="mb-2 block text-sm font-semibold">
-                    {t("street")} *
-                  </label>
-                  <input
-                    id="co-street"
-                    type="text"
-                    autoComplete="address-line1"
-                    value={info.street}
-                    onChange={(e) => setField("street", e.target.value)}
-                    aria-invalid={Boolean(errors.street)}
-                    className={inputClass(Boolean(errors.street))}
-                  />
-                  {errors.street && (
-                    <p role="alert" className="mt-1.5 text-xs text-danger">
-                      {errors.street}
                     </p>
                   )}
                 </div>

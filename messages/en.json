@@ -225,7 +225,6 @@
     "selectGovernorate": "Select governorate",
     "state": "State / Province",
     "city": "City / District",
-    "street": "Street",
     "landmark": "Nearest landmark",
     "landmarkPlaceholder": "e.g. near Al-Rasheed Bank",
     "zip": "ZIP / Postal code",

@@ -48,7 +48,6 @@ interface CheckoutInput {
      * submitting. Re-validated here regardless, since the client is
      * never trusted for a payment-adjacent field. */
     phone: string;
-    street: string;
     landmark: string;
     city: string;
     governorate: string;
@@ -102,7 +101,6 @@ export async function POST(request: NextRequest) {
       (emailTrimmed && !isValidEmail(emailTrimmed)) ||
       !c?.governorate?.trim() ||
       !c?.city?.trim() ||
-      !c?.street?.trim() ||
       !c?.landmark?.trim()
     ) {
       return NextResponse.json({ error: "invalid-customer" }, { status: 400 });
@@ -265,7 +263,6 @@ export async function POST(request: NextRequest) {
             email: emailTrimmed || undefined,
             phone: c!.phone.trim(),
             country: "IQ",
-            street: c!.street.trim(),
             landmark: c!.landmark.trim(),
             city: c!.city.trim(),
             governorate: c!.governorate.trim(),
