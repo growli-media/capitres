@@ -16,6 +16,12 @@ interface TrackBody {
 
 const VALID_TYPES: VisitEventType[] = ["page_view", "product_view", "add_to_cart"];
 
+function parseCoordinate(value: string | null): number | null {
+  if (!value) return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
 /**
  * First-party visit beacon — powers the admin Analytics section. The
  * visitor-id cookie is minted exclusively by src/proxy.ts on a real
@@ -48,6 +54,8 @@ export async function POST(request: NextRequest) {
     country: request.headers.get("x-vercel-ip-country"),
     region: request.headers.get("x-vercel-ip-country-region"),
     city: request.headers.get("x-vercel-ip-city"),
+    latitude: parseCoordinate(request.headers.get("x-vercel-ip-latitude")),
+    longitude: parseCoordinate(request.headers.get("x-vercel-ip-longitude")),
     userAgent: request.headers.get("user-agent")?.slice(0, 500),
     referrerSource: source,
     referrerHost,

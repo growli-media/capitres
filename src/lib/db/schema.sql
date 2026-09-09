@@ -462,3 +462,18 @@ CREATE INDEX IF NOT EXISTS idx_visit_events_visit_id ON visit_events (visit_id, 
 -- extra when it's gone — expected, not a bug.
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS visitor_id text;
 CREATE INDEX IF NOT EXISTS idx_orders_visitor_id ON orders (visitor_id) WHERE visitor_id IS NOT NULL;
+
+-- Vercel's edge geolocation (x-vercel-ip-latitude/-longitude), captured
+-- alongside country/region/city. The map highlights a visit's containing
+-- shape (state, district, ...) by testing this point against each
+-- shape's polygon (geoContains) rather than matching city/region text
+-- against geoBoundaries' names — a country's ADM2 tier is often coarser
+-- than a city (e.g. Germany's only goes down to Regierungsbezirk, so
+-- there is no shape literally named "Munich" to string-match against),
+-- and geoBoundaries' shapeName is frequently in the local language while
+-- Vercel's city header is English. A point-in-polygon test sidesteps
+-- both problems for every country uniformly. Nullable: older rows
+-- predate this column, and not every IP resolves to a precise lat/lng —
+-- those fall back to the original text matching in geo-match.ts.
+ALTER TABLE visits ADD COLUMN IF NOT EXISTS latitude double precision;
+ALTER TABLE visits ADD COLUMN IF NOT EXISTS longitude double precision;

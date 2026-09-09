@@ -141,6 +141,26 @@ function districtsWithinRegion(districts: GeoBoundaryFeature[], region: GeoBound
   return districts.filter((d) => geoContains(region as never, geoCentroid(d as never)));
 }
 
+/** [longitude, latitude] for a visit/aggregate row, or null when it
+ * predates lat/lng capture (or Vercel didn't resolve a precise point) —
+ * d3-geo's point order, not [lat, lng]. */
+function pointOf(row: { latitude: number | null; longitude: number | null }): [number, number] | null {
+  return row.latitude != null && row.longitude != null ? [row.longitude, row.latitude] : null;
+}
+
+/** Point-in-polygon match against real geometry instead of text —
+ * correct for every country and every drill level uniformly, unlike
+ * matching a raw city/region string against geoBoundaries' shapeName
+ * (which breaks whenever a country's admin tier is coarser than a city,
+ * e.g. Germany's ADM2 only goes down to Regierungsbezirk, or whenever
+ * the two sources name the same place differently, e.g. English "Munich"
+ * vs geoBoundaries' German "München"). Falls back to matchGeoBoundaryShape
+ * (geo-match.ts) wherever a row has no point yet. */
+function findBySpatialPoint<T>(features: T[], point: [number, number] | null): T | undefined {
+  if (!point) return undefined;
+  return features.find((f) => geoContains(f as never, point));
+}
+
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 8;
 const ZOOM_STEP = 1.6;
@@ -186,7 +206,8 @@ export default function AnalyticsMap({
   const countsByCountryName = useMemo(() => {
     const totals = new Map<string, number>();
     for (const agg of aggregates) {
-      const name = matchCountryName(agg.country, WORLD_ATLAS_NAMES);
+      const spatial = findBySpatialPoint(WORLD_COUNTRY_FEATURES, pointOf(agg));
+      const name = spatial?.properties.name ?? matchCountryName(agg.country, WORLD_ATLAS_NAMES);
       if (!name) continue;
       totals.set(name, (totals.get(name) ?? 0) + agg.count);
     }
@@ -198,8 +219,9 @@ export default function AnalyticsMap({
     const totals = new Map<string, number>();
     if (drill.level !== "country" || !adm1Features) return totals;
     for (const agg of aggregates) {
-      if (agg.country !== drill.alpha2 || !agg.region) continue;
-      const shapeName = matchGeoBoundaryShape(agg.region, adm1Features);
+      if (agg.country !== drill.alpha2) continue;
+      const spatial = findBySpatialPoint(adm1Features, pointOf(agg));
+      const shapeName = spatial?.properties.shapeName ?? (agg.region ? matchGeoBoundaryShape(agg.region, adm1Features) : undefined);
       if (!shapeName) continue;
       totals.set(shapeName, (totals.get(shapeName) ?? 0) + agg.count);
     }
@@ -211,11 +233,18 @@ export default function AnalyticsMap({
     const totals = new Map<string, number>();
     if (drill.level !== "region" || !districtsInRegion) return totals;
     for (const agg of aggregates) {
-      if (agg.country !== drill.alpha2 || !agg.region || !agg.city) continue;
-      if (!adm1Features) continue;
-      const regionMatch = matchGeoBoundaryShape(agg.region, adm1Features);
-      if (regionMatch !== drill.regionShapeName) continue;
-      const shapeName = matchGeoBoundaryShape(agg.city, districtsInRegion);
+      if (agg.country !== drill.alpha2) continue;
+      // districtsInRegion is already scoped to the region being viewed, so
+      // a point match against it both confirms "this visit is in this
+      // region" and picks the exact district in one step — no separate
+      // region-equality check needed the way the text-matching fallback
+      // still requires below.
+      const spatial = findBySpatialPoint(districtsInRegion, pointOf(agg));
+      let shapeName = spatial?.properties.shapeName;
+      if (!shapeName && agg.region && agg.city && adm1Features) {
+        const regionMatch = matchGeoBoundaryShape(agg.region, adm1Features);
+        if (regionMatch === drill.regionShapeName) shapeName = matchGeoBoundaryShape(agg.city, districtsInRegion);
+      }
       if (!shapeName) continue;
       totals.set(shapeName, (totals.get(shapeName) ?? 0) + agg.count);
     }
@@ -238,22 +267,30 @@ export default function AnalyticsMap({
    * whole area," not one pixel. */
   const highlighted = useMemo((): { name: string; coordinates: [number, number] } | undefined => {
     if (!selectedVisit) return undefined;
+    const point = pointOf(selectedVisit);
 
     if (drill.level === "world") {
-      const countryName = matchCountryName(selectedVisit.country ?? "", WORLD_ATLAS_NAMES);
-      const feature = WORLD_COUNTRY_FEATURES.find((f) => f.properties.name === countryName);
+      const spatial = findBySpatialPoint(WORLD_COUNTRY_FEATURES, point);
+      const countryName = spatial?.properties.name ?? matchCountryName(selectedVisit.country ?? "", WORLD_ATLAS_NAMES);
+      const feature = spatial ?? WORLD_COUNTRY_FEATURES.find((f) => f.properties.name === countryName);
       return feature ? { name: countryName!, coordinates: geoCentroid(feature as never) } : undefined;
     }
 
     if (drill.level === "country" && adm1Features) {
-      if (selectedVisit.country !== drill.alpha2 || !selectedVisit.region) return undefined;
-      const shapeName = matchGeoBoundaryShape(selectedVisit.region, adm1Features);
-      const feature = adm1Features.find((f) => f.properties.shapeName === shapeName);
+      if (selectedVisit.country !== drill.alpha2) return undefined;
+      const spatial = findBySpatialPoint(adm1Features, point);
+      const shapeName = spatial?.properties.shapeName ?? (selectedVisit.region ? matchGeoBoundaryShape(selectedVisit.region, adm1Features) : undefined);
+      const feature = spatial ?? adm1Features.find((f) => f.properties.shapeName === shapeName);
       return feature ? { name: shapeName!, coordinates: geoCentroid(feature as never) } : undefined;
     }
 
     if (drill.level === "region" && districtsInRegion && adm1Features) {
-      if (selectedVisit.country !== drill.alpha2 || !selectedVisit.region || !selectedVisit.city) return undefined;
+      if (selectedVisit.country !== drill.alpha2) return undefined;
+      const spatial = findBySpatialPoint(districtsInRegion, point);
+      if (spatial) {
+        return { name: spatial.properties.shapeName, coordinates: geoCentroid(spatial as never) };
+      }
+      if (!selectedVisit.region || !selectedVisit.city) return undefined;
       if (matchGeoBoundaryShape(selectedVisit.region, adm1Features) !== drill.regionShapeName) return undefined;
       const shapeName = matchGeoBoundaryShape(selectedVisit.city, districtsInRegion);
       const feature = districtsInRegion.find((f) => f.properties.shapeName === shapeName);

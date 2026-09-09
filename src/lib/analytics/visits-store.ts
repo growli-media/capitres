@@ -11,6 +11,8 @@ export interface RecordVisitEventInput {
   country?: string | null;
   region?: string | null;
   city?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   userAgent?: string | null;
   referrerSource: ReferrerSource;
   referrerHost?: string | null;
@@ -29,10 +31,11 @@ export async function recordVisitEvent(input: RecordVisitEventInput): Promise<vo
   await sql.begin(async (tx) => {
     await tx`
       insert into visits (
-        id, country, region, city, landing_path, referrer_source,
+        id, country, region, city, latitude, longitude, landing_path, referrer_source,
         referrer_host, utm_source, utm_medium, utm_campaign, user_agent
       ) values (
         ${input.visitorId}, ${input.country ?? null}, ${input.region ?? null}, ${input.city ?? null},
+        ${input.latitude ?? null}, ${input.longitude ?? null},
         ${input.path ?? "/"}, ${input.referrerSource}, ${input.referrerHost ?? null},
         ${input.utmSource ?? null}, ${input.utmMedium ?? null}, ${input.utmCampaign ?? null},
         ${input.userAgent ?? null}

@@ -10,6 +10,8 @@ export interface VisitSummary {
   country: string | null;
   region: string | null;
   city: string | null;
+  latitude: number | null;
+  longitude: number | null;
   landingPath: string;
   referrerSource: ReferrerSource;
   referrerHost: string | null;
@@ -28,6 +30,8 @@ interface VisitRow {
   country: string | null;
   region: string | null;
   city: string | null;
+  latitude: number | null;
+  longitude: number | null;
   landing_path: string;
   referrer_source: ReferrerSource;
   referrer_host: string | null;
@@ -47,6 +51,8 @@ function toVisitSummary(row: VisitRow): VisitSummary {
     country: row.country,
     region: row.region,
     city: row.city,
+    latitude: row.latitude,
+    longitude: row.longitude,
     landingPath: row.landing_path,
     referrerSource: row.referrer_source,
     referrerHost: row.referrer_host,
@@ -77,7 +83,7 @@ export async function getRecentVisits(
   const rows = start
     ? await sql<VisitRow[]>`
         select v.id, v.first_seen::text as first_seen, v.last_seen::text as last_seen,
-               v.country, v.region, v.city, v.landing_path, v.referrer_source, v.referrer_host,
+               v.country, v.region, v.city, v.latitude, v.longitude, v.landing_path, v.referrer_source, v.referrer_host,
                v.utm_source, v.utm_medium, v.utm_campaign, v.user_agent,
                (select count(*) from visit_events e where e.visit_id = v.id)::int as event_count,
                (select o.ref from orders o
@@ -90,7 +96,7 @@ export async function getRecentVisits(
       `
     : await sql<VisitRow[]>`
         select v.id, v.first_seen::text as first_seen, v.last_seen::text as last_seen,
-               v.country, v.region, v.city, v.landing_path, v.referrer_source, v.referrer_host,
+               v.country, v.region, v.city, v.latitude, v.longitude, v.landing_path, v.referrer_source, v.referrer_host,
                v.utm_source, v.utm_medium, v.utm_campaign, v.user_agent,
                (select count(*) from visit_events e where e.visit_id = v.id)::int as event_count,
                (select o.ref from orders o
@@ -112,7 +118,7 @@ export async function getRecentVisits(
 export async function getVisit(id: string): Promise<VisitSummary | undefined> {
   const rows = await sql<VisitRow[]>`
     select v.id, v.first_seen::text as first_seen, v.last_seen::text as last_seen,
-           v.country, v.region, v.city, v.landing_path, v.referrer_source, v.referrer_host,
+           v.country, v.region, v.city, v.latitude, v.longitude, v.landing_path, v.referrer_source, v.referrer_host,
            v.utm_source, v.utm_medium, v.utm_campaign, v.user_agent,
            (select count(*) from visit_events e where e.visit_id = v.id)::int as event_count,
            (select o.ref from orders o
@@ -186,24 +192,32 @@ export interface GeoAggregate {
   country: string;
   region: string | null;
   city: string | null;
+  /** A visit's lat/lng is effectively constant per city (Vercel resolves
+   * IPs to a fixed city-centroid point, not a precise address), so
+   * grouping by it alongside region/city doesn't fragment the count —
+   * see AnalyticsMap.tsx, which prefers point-in-polygon matching against
+   * this over region/city text matching wherever it's available. */
+  latitude: number | null;
+  longitude: number | null;
   count: number;
 }
 
-/** Visit counts per country/region/city — feeds the map's shading,
- * optionally scoped to the same time range as the rest of the page. */
+/** Visit counts per country/region/city(/point) — feeds the map's
+ * shading, optionally scoped to the same time range as the rest of the
+ * page. */
 export async function getVisitAggregates(start: Date | null = null, end: Date = new Date()): Promise<GeoAggregate[]> {
   const rows = start
     ? await sql<GeoAggregate[]>`
-        select country, region, city, count(*)::int as count
+        select country, region, city, latitude, longitude, count(*)::int as count
         from visits
         where country is not null and first_seen >= ${start} and first_seen <= ${end}
-        group by country, region, city
+        group by country, region, city, latitude, longitude
       `
     : await sql<GeoAggregate[]>`
-        select country, region, city, count(*)::int as count
+        select country, region, city, latitude, longitude, count(*)::int as count
         from visits
         where country is not null and first_seen <= ${end}
-        group by country, region, city
+        group by country, region, city, latitude, longitude
       `;
   return rows;
 }
