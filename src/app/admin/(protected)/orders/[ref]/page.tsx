@@ -64,6 +64,11 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ re
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Placed {formatDateTime(order.createdAt)}
           </p>
+          {order.waylLinkId && !order.mock && (
+            <p className="mt-0.5 font-mono text-xs text-slate-400 dark:text-slate-500">
+              Wayl link {order.waylLinkId}
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <span className={`rounded-full px-3 py-1.5 text-sm font-semibold ${statusTone}`}>{order.status}</span>

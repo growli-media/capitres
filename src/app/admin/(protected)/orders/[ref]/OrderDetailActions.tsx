@@ -2,10 +2,15 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Printer, Trash } from "@phosphor-icons/react";
+import { ArrowsClockwise, Printer, Trash } from "@phosphor-icons/react";
 import type { Order } from "@/lib/orders/order-helpers";
 import { PAID_STATUSES } from "@/lib/admin/queries-shared";
-import { markOrderDeliveredAction, deleteOrderAction, setOrderStatusAction } from "../actions";
+import {
+  markOrderDeliveredAction,
+  deleteOrderAction,
+  setOrderStatusAction,
+  checkWaylStatusAction,
+} from "../actions";
 import { useAdminToast } from "../../components/AdminToastProvider";
 import { glassButtonSecondary, glassButtonPrimary } from "../../../glass";
 
@@ -31,6 +36,18 @@ export default function OrderDetailActions({ order }: { order: Order }) {
       await setOrderStatusAction(order.ref, status);
       showToast(`Order marked ${status.toLowerCase()}`);
       router.refresh();
+    });
+  }
+
+  function checkWayl() {
+    startTransition(async () => {
+      const result = await checkWaylStatusAction(order.ref);
+      if ("error" in result) {
+        showToast(result.error);
+        return;
+      }
+      showToast(result.changed ? `Updated from Wayl — now ${result.status}` : `Still ${result.status} on Wayl`);
+      if (result.changed) router.refresh();
     });
   }
 
@@ -69,6 +86,18 @@ export default function OrderDetailActions({ order }: { order: Order }) {
             </option>
           ))}
         </select>
+      )}
+      {!order.mock && order.status !== "CashOnDelivery" && (
+        <button
+          type="button"
+          disabled={pending}
+          onClick={checkWayl}
+          title="Ask Wayl for this order's live status"
+          className={`flex h-10 items-center gap-1.5 px-3.5 text-sm font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-60 dark:text-slate-300 ${glassButtonSecondary}`}
+        >
+          <ArrowsClockwise size={15} />
+          Check Wayl
+        </button>
       )}
       <button
         type="button"

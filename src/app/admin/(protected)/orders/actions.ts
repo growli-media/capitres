@@ -6,6 +6,7 @@ import { orderStore, type Order } from "@/lib/orders/store";
 import { can, requirePermission } from "@/lib/admin/permissions";
 import { resolveTimeRange, type TimeRangeValue } from "@/lib/admin/time-range";
 import { logAdminActivity } from "@/lib/admin/activity";
+import { getWaylPaymentStatus } from "@/lib/payments/wayl";
 
 export async function getOrdersForRangeAction(range: TimeRangeValue): Promise<Order[]> {
   await requirePermission("orders");
@@ -78,6 +79,41 @@ export async function cancelOrderAction(ref: string): Promise<void> {
   revalidatePath("/admin/orders");
   revalidatePath("/admin/abandoned");
   revalidatePath("/admin");
+}
+
+/**
+ * Manual "check Wayl now" — for an order stuck on "Created"/"Pending"
+ * because the webhook never arrived (or the customer closed the tab
+ * before the confirmation page's own short-lived poll — see
+ * src/app/api/orders/[ref]/route.ts — caught up). Deliberately mirrors
+ * that same route's sync logic exactly (ask Wayl for the live status,
+ * write it if different) rather than firing the Meta CAPI purchase event
+ * the webhook does — that event only ever fires from the webhook in this
+ * codebase, and duplicating it here risks double-counting a conversion
+ * if the webhook later arrives too.
+ */
+export async function checkWaylStatusAction(
+  ref: string,
+): Promise<{ status: string; changed: boolean } | { error: string }> {
+  if (!(await isAuthenticated())) return { error: "Not signed in." };
+  if (!(await can("orders"))) return { error: "Not permitted." };
+  const order = await orderStore.get(ref);
+  if (!order) return { error: "Order not found." };
+  if (order.mock) return { error: "This is a test order — it was never sent to Wayl." };
+  if (order.status === "CashOnDelivery") {
+    return { error: "This order was Cash on Delivery — it never touched Wayl." };
+  }
+  const remote = await getWaylPaymentStatus(ref);
+  if (!remote) return { error: "Couldn't reach Wayl just now — try again in a moment." };
+  const changed = remote.status !== order.status;
+  if (changed) {
+    await orderStore.setStatus(ref, remote.status, remote.paymentMethod);
+    await logAdminActivity(`Synced order ${ref} from Wayl: ${order.status} → ${remote.status}`);
+    revalidatePath("/admin/orders");
+    revalidatePath(`/admin/orders/${ref}`);
+    revalidatePath("/admin");
+  }
+  return { status: remote.status, changed };
 }
 
 export async function updateOrderNoteAction(ref: string, note: string): Promise<void> {
