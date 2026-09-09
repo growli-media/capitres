@@ -55,24 +55,28 @@ export default function ProductCard({
             className="object-cover opacity-0 transition-[opacity,transform] duration-700 ease-out group-hover:scale-[1.05] group-hover:opacity-100"
           />
         )}
-        <div className="absolute start-3 top-3 flex flex-col items-start gap-2">
+        {/* Smaller on mobile — at small card sizes (the homepage marquee,
+            Shop All) full-size badges were covering most of the photo;
+            text-[9px]/tighter padding shrink them there, sm: restores the
+            original size once cards have room (shop grid, collections). */}
+        <div className="absolute start-2 top-2 flex flex-col items-start gap-1 sm:start-3 sm:top-3 sm:gap-2">
           {product.isNew && (
-            <span className={`text-eyebrow px-2.5 py-1.5 ${BADGE_CLASSES.new}`}>
+            <span className={`text-eyebrow px-1.5 py-1 text-[9px] sm:px-2.5 sm:py-1.5 sm:text-[11px] ${BADGE_CLASSES.new}`}>
               {t("new")}
             </span>
           )}
           {!inStock && (
-            <span className={`text-eyebrow px-2.5 py-1.5 ${BADGE_CLASSES.soldOut}`}>
+            <span className={`text-eyebrow px-1.5 py-1 text-[9px] sm:px-2.5 sm:py-1.5 sm:text-[11px] ${BADGE_CLASSES.soldOut}`}>
               {t("soldOut")}
             </span>
           )}
           {onSale && (
-            <span className={`text-eyebrow px-2.5 py-1.5 ${BADGE_CLASSES.sale}`}>
+            <span className={`text-eyebrow px-1.5 py-1 text-[9px] sm:px-2.5 sm:py-1.5 sm:text-[11px] ${BADGE_CLASSES.sale}`}>
               {t("sale")}
             </span>
           )}
           {product.gender === "unisex" && (
-            <span className={`text-eyebrow px-2.5 py-1.5 ${BADGE_CLASSES.unisex}`}>
+            <span className={`text-eyebrow px-1.5 py-1 text-[9px] sm:px-2.5 sm:py-1.5 sm:text-[11px] ${BADGE_CLASSES.unisex}`}>
               {t("unisex")}
             </span>
           )}
