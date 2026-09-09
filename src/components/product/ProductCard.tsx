@@ -58,8 +58,12 @@ export default function ProductCard({
         {/* Smaller on mobile — at small card sizes (the homepage marquee,
             Shop All) full-size badges were covering most of the photo;
             text-[9px]/tighter padding shrink them there, sm: restores the
-            original size once cards have room (shop grid, collections). */}
-        <div className="absolute start-2 top-2 flex flex-col items-start gap-1 sm:start-3 sm:top-3 sm:gap-2">
+            original size once cards have room (shop grid, collections).
+            Anchored to the bottom, not the top — some product shots frame
+            the model with little headroom, so a stack of 2+ badges
+            (e.g. sold-out + unisex) pinned to the top can sit right over
+            the face; the bottom of the frame is always just clothing. */}
+        <div className="absolute start-2 bottom-2 flex flex-col items-start gap-1 sm:start-3 sm:bottom-3 sm:gap-2">
           {product.isNew && (
             <span className={`text-eyebrow px-1.5 py-1 text-[9px] sm:px-2.5 sm:py-1.5 sm:text-[11px] ${BADGE_CLASSES.new}`}>
               {t("new")}
