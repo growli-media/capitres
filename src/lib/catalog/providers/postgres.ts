@@ -2,6 +2,7 @@ import "server-only";
 import { sql } from "@/lib/db/client";
 import { dbReadCategories } from "../categories";
 import { applyFilter, applySort } from "../filter-sort";
+import { compareSizes } from "@/lib/commerce/filters";
 import type {
   Collection,
   Currency,
@@ -198,7 +199,8 @@ function toProduct(
     colors: row.colors ?? [],
     variants: variants
       .filter((v) => v.product_id === row.id)
-      .map((v): ProductVariant => ({ id: v.id, size: v.size, stock: v.stock })),
+      .map((v): ProductVariant => ({ id: v.id, size: v.size, stock: v.stock }))
+      .sort((a, b) => compareSizes(a.size, b.size)),
     images: (row.images ?? []).map(toImage),
     sizeChart: row.size_chart ?? [],
     collectionSlugs: row.collection_slugs ?? [],

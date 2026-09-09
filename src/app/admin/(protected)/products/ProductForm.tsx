@@ -807,34 +807,58 @@ export default function ProductForm({
             Sizes &amp; stock
           </h2>
           <p className="mb-3 text-xs text-slate-400 dark:text-slate-500">
-            One row per size. Set the quantity to 0 to mark that size sold
-            out — it still shows to customers, just dimmed and unselectable.
+            Sizes run left to right, smallest to largest. Set a quantity to 0
+            to mark that size sold out — it still shows to customers, just
+            dimmed and unselectable, never hidden.
           </p>
           <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-200 text-start text-xs font-semibold uppercase tracking-wide text-slate-400 dark:border-slate-800 dark:text-slate-500">
-                  <th className="px-3 py-2 text-start">Size</th>
-                  <th className="px-3 py-2 text-start">In stock</th>
-                  <th className="px-3 py-2" />
-                </tr>
-              </thead>
+            <table className="text-sm">
               <tbody>
-                {sizeRows.map((row) => {
-                  const soldOut = Number(row.stock) <= 0;
-                  return (
-                    <tr key={row.id} className="border-b border-slate-100 last:border-0 dark:border-slate-800/60">
-                      <td className="px-3 py-2">
+                <tr className="border-b border-slate-200 dark:border-slate-800">
+                  <td className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                    Size
+                  </td>
+                  {sizeRows.map((row) => (
+                    <td key={row.id} className="px-2 py-2">
+                      <div className="flex items-center gap-1">
                         <input
                           type="text"
                           name="variantSize"
                           value={row.size}
                           onChange={(e) => updateSizeRow(row.id, { size: e.target.value })}
-                          placeholder="e.g. M"
-                          className={`h-9 w-24 px-2 ${glassInput}`}
+                          placeholder="M"
+                          className={`h-9 w-16 px-1 text-center font-semibold ${glassInput}`}
                         />
-                      </td>
-                      <td className="px-3 py-2">
+                        <button
+                          type="button"
+                          onClick={() => removeSizeRow(row.id)}
+                          aria-label={`Remove size ${row.size || ""}`.trim()}
+                          className="flex h-9 w-6 shrink-0 cursor-pointer items-center justify-center rounded-lg text-slate-300 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-slate-600 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+                        >
+                          <Trash size={13} />
+                        </button>
+                      </div>
+                    </td>
+                  ))}
+                  <td className="px-2 py-2">
+                    <button
+                      type="button"
+                      onClick={addSizeRow}
+                      aria-label="Add a size"
+                      className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-dashed border-slate-300 text-slate-500 transition-colors hover:border-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
+                    >
+                      <Plus size={14} />
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                    In stock
+                  </td>
+                  {sizeRows.map((row) => {
+                    const soldOut = Number(row.stock) <= 0;
+                    return (
+                      <td key={row.id} className="px-2 py-2">
                         <input
                           type="number"
                           name="variantStock"
@@ -842,38 +866,16 @@ export default function ProductForm({
                           step={1}
                           value={row.stock}
                           onChange={(e) => updateSizeRow(row.id, { stock: e.target.value })}
-                          className={`h-9 w-24 px-2 ${glassInput} ${soldOut ? "opacity-50" : ""}`}
+                          className={`h-9 w-16 px-1 text-center ${glassInput} ${soldOut ? "opacity-50" : ""}`}
                         />
-                        {soldOut && (
-                          <span className="ms-2 text-xs font-medium text-slate-400 dark:text-slate-500">
-                            Sold out
-                          </span>
-                        )}
                       </td>
-                      <td className="px-3 py-2">
-                        <button
-                          type="button"
-                          onClick={() => removeSizeRow(row.id)}
-                          aria-label="Remove size"
-                          className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-slate-500 dark:hover:bg-red-950/40 dark:hover:text-red-400"
-                        >
-                          <Trash size={15} />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
+                    );
+                  })}
+                  <td />
+                </tr>
               </tbody>
             </table>
           </div>
-          <button
-            type="button"
-            onClick={addSizeRow}
-            className="mt-3 flex h-10 cursor-pointer items-center gap-1.5 rounded-lg border border-dashed border-slate-300 px-3.5 text-sm font-medium text-slate-600 transition-colors hover:border-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
-          >
-            <Plus size={14} aria-hidden="true" />
-            Add a size
-          </button>
         </section>
       )}
 

@@ -1,6 +1,7 @@
 import "server-only";
 import { sql, jsonb } from "@/lib/db/client";
 import type { Category, Gender, SizeChartRow } from "@/lib/catalog/types";
+import { compareSizes } from "@/lib/commerce/filters";
 
 /** Flat, admin-facing view of a product row — no locale picking, no
  * variant/review joins beyond what the list/edit screens need. */
@@ -162,6 +163,9 @@ export async function getAdminProduct(
   ]);
   const row = rows[0];
   if (!row) return undefined;
+  // SQL's `order by size` is plain alphabetical ("2XL" before "L") — resort
+  // by the real S…2XL progression for the sizes/stock table.
+  variants.sort((a, b) => compareSizes(a.size, b.size));
   return {
     product: {
       id: row.id,
