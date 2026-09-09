@@ -3,6 +3,7 @@ import { DEFAULT_TIME_RANGE } from "@/lib/admin/time-range";
 import { getDashboardForRangeAction } from "./dashboard-actions";
 import { getOnboardingSteps } from "@/lib/admin/onboarding";
 import { getOpenOrdersCount } from "@/lib/admin/queries";
+import { getVisitsTodayCount } from "@/lib/admin/analytics";
 import NightSkyBanner from "./components/NightSkyBanner";
 import OnboardingChecklist from "./components/OnboardingChecklist";
 import DashboardView from "./DashboardView";
@@ -10,10 +11,11 @@ import DashboardView from "./DashboardView";
 export const metadata: Metadata = { title: "Dashboard" };
 
 export default async function AdminDashboardPage() {
-  const [initial, onboardingSteps, openOrdersCount] = await Promise.all([
+  const [initial, onboardingSteps, openOrdersCount, visitsToday] = await Promise.all([
     getDashboardForRangeAction({ mode: "preset", key: DEFAULT_TIME_RANGE }),
     getOnboardingSteps(),
     getOpenOrdersCount(),
+    getVisitsTodayCount(),
   ]);
 
   return (
@@ -30,7 +32,7 @@ export default async function AdminDashboardPage() {
       </div>
 
       <div className="mt-6">
-        <DashboardView initial={initial} openOrdersCount={openOrdersCount} />
+        <DashboardView initial={initial} openOrdersCount={openOrdersCount} visitsToday={visitsToday} />
       </div>
     </div>
   );

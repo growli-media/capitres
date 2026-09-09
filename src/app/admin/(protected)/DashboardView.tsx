@@ -11,6 +11,7 @@ import {
   CaretRight,
   TrendUp,
   TrendDown,
+  GlobeHemisphereWest,
 } from "@phosphor-icons/react";
 import TimeRangeSlider from "./components/TimeRangeSlider";
 import { getDashboardForRangeAction, type DashboardRangeResult } from "./dashboard-actions";
@@ -109,12 +110,17 @@ function formatDate(iso: string): string {
 export default function DashboardView({
   initial,
   openOrdersCount,
+  visitsToday,
 }: {
   initial: DashboardRangeResult;
   /** Cash on Delivery orders still awaiting the "Mark as delivered"
    * action — a live to-do count, not scoped to the time-range slider
    * below (an old undelivered order is just as "still to do" today). */
   openOrdersCount: number;
+  /** Always "today," regardless of the range slider — same reasoning as
+   * openOrdersCount above (a glance number, not a report). The
+   * Analytics page itself has its own slider for any other window. */
+  visitsToday: number;
 }) {
   const [range, setRange] = useState<TimeRangeValue>(DEFAULT_TIME_RANGE_VALUE);
   const [data, setData] = useState<DashboardRangeResult>(initial);
@@ -133,13 +139,19 @@ export default function DashboardView({
     <div>
       <TimeRangeSlider value={range} onChange={handleChange} pending={isPending} />
 
-      <div className={`mt-6 grid grid-cols-2 gap-4 transition-opacity lg:grid-cols-5 ${isPending ? "opacity-60" : ""}`}>
+      <div className={`mt-6 grid grid-cols-2 gap-4 transition-opacity lg:grid-cols-6 ${isPending ? "opacity-60" : ""}`}>
         <KpiCard
           icon={Truck}
           label="Open orders"
           value={String(openOrdersCount)}
           href="/admin/orders?status=open"
           tone={openOrdersCount > 0 ? "alert" : undefined}
+        />
+        <KpiCard
+          icon={GlobeHemisphereWest}
+          label="Visits today"
+          value={String(visitsToday)}
+          href="/admin/analytics"
         />
         <KpiCard
           icon={CurrencyCircleDollar}

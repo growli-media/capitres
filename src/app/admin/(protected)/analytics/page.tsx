@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { getRecentVisits, getVisitAggregates } from "@/lib/admin/analytics";
 import { requirePermission } from "@/lib/admin/permissions";
+import { DEFAULT_TIME_RANGE } from "@/lib/admin/time-range";
+import { getAnalyticsForRangeAction } from "./actions";
 import AnalyticsView from "./AnalyticsView";
 
 export const metadata: Metadata = { title: "Analytics" };
@@ -8,7 +9,7 @@ export const metadata: Metadata = { title: "Analytics" };
 export default async function AnalyticsPage() {
   await requirePermission("analytics");
 
-  const [visits, aggregates] = await Promise.all([getRecentVisits(50), getVisitAggregates()]);
+  const initial = await getAnalyticsForRangeAction({ mode: "preset", key: DEFAULT_TIME_RANGE });
 
   return (
     <div>
@@ -18,7 +19,7 @@ export default async function AnalyticsPage() {
       </p>
 
       <div className="mt-6">
-        <AnalyticsView initialVisits={visits} aggregates={aggregates} />
+        <AnalyticsView initial={initial} />
       </div>
     </div>
   );

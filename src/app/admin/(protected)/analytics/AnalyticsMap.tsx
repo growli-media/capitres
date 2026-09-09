@@ -1,18 +1,18 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { geoCentroid, geoContains, geoMercator } from "d3-geo";
+import { geoCentroid, geoContains, geoMercator, geoPath } from "d3-geo";
 import { feature as topoFeature } from "topojson-client";
 import type { GeoJsonObject } from "geojson";
-import { CaretLeft } from "@phosphor-icons/react";
-import { ComposableMap, Geographies, Geography, Marker } from "react-simple-maps";
+import { CaretLeft, MagnifyingGlassMinus, MagnifyingGlassPlus } from "@phosphor-icons/react";
+import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from "react-simple-maps";
 import worldAtlas from "world-atlas/countries-50m.json";
 import type { GeoAggregate, VisitSummary } from "@/lib/admin/analytics";
 import { matchCountryName } from "@/lib/analytics/country-match";
 import { matchGeoBoundaryShape } from "@/lib/analytics/geo-match";
 import { COUNTRY_ISO3 } from "@/lib/analytics/country-iso3";
 import { getGeoBoundariesAction, type GeoBoundaryFeature } from "./actions";
-import { glassCard } from "../../glass";
+import { glassCard, glassIconButton } from "../../glass";
 
 /** react-simple-maps' <Geographies geography> accepts a raw TopoJSON
  * Topology directly (it runs topojson-client internally) — this cast is
@@ -42,10 +42,9 @@ const NAME_TO_ALPHA2 = new Map<string, string>(
 /** world-atlas ships correctly-wound geometry already (verified: Iraq's
  * geoArea comes back as a small, sane number, not 4π — unlike
  * geoBoundaries' raw data, see rewind-geometry.ts) — no rewind needed
- * here, only real-GeoJSON conversion so geoCentroid() has something to
- * work with (react-simple-maps does this same conversion internally for
- * rendering, but doesn't expose the result for reuse). Used only for
- * placing the selected-visit marker at the world level. */
+ * here, only real-GeoJSON conversion so geoCentroid()/geoPath() have
+ * something to work with (react-simple-maps does this same conversion
+ * internally for rendering, but doesn't expose the result for reuse). */
 const WORLD_COUNTRY_FEATURES = (
   topoFeature(
     worldAtlas as unknown as Parameters<typeof topoFeature>[0],
@@ -64,7 +63,48 @@ type Drill =
       regionShapeName: string;
     };
 
-const MAP_HEIGHT = 420;
+const WORLD_WIDTH = 800;
+const WORLD_HEIGHT = 440;
+const FIT_PADDING = 24;
+/** Clamped so a handful of antimeridian-crossing countries (the US via
+ * the Aleutians, Russia, Fiji, New Zealand) don't report an enormous,
+ * mostly-empty bounding box and render as an unusably thin sliver —
+ * padding the shorter axis keeps real proportions for every normal
+ * country while keeping those few usable, not perfectly framed. A known,
+ * accepted limit, not a bug. */
+const MIN_ASPECT = 0.5;
+const MAX_ASPECT = 2.2;
+
+/** Computes a projection + matching viewBox width/height that frames a
+ * feature collection with minimal, even padding and (aspect-clamped)
+ * correct proportions — replaces a fixed viewBox that made e.g. the US
+ * (a wide, short shape) render tiny inside empty vertical space. Paired
+ * with CSS width:100%/height:auto below, this is also what makes the
+ * map genuinely responsive: the SVG's own aspect ratio now matches its
+ * content, so there's no letterboxing at any container width. */
+function fitProjectionToFeatures(features: { geometry: unknown }[]) {
+  const fc = { type: "FeatureCollection", features } as GeoJsonObject;
+  const probe = geoMercator().fitSize([1000, 1000], fc as never);
+  const path = geoPath(probe);
+  const [[x0, y0], [x1, y1]] = path.bounds(fc as never);
+  const rawWidth = Math.max(x1 - x0, 1);
+  const rawHeight = Math.max(y1 - y0, 1);
+  const rawAspect = rawWidth / rawHeight;
+
+  let extraX = 0;
+  let extraY = 0;
+  if (rawAspect > MAX_ASPECT) extraY = rawWidth / MAX_ASPECT - rawHeight;
+  else if (rawAspect < MIN_ASPECT) extraX = rawHeight * MIN_ASPECT - rawWidth;
+
+  const width = rawWidth + extraX + FIT_PADDING * 2;
+  const height = rawHeight + extraY + FIT_PADDING * 2;
+  const [tx, ty] = probe.translate();
+  const projection = geoMercator()
+    .scale(probe.scale())
+    .translate([tx - x0 + extraX / 2 + FIT_PADDING, ty - y0 + extraY / 2 + FIT_PADDING]);
+
+  return { projection, width, height };
+}
 
 function colorFor(count: number, max: number, hovered: boolean): string {
   if (count === 0) return hovered ? "#cbd5e1" : "#e2e8f0";
@@ -86,11 +126,10 @@ function districtsWithinRegion(districts: GeoBoundaryFeature[], region: GeoBound
   return districts.filter((d) => geoContains(region as never, geoCentroid(d as never)));
 }
 
-/** Fixed light canvas regardless of the admin's own light/dark toggle —
- * a choropleth's color-coded shapes need consistent contrast to read
- * correctly, and flipping the whole scale for dark mode is real added
- * complexity for a first version. Revisit if this reads badly in
- * practice. */
+const MIN_ZOOM = 1;
+const MAX_ZOOM = 8;
+const ZOOM_STEP = 1.6;
+
 export default function AnalyticsMap({
   aggregates,
   selectedVisit,
@@ -98,8 +137,8 @@ export default function AnalyticsMap({
   aggregates: GeoAggregate[];
   /** Highlights this visit's location on the map if it falls within
    * whatever's currently drawn — a visit selected in RecentVisits.tsx
-   * while viewing an unrelated country/region simply shows no marker,
-   * rather than forcing a jump the admin didn't ask for. */
+   * while viewing an unrelated country/region simply shows no
+   * highlight, rather than forcing a jump the admin didn't ask for. */
   selectedVisit: VisitSummary | null;
 }) {
   const [drill, setDrill] = useState<Drill>({ level: "world" });
@@ -109,6 +148,13 @@ export default function AnalyticsMap({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hoveredName, setHoveredName] = useState<string | null>(null);
+  // Reset directly inside the 4 transition functions below (backToWorld,
+  // drillIntoCountry, etc.) rather than an effect keyed on `drill` — an
+  // old zoom/pan from a different shape wouldn't mean anything on the
+  // new one, and there's no rendered map to have zoomed on yet the
+  // instant a drill transition starts, so resetting at that moment
+  // (not when the fetch it kicks off later resolves) is sufficient.
+  const [zoom, setZoom] = useState(1);
 
   const countsByCountryName = useMemo(() => {
     const totals = new Map<string, number>();
@@ -152,39 +198,31 @@ export default function AnalyticsMap({
 
   const activeFeatures =
     drill.level === "region" ? districtsInRegion : drill.level === "country" ? adm1Features : null;
+  const fitted = useMemo(() => (activeFeatures ? fitProjectionToFeatures(activeFeatures) : null), [activeFeatures]);
   const activeFeatureCollection = useMemo(
     () => (activeFeatures ? ({ type: "FeatureCollection", features: activeFeatures } as GeoJsonObject) : null),
     [activeFeatures],
   );
-  const activeProjection = useMemo(() => {
-    if (!activeFeatureCollection) return undefined;
-    return geoMercator().fitExtent(
-      [
-        [16, 16],
-        [784, MAP_HEIGHT - 16],
-      ],
-      // d3-geo's fitExtent accepts any GeoJSON geometry/feature/collection.
-      activeFeatureCollection as never,
-    );
-  }, [activeFeatureCollection]);
 
-  /** Where to drop the selected-visit marker, if it matches anything in
-   * the currently-drawn level — undefined means "don't show a marker,"
-   * not an error (see the prop's own comment above). */
-  const markerCoordinates = useMemo((): [number, number] | undefined => {
+  /** The shape (at whatever level is currently drawn) that contains the
+   * selected visit, plus its centroid for the marker — a single lookup
+   * so the shape can stay highlighted (not just a dot) at every drill
+   * level, the way a visitor's actual state/city should read as "this
+   * whole area," not one pixel. */
+  const highlighted = useMemo((): { name: string; coordinates: [number, number] } | undefined => {
     if (!selectedVisit) return undefined;
 
     if (drill.level === "world") {
       const countryName = matchCountryName(selectedVisit.country ?? "", WORLD_ATLAS_NAMES);
       const feature = WORLD_COUNTRY_FEATURES.find((f) => f.properties.name === countryName);
-      return feature ? geoCentroid(feature as never) : undefined;
+      return feature ? { name: countryName!, coordinates: geoCentroid(feature as never) } : undefined;
     }
 
     if (drill.level === "country" && adm1Features) {
       if (selectedVisit.country !== drill.alpha2 || !selectedVisit.region) return undefined;
       const shapeName = matchGeoBoundaryShape(selectedVisit.region, adm1Features);
       const feature = adm1Features.find((f) => f.properties.shapeName === shapeName);
-      return feature ? geoCentroid(feature as never) : undefined;
+      return feature ? { name: shapeName!, coordinates: geoCentroid(feature as never) } : undefined;
     }
 
     if (drill.level === "region" && districtsInRegion && adm1Features) {
@@ -192,7 +230,7 @@ export default function AnalyticsMap({
       if (matchGeoBoundaryShape(selectedVisit.region, adm1Features) !== drill.regionShapeName) return undefined;
       const shapeName = matchGeoBoundaryShape(selectedVisit.city, districtsInRegion);
       const feature = districtsInRegion.find((f) => f.properties.shapeName === shapeName);
-      return feature ? geoCentroid(feature as never) : undefined;
+      return feature ? { name: shapeName!, coordinates: geoCentroid(feature as never) } : undefined;
     }
 
     return undefined;
@@ -207,6 +245,7 @@ export default function AnalyticsMap({
     setDistrictsInRegion(null);
     setError(null);
     setHoveredName(null);
+    setZoom(1);
     setLoading(true);
     getGeoBoundariesAction(iso3, "ADM1").then((result) => {
       setLoading(false);
@@ -223,6 +262,7 @@ export default function AnalyticsMap({
     setDistrictsInRegion(null);
     setError(null);
     setHoveredName(null);
+    setZoom(1);
     setLoading(true);
 
     let districts = adm2Cache[iso3];
@@ -246,6 +286,7 @@ export default function AnalyticsMap({
     setDistrictsInRegion(null);
     setError(null);
     setHoveredName(null);
+    setZoom(1);
   }
 
   function backToCountry() {
@@ -254,13 +295,21 @@ export default function AnalyticsMap({
     setDistrictsInRegion(null);
     setError(null);
     setHoveredName(null);
+    setZoom(1);
   }
 
+  const zoomIn = () => setZoom((z) => Math.min(MAX_ZOOM, z * ZOOM_STEP));
+  const zoomOut = () => setZoom((z) => Math.max(MIN_ZOOM, z / ZOOM_STEP));
+
   return (
-    <div className={`overflow-hidden bg-slate-50 p-3 ${glassCard}`}>
+    <div className={`relative overflow-hidden bg-slate-50 p-3 ${glassCard}`}>
       {drill.level !== "world" && (
         <div className="mb-2 flex items-center gap-1 text-xs font-semibold text-slate-500">
-          <button type="button" onClick={backToWorld} className="flex cursor-pointer items-center gap-1 hover:text-slate-900">
+          <button
+            type="button"
+            onClick={backToWorld}
+            className="flex cursor-pointer items-center gap-1 hover:text-slate-900"
+          >
             <CaretLeft size={11} aria-hidden="true" />
             World
           </button>
@@ -279,122 +328,130 @@ export default function AnalyticsMap({
         </div>
       )}
 
+      <div className="absolute end-5 top-5 z-10 flex flex-col gap-1">
+        <button
+          type="button"
+          onClick={zoomIn}
+          disabled={zoom >= MAX_ZOOM}
+          aria-label="Zoom in"
+          className={`flex h-8 w-8 cursor-pointer items-center justify-center disabled:cursor-not-allowed disabled:opacity-40 ${glassIconButton}`}
+        >
+          <MagnifyingGlassPlus size={14} aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          onClick={zoomOut}
+          disabled={zoom <= MIN_ZOOM}
+          aria-label="Zoom out"
+          className={`flex h-8 w-8 cursor-pointer items-center justify-center disabled:cursor-not-allowed disabled:opacity-40 ${glassIconButton}`}
+        >
+          <MagnifyingGlassMinus size={14} aria-hidden="true" />
+        </button>
+      </div>
+
       {drill.level !== "world" && loading && (
-        <div className="flex items-center justify-center text-sm text-slate-400" style={{ height: MAP_HEIGHT }}>
+        <div className="flex items-center justify-center text-sm text-slate-400" style={{ height: WORLD_HEIGHT }}>
           Loading…
         </div>
       )}
       {drill.level !== "world" && error && (
         <div
           className="flex items-center justify-center px-8 text-center text-sm text-slate-400"
-          style={{ height: MAP_HEIGHT }}
+          style={{ height: WORLD_HEIGHT }}
         >
           {error}
         </div>
       )}
 
-      {drill.level === "country" && !loading && !error && activeFeatureCollection && activeProjection && (
-        <ComposableMap projection={activeProjection} className="w-full" style={{ maxHeight: MAP_HEIGHT }}>
-          <Geographies geography={activeFeatureCollection}>
-            {({ geographies }) =>
-              geographies.map((geo) => {
-                const feature = geo as unknown as GeoBoundaryFeature;
-                const name = feature.properties.shapeName;
-                const count = countsByRegion.get(name) ?? 0;
-                const hovered = hoveredName === name;
-                return (
-                  <Geography
-                    key={geo.rsmKey}
-                    geography={geo}
-                    fill={colorFor(count, maxRegionCount, hovered)}
-                    stroke="#94a3b8"
-                    strokeWidth={0.75}
-                    onMouseEnter={() => setHoveredName(name)}
-                    onMouseLeave={() => setHoveredName((prev) => (prev === name ? null : prev))}
-                    onClick={() => drillIntoRegion(feature)}
-                    style={{ outline: "none", cursor: "pointer" }}
-                  >
-                    <title>
-                      {name}
-                      {count > 0 ? `: ${count} visit${count === 1 ? "" : "s"}` : ""}
-                    </title>
-                  </Geography>
-                );
-              })
-            }
-          </Geographies>
-          {markerCoordinates && <VisitMarker coordinates={markerCoordinates} />}
-        </ComposableMap>
-      )}
-
-      {drill.level === "region" && !loading && !error && activeFeatureCollection && activeProjection && (
-        <ComposableMap projection={activeProjection} className="w-full" style={{ maxHeight: MAP_HEIGHT }}>
-          <Geographies geography={activeFeatureCollection}>
-            {({ geographies }) =>
-              geographies.map((geo) => {
-                const name = (geo.properties as { shapeName: string }).shapeName;
-                const count = countsByDistrict.get(name) ?? 0;
-                const hovered = hoveredName === name;
-                return (
-                  <Geography
-                    key={geo.rsmKey}
-                    geography={geo}
-                    fill={colorFor(count, maxDistrictCount, hovered)}
-                    stroke="#94a3b8"
-                    strokeWidth={0.75}
-                    onMouseEnter={() => setHoveredName(name)}
-                    onMouseLeave={() => setHoveredName((prev) => (prev === name ? null : prev))}
-                    style={{ outline: "none" }}
-                  >
-                    <title>
-                      {name}
-                      {count > 0 ? `: ${count} visit${count === 1 ? "" : "s"}` : ""}
-                    </title>
-                  </Geography>
-                );
-              })
-            }
-          </Geographies>
-          {markerCoordinates && <VisitMarker coordinates={markerCoordinates} />}
-        </ComposableMap>
-      )}
+      {(drill.level === "country" || drill.level === "region") &&
+        !loading &&
+        !error &&
+        activeFeatureCollection &&
+        fitted && (
+          <ComposableMap
+            width={fitted.width}
+            height={fitted.height}
+            projection={fitted.projection}
+            style={{ width: "100%", height: "auto", maxHeight: 480 }}
+          >
+            <ZoomableGroup zoom={zoom} minZoom={MIN_ZOOM} maxZoom={MAX_ZOOM} onMoveEnd={({ zoom: z }) => setZoom(z ?? 1)}>
+              <Geographies geography={activeFeatureCollection}>
+                {({ geographies }) =>
+                  geographies.map((geo) => {
+                    const name = (geo.properties as { shapeName: string }).shapeName;
+                    const count =
+                      drill.level === "country"
+                        ? (countsByRegion.get(name) ?? 0)
+                        : (countsByDistrict.get(name) ?? 0);
+                    const max = drill.level === "country" ? maxRegionCount : maxDistrictCount;
+                    const hovered = hoveredName === name;
+                    const isHighlighted = highlighted?.name === name;
+                    return (
+                      <Geography
+                        key={geo.rsmKey}
+                        geography={geo}
+                        fill={colorFor(count, max, hovered)}
+                        stroke={isHighlighted ? "#f59e0b" : "#94a3b8"}
+                        strokeWidth={isHighlighted ? 2.5 : 0.75}
+                        onMouseEnter={() => setHoveredName(name)}
+                        onMouseLeave={() => setHoveredName((prev) => (prev === name ? null : prev))}
+                        onClick={() => drill.level === "country" && drillIntoRegion(geo as unknown as GeoBoundaryFeature)}
+                        style={{ outline: "none", cursor: drill.level === "country" ? "pointer" : "default" }}
+                      >
+                        <title>
+                          {name}
+                          {count > 0 ? `: ${count} visit${count === 1 ? "" : "s"}` : ""}
+                        </title>
+                      </Geography>
+                    );
+                  })
+                }
+              </Geographies>
+              {highlighted && <VisitMarker coordinates={highlighted.coordinates} />}
+            </ZoomableGroup>
+          </ComposableMap>
+        )}
 
       {drill.level === "world" && (
         <ComposableMap
+          width={WORLD_WIDTH}
+          height={WORLD_HEIGHT}
           projection="geoNaturalEarth1"
           projectionConfig={{ scale: 148 }}
-          className="w-full"
-          style={{ maxHeight: MAP_HEIGHT }}
+          style={{ width: "100%", height: "auto", maxHeight: 480 }}
         >
-          <Geographies geography={WORLD_TOPOLOGY}>
-            {({ geographies }) =>
-              geographies.map((geo) => {
-                const name = (geo.properties as { name: string }).name;
-                const count = countsByCountryName.get(name) ?? 0;
-                const hovered = hoveredName === name;
-                const drillable = NAME_TO_ALPHA2.has(name);
-                return (
-                  <Geography
-                    key={geo.rsmKey}
-                    geography={geo}
-                    fill={colorFor(count, maxCountryCount, hovered)}
-                    stroke="#f8fafc"
-                    strokeWidth={0.4}
-                    onMouseEnter={() => setHoveredName(name)}
-                    onMouseLeave={() => setHoveredName((prev) => (prev === name ? null : prev))}
-                    onClick={() => drillIntoCountry(name)}
-                    style={{ outline: "none", cursor: drillable ? "pointer" : "default" }}
-                  >
-                    <title>
-                      {name}
-                      {count > 0 ? `: ${count} visit${count === 1 ? "" : "s"}` : ""}
-                    </title>
-                  </Geography>
-                );
-              })
-            }
-          </Geographies>
-          {markerCoordinates && <VisitMarker coordinates={markerCoordinates} />}
+          <ZoomableGroup zoom={zoom} minZoom={MIN_ZOOM} maxZoom={MAX_ZOOM} onMoveEnd={({ zoom: z }) => setZoom(z ?? 1)}>
+            <Geographies geography={WORLD_TOPOLOGY}>
+              {({ geographies }) =>
+                geographies.map((geo) => {
+                  const name = (geo.properties as { name: string }).name;
+                  const count = countsByCountryName.get(name) ?? 0;
+                  const hovered = hoveredName === name;
+                  const drillable = NAME_TO_ALPHA2.has(name);
+                  const isHighlighted = highlighted?.name === name;
+                  return (
+                    <Geography
+                      key={geo.rsmKey}
+                      geography={geo}
+                      fill={colorFor(count, maxCountryCount, hovered)}
+                      stroke={isHighlighted ? "#f59e0b" : "#f8fafc"}
+                      strokeWidth={isHighlighted ? 2 : 0.4}
+                      onMouseEnter={() => setHoveredName(name)}
+                      onMouseLeave={() => setHoveredName((prev) => (prev === name ? null : prev))}
+                      onClick={() => drillIntoCountry(name)}
+                      style={{ outline: "none", cursor: drillable ? "pointer" : "default" }}
+                    >
+                      <title>
+                        {name}
+                        {count > 0 ? `: ${count} visit${count === 1 ? "" : "s"}` : ""}
+                      </title>
+                    </Geography>
+                  );
+                })
+              }
+            </Geographies>
+            {highlighted && <VisitMarker coordinates={highlighted.coordinates} />}
+          </ZoomableGroup>
         </ComposableMap>
       )}
     </div>
@@ -402,8 +459,8 @@ export default function AnalyticsMap({
 }
 
 /** A single-visit highlight — a bright accent dot the choropleth blue
- * never uses, so it reads as "a specific point" rather than "another
- * shaded region." */
+ * never uses, so it reads as "a specific point" on top of the
+ * highlighted shape's own amber outline. */
 function VisitMarker({ coordinates }: { coordinates: [number, number] }) {
   return (
     <Marker coordinates={coordinates}>

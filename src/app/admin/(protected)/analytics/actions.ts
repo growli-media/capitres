@@ -1,13 +1,42 @@
 "use server";
 
-import { getVisitEvents, type VisitEvent } from "@/lib/admin/analytics";
+import {
+  getVisitEvents,
+  getRecentVisits,
+  getVisitAggregates,
+  getVisitCount,
+  type VisitEvent,
+  type VisitSummary,
+  type GeoAggregate,
+} from "@/lib/admin/analytics";
 import { requirePermission } from "@/lib/admin/permissions";
+import { resolveTimeRange, type TimeRangeValue } from "@/lib/admin/time-range";
 import type { GeoBoundaryProperties } from "@/lib/analytics/geo-match";
 import { rewindFeature } from "@/lib/analytics/rewind-geometry";
 
 export async function getVisitEventsAction(visitId: string): Promise<VisitEvent[]> {
   await requirePermission("analytics");
   return getVisitEvents(visitId);
+}
+
+export interface AnalyticsRangeResult {
+  visits: VisitSummary[];
+  aggregates: GeoAggregate[];
+  visitCount: number;
+}
+
+/** Same "pass a TimeRangeValue, get back scoped data" shape as Revenue's
+ * getRevenueForRangeAction — the Analytics page's slider calls this on
+ * every change. */
+export async function getAnalyticsForRangeAction(range: TimeRangeValue): Promise<AnalyticsRangeResult> {
+  await requirePermission("analytics");
+  const { start, end } = resolveTimeRange(range);
+  const [visits, aggregates, visitCount] = await Promise.all([
+    getRecentVisits(50, start, end),
+    getVisitAggregates(start, end),
+    getVisitCount(start, end),
+  ]);
+  return { visits, aggregates, visitCount };
 }
 
 export interface GeoBoundaryFeature {

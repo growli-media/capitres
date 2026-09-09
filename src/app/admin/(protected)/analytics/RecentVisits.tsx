@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { CaretDown, CaretUp, ShoppingCartSimple } from "@phosphor-icons/react";
+import { ArrowSquareOut, CaretDown, CaretUp, ShoppingCartSimple } from "@phosphor-icons/react";
 import type { VisitSummary, VisitEvent } from "@/lib/admin/analytics";
 import { getVisitEventsAction } from "./actions";
 import { glassCard, glassTone } from "../../glass";
@@ -130,6 +130,13 @@ export default function RecentVisits({
             </button>
             {expanded && (
               <div className="border-t border-slate-200/70 bg-slate-50/50 px-5 py-4 dark:border-slate-800/70 dark:bg-slate-900/30">
+                <Link
+                  href={`/admin/analytics/visits/${visit.id}`}
+                  className="mb-3 inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+                >
+                  View full detail
+                  <ArrowSquareOut size={12} aria-hidden="true" />
+                </Link>
                 {loadingId === visit.id ? (
                   <p className="text-sm text-slate-400 dark:text-slate-500">Loading…</p>
                 ) : !visitEvents || visitEvents.length === 0 ? (
