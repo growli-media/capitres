@@ -103,14 +103,29 @@ function fitProjectionToFeatures(features: { geometry: unknown }[]) {
     .scale(probe.scale())
     .translate([tx - x0 + extraX / 2 + FIT_PADDING, ty - y0 + extraY / 2 + FIT_PADDING]);
 
-  return { projection, width, height };
+  // ZoomableGroup re-centers on its own `center` prop (geographic
+  // [lon, lat], default [0, 0]) by translating so projection(center)
+  // lands at [width/2, height/2] — it has no idea this projection was
+  // already custom-fit to the shape. Left at the default, it re-centers
+  // on Null Island instead, which for a country-local Mercator fit can
+  // project thousands of pixels away and shove the whole map off-canvas
+  // (confirmed: Germany's ADM1 view was rendering ~1500px above the
+  // viewport). Handing it the geo point that our own fit already places
+  // at the box center makes its translate a no-op at zoom 1, so it only
+  // does what it's meant to: zoom in/out around that fixed point.
+  const center = projection.invert!([width / 2, height / 2]) as [number, number];
+
+  return { projection, width, height, center };
 }
 
+/** A one-hue sequential ramp (light -> dark Deep Navy, via alpha over the
+ * light card background) instead of the generic Tailwind blue this used
+ * to be — same alpha math, just built entirely from the one brand hex. */
 function colorFor(count: number, max: number, hovered: boolean): string {
-  if (count === 0) return hovered ? "#cbd5e1" : "#e2e8f0";
+  if (count === 0) return `rgba(${GROWLI_DEEP_NAVY_RGB}, ${hovered ? 0.12 : 0.06})`;
   const intensity = 0.2 + 0.7 * (count / max);
   const alpha = hovered ? Math.min(intensity + 0.25, 0.95) : intensity;
-  return `rgba(37, 99, 235, ${alpha})`;
+  return `rgba(${GROWLI_DEEP_NAVY_RGB}, ${alpha})`;
 }
 
 /** Districts (ADM2) belonging to one governorate/state (ADM1) — there's
@@ -130,12 +145,17 @@ const MIN_ZOOM = 1;
 const MAX_ZOOM = 8;
 const ZOOM_STEP = 1.6;
 
-/** Deep Navy — Growli's primary brand color (Growli-Brand-Guidelines.html)
- * — used for the selected-visit outline/marker instead of an arbitrary
- * accent color, so the highlight reads as on-brand rather than a generic
- * UI warning color. Dark enough to stay legible over both the light
- * unfilled shapes and the blue choropleth fill at any intensity. */
-const HIGHLIGHT_COLOR = "#1B3445";
+/** Growli's brand palette (Growli-Brand-Guidelines.html) — the whole map
+ * (choropleth ramp, borders, highlight, marker) is built from these
+ * instead of arbitrary Tailwind blue/amber/slate, so it reads as on-brand
+ * rather than generic UI colors. */
+const GROWLI_DEEP_NAVY_RGB = "27, 52, 69"; // Deep Navy · Primär — #1B3445
+const GROWLI_STEEL = "#5A7387"; // Steel · Akzent
+
+/** Deep Navy at full opacity — used for the selected-visit outline/marker,
+ * dark enough to stay legible over both the light unfilled shapes and the
+ * navy choropleth fill at any intensity. */
+const HIGHLIGHT_COLOR = `rgb(${GROWLI_DEEP_NAVY_RGB})`;
 
 export default function AnalyticsMap({
   aggregates,
@@ -398,7 +418,13 @@ export default function AnalyticsMap({
             projection={fitted.projection}
             style={{ width: "100%", height: "auto", maxHeight: 480 }}
           >
-            <ZoomableGroup zoom={zoom} minZoom={MIN_ZOOM} maxZoom={MAX_ZOOM} onMoveEnd={({ zoom: z }) => setZoom(z ?? 1)}>
+            <ZoomableGroup
+              center={fitted.center}
+              zoom={zoom}
+              minZoom={MIN_ZOOM}
+              maxZoom={MAX_ZOOM}
+              onMoveEnd={({ zoom: z }) => setZoom(z ?? 1)}
+            >
               <Geographies geography={activeFeatureCollection}>
                 {({ geographies }) =>
                   geographies.map((geo) => {
@@ -415,7 +441,7 @@ export default function AnalyticsMap({
                         key={geo.rsmKey}
                         geography={geo}
                         fill={colorFor(count, max, hovered)}
-                        stroke={isHighlighted ? HIGHLIGHT_COLOR : "#94a3b8"}
+                        stroke={isHighlighted ? HIGHLIGHT_COLOR : GROWLI_STEEL}
                         strokeWidth={isHighlighted ? 2.5 : 0.75}
                         onMouseEnter={() => setHoveredName(name)}
                         onMouseLeave={() => setHoveredName((prev) => (prev === name ? null : prev))}
@@ -458,7 +484,7 @@ export default function AnalyticsMap({
                       key={geo.rsmKey}
                       geography={geo}
                       fill={colorFor(count, maxCountryCount, hovered)}
-                      stroke={isHighlighted ? HIGHLIGHT_COLOR : "#f8fafc"}
+                      stroke={isHighlighted ? HIGHLIGHT_COLOR : "rgba(90, 115, 135, 0.35)"}
                       strokeWidth={isHighlighted ? 2 : 0.4}
                       onMouseEnter={() => setHoveredName(name)}
                       onMouseLeave={() => setHoveredName((prev) => (prev === name ? null : prev))}
