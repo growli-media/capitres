@@ -130,6 +130,13 @@ const MIN_ZOOM = 1;
 const MAX_ZOOM = 8;
 const ZOOM_STEP = 1.6;
 
+/** Deep Navy — Growli's primary brand color (Growli-Brand-Guidelines.html)
+ * — used for the selected-visit outline/marker instead of an arbitrary
+ * accent color, so the highlight reads as on-brand rather than a generic
+ * UI warning color. Dark enough to stay legible over both the light
+ * unfilled shapes and the blue choropleth fill at any intensity. */
+const HIGHLIGHT_COLOR = "#1B3445";
+
 export default function AnalyticsMap({
   aggregates,
   selectedVisit,
@@ -238,7 +245,18 @@ export default function AnalyticsMap({
 
   function drillIntoCountry(name: string) {
     const alpha2 = NAME_TO_ALPHA2.get(name);
-    if (!alpha2) return; // not in COUNTRY_ISO3 yet — see that file's comment
+    if (!alpha2) {
+      // No ISO3 mapping (a handful of micro-territories) — show this
+      // instead of silently doing nothing, which used to look exactly
+      // like a stuck loading state.
+      setDrill({ level: "world" });
+      setAdm1Features(null);
+      setDistrictsInRegion(null);
+      setHoveredName(null);
+      setLoading(false);
+      setError(`No detailed map available for ${name} yet.`);
+      return;
+    }
     const iso3 = COUNTRY_ISO3[alpha2];
     setDrill({ level: "country", alpha2, iso3, name });
     setAdm1Features(null);
@@ -328,6 +346,12 @@ export default function AnalyticsMap({
         </div>
       )}
 
+      {drill.level === "world" && error && (
+        <div className="mb-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:bg-amber-950/40 dark:text-amber-400">
+          {error}
+        </div>
+      )}
+
       <div className="absolute end-5 top-5 z-10 flex flex-col gap-1">
         <button
           type="button"
@@ -391,7 +415,7 @@ export default function AnalyticsMap({
                         key={geo.rsmKey}
                         geography={geo}
                         fill={colorFor(count, max, hovered)}
-                        stroke={isHighlighted ? "#f59e0b" : "#94a3b8"}
+                        stroke={isHighlighted ? HIGHLIGHT_COLOR : "#94a3b8"}
                         strokeWidth={isHighlighted ? 2.5 : 0.75}
                         onMouseEnter={() => setHoveredName(name)}
                         onMouseLeave={() => setHoveredName((prev) => (prev === name ? null : prev))}
@@ -434,7 +458,7 @@ export default function AnalyticsMap({
                       key={geo.rsmKey}
                       geography={geo}
                       fill={colorFor(count, maxCountryCount, hovered)}
-                      stroke={isHighlighted ? "#f59e0b" : "#f8fafc"}
+                      stroke={isHighlighted ? HIGHLIGHT_COLOR : "#f8fafc"}
                       strokeWidth={isHighlighted ? 2 : 0.4}
                       onMouseEnter={() => setHoveredName(name)}
                       onMouseLeave={() => setHoveredName((prev) => (prev === name ? null : prev))}
@@ -458,13 +482,13 @@ export default function AnalyticsMap({
   );
 }
 
-/** A single-visit highlight — a bright accent dot the choropleth blue
- * never uses, so it reads as "a specific point" on top of the
- * highlighted shape's own amber outline. */
+/** A single-visit highlight — a dot in the same brand navy as the
+ * highlighted shape's own outline, distinct enough from the choropleth
+ * blue fill to read as "a specific point" on top of it. */
 function VisitMarker({ coordinates }: { coordinates: [number, number] }) {
   return (
     <Marker coordinates={coordinates}>
-      <circle r={5} fill="#f59e0b" stroke="#ffffff" strokeWidth={1.5} />
+      <circle r={5} fill={HIGHLIGHT_COLOR} stroke="#ffffff" strokeWidth={1.5} />
     </Marker>
   );
 }
