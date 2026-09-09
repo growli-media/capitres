@@ -53,15 +53,23 @@ export async function POST(request: NextRequest) {
         address: payload.customer.address,
       });
     }
+    const isPaid = (PAID_STATUSES as readonly string[]).includes(payload.paymentStatus);
     await orderStore.setStatus(
       payload.referenceId,
       payload.paymentStatus,
       payload.paymentMethod ?? undefined,
+      // Wayl's webhook body doesn't carry its own completedAt (unlike
+      // GET /links/{referenceId} — see getWaylPaymentStatus), so this is
+      // our own clock at the moment we found out, not Wayl's authoritative
+      // timestamp. setStatus only ever writes it once, so a later, more
+      // precise sync (the confirmation-page poll or admin's "Check Wayl")
+      // never overwrites it with a "more correct" value anyway.
+      isPaid ? new Date().toISOString() : undefined,
     );
     // TODO(production): on "Complete", trigger gift-card email delivery
     // and the order-confirmation email from here.
 
-    if ((PAID_STATUSES as readonly string[]).includes(payload.paymentStatus)) {
+    if (isPaid) {
       const claimed = await orderStore.claimForMetaCapi(payload.referenceId);
       if (claimed) await sendMetaPurchaseEvent(claimed);
     }

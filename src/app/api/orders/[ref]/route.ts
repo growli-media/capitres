@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { orderStore } from "@/lib/orders/store";
 import { getWaylPaymentStatus } from "@/lib/payments/wayl";
+import { applyWaylStatus } from "@/lib/payments/sync-order";
 
 /**
  * Public order-status endpoint used by the confirmation page.
@@ -13,18 +14,14 @@ export async function GET(
   { params }: { params: Promise<{ ref: string }> },
 ) {
   const { ref } = await params;
-  const order = await orderStore.get(ref);
+  let order = await orderStore.get(ref);
   if (!order) {
     return NextResponse.json({ error: "not-found" }, { status: 404 });
   }
 
   if (!order.mock && !["Complete", "Delivered"].includes(order.status)) {
     const remote = await getWaylPaymentStatus(ref);
-    if (remote && remote.status !== order.status) {
-      await orderStore.setStatus(ref, remote.status, remote.paymentMethod);
-      order.status = remote.status;
-      order.paymentMethod = remote.paymentMethod;
-    }
+    order = (await applyWaylStatus(order, remote)).order;
   }
 
   return NextResponse.json({

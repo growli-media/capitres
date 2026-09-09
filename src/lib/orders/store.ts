@@ -31,6 +31,11 @@ export interface OrderStore {
     ref: string,
     status: Order["status"],
     paymentMethod?: string | null,
+    /** Set once — a no-op if the order already has a paidAt (see
+     * schema.sql's comment on orders.paid_at). Omit/undefined leaves it
+     * untouched entirely (the common case: most status changes, like
+     * Delivered, aren't a payment event). */
+    paidAt?: string | null,
   ): Promise<Order | undefined>;
   /** Shallow-merges a patch into `customer` — used by the Wayl webhook to
    * backfill the name/phone/address the customer gave Wayl directly,
@@ -71,7 +76,20 @@ export interface OrderStore {
   /** Same count, for every code at once — the promo codes admin list, so
    * it doesn't run one query per row. */
   countsByPromoCode(): Promise<Record<string, number>>;
+  /** Real (non-mock) orders still in a non-terminal Wayl status (Created/
+   * Pending/Processing — i.e. not yet paid, and not already failed) since
+   * `since` — what the cron auto-sync re-checks against Wayl. Bounded by
+   * `since` so it never keeps re-polling links definitively expired on
+   * Wayl's side forever (max 30 days per Wayl's own linkExpiresIn cap). */
+  listStalePending(since: Date): Promise<Order[]>;
 }
+
+/** Non-terminal Wayl statuses — still waiting to resolve one way or the
+ * other. Used by fileOrderStore's listStalePending() below; kept in sync
+ * by hand with the literal list in postgresOrderStore's SQL version
+ * (`'Created', 'Pending', 'Processing'`) — small, stable set, unlikely to
+ * ever change since it's just "not in PAID_STATUSES or FAILED_STATUSES". */
+const STALE_PENDING_STATUSES: Order["status"][] = ["Created", "Pending", "Processing"];
 
 /* ------------------------------------------------------------------ */
 /* Postgres implementation (production)                                */
@@ -84,6 +102,7 @@ interface OrderRow {
   status: Order["status"];
   wayl_link_id: string | null;
   payment_method: string | null;
+  paid_at: string | null;
   mock: boolean;
   customer: Order["customer"];
   lines: OrderLine[];
@@ -103,6 +122,7 @@ function toOrder(row: OrderRow): Order {
     status: row.status,
     waylLinkId: row.wayl_link_id ?? undefined,
     paymentMethod: row.payment_method,
+    paidAt: row.paid_at ?? undefined,
     mock: row.mock,
     customer: row.customer,
     lines: row.lines,
@@ -133,22 +153,23 @@ const postgresOrderStore: OrderStore = {
   async get(ref) {
     const rows = await sql<OrderRow[]>`
       select ref, created_at::text as created_at, locale, status,
-             wayl_link_id, payment_method, mock, customer, lines, totals,
+             wayl_link_id, payment_method, paid_at::text as paid_at, mock, customer, lines, totals,
              promo_code, ad_tracking, meta_capi_sent, admin_note,
              deleted_at::text as deleted_at
       from orders where ref = ${ref} limit 1
     `;
     return rows[0] ? toOrder(rows[0]) : undefined;
   },
-  async setStatus(ref, status, paymentMethod) {
+  async setStatus(ref, status, paymentMethod, paidAt) {
     const rows = await sql<OrderRow[]>`
       update orders
       set status = ${status},
           payment_method = coalesce(${paymentMethod ?? null}, payment_method),
+          paid_at = coalesce(paid_at, ${paidAt ?? null}),
           updated_at = now()
       where ref = ${ref}
       returning ref, created_at::text as created_at, locale, status,
-                wayl_link_id, payment_method, mock, customer, lines, totals,
+                wayl_link_id, payment_method, paid_at::text as paid_at, mock, customer, lines, totals,
                 promo_code, ad_tracking, meta_capi_sent, admin_note,
                 deleted_at::text as deleted_at
     `;
@@ -164,7 +185,7 @@ const postgresOrderStore: OrderStore = {
   async list() {
     const rows = await sql<OrderRow[]>`
       select ref, created_at::text as created_at, locale, status,
-             wayl_link_id, payment_method, mock, customer, lines, totals,
+             wayl_link_id, payment_method, paid_at::text as paid_at, mock, customer, lines, totals,
              promo_code, ad_tracking, meta_capi_sent, admin_note,
              deleted_at::text as deleted_at
       from orders where deleted_at is null order by created_at desc limit 500
@@ -177,7 +198,7 @@ const postgresOrderStore: OrderStore = {
       set meta_capi_sent = true
       where ref = ${ref} and meta_capi_sent = false
       returning ref, created_at::text as created_at, locale, status,
-                wayl_link_id, payment_method, mock, customer, lines, totals,
+                wayl_link_id, payment_method, paid_at::text as paid_at, mock, customer, lines, totals,
                 promo_code, ad_tracking, meta_capi_sent, admin_note,
                 deleted_at::text as deleted_at
     `;
@@ -192,7 +213,7 @@ const postgresOrderStore: OrderStore = {
     const rows = start
       ? await sql<OrderRow[]>`
           select ref, created_at::text as created_at, locale, status,
-                 wayl_link_id, payment_method, mock, customer, lines, totals,
+                 wayl_link_id, payment_method, paid_at::text as paid_at, mock, customer, lines, totals,
                  promo_code, ad_tracking, meta_capi_sent, admin_note,
                  deleted_at::text as deleted_at
           from orders
@@ -201,7 +222,7 @@ const postgresOrderStore: OrderStore = {
         `
       : await sql<OrderRow[]>`
           select ref, created_at::text as created_at, locale, status,
-                 wayl_link_id, payment_method, mock, customer, lines, totals,
+                 wayl_link_id, payment_method, paid_at::text as paid_at, mock, customer, lines, totals,
                  promo_code, ad_tracking, meta_capi_sent, admin_note,
                  deleted_at::text as deleted_at
           from orders
@@ -222,7 +243,7 @@ const postgresOrderStore: OrderStore = {
   async listDeleted(since) {
     const rows = await sql<OrderRow[]>`
       select ref, created_at::text as created_at, locale, status,
-             wayl_link_id, payment_method, mock, customer, lines, totals,
+             wayl_link_id, payment_method, paid_at::text as paid_at, mock, customer, lines, totals,
              promo_code, ad_tracking, meta_capi_sent, admin_note,
              deleted_at::text as deleted_at
       from orders
@@ -245,6 +266,20 @@ const postgresOrderStore: OrderStore = {
       group by promo_code
     `;
     return Object.fromEntries(rows.map((r) => [r.promo_code, Number(r.count)]));
+  },
+  async listStalePending(since) {
+    const rows = await sql<OrderRow[]>`
+      select ref, created_at::text as created_at, locale, status,
+             wayl_link_id, payment_method, paid_at::text as paid_at, mock, customer, lines, totals,
+             promo_code, ad_tracking, meta_capi_sent, admin_note,
+             deleted_at::text as deleted_at
+      from orders
+      where deleted_at is null and mock = false
+        and status in ('Created', 'Pending', 'Processing')
+        and created_at >= ${since}
+      order by created_at asc
+    `;
+    return rows.map(toOrder);
   },
 };
 
@@ -279,12 +314,13 @@ const fileOrderStore: OrderStore = {
     const all = await readAll();
     return all[ref];
   },
-  async setStatus(ref, status, paymentMethod) {
+  async setStatus(ref, status, paymentMethod, paidAt) {
     const all = await readAll();
     const order = all[ref];
     if (!order) return undefined;
     order.status = status;
     if (paymentMethod !== undefined) order.paymentMethod = paymentMethod;
+    if (paidAt && !order.paidAt) order.paidAt = paidAt;
     await writeAll(all);
     return order;
   },
@@ -366,6 +402,19 @@ const fileOrderStore: OrderStore = {
       counts[o.promoCode] = (counts[o.promoCode] ?? 0) + 1;
     }
     return counts;
+  },
+  async listStalePending(since) {
+    const all = await readAll();
+    const sinceMs = since.getTime();
+    return Object.values(all)
+      .filter(
+        (o) =>
+          !o.deletedAt &&
+          !o.mock &&
+          (STALE_PENDING_STATUSES as string[]).includes(o.status) &&
+          new Date(o.createdAt).getTime() >= sinceMs,
+      )
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   },
 };
 

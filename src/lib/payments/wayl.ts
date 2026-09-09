@@ -121,9 +121,10 @@ export async function createWaylPaymentLink(
   return { ...json.data, mock: false };
 }
 
-export async function getWaylPaymentStatus(
-  referenceId: string,
-): Promise<{ status: WaylStatus; paymentMethod: string | null } | undefined> {
+export async function getWaylPaymentStatus(referenceId: string): Promise<
+  | { status: WaylStatus; paymentMethod: string | null; completedAt: string | null }
+  | undefined
+> {
   if (isWaylMockMode()) return undefined;
 
   const res = await fetch(
@@ -135,9 +136,52 @@ export async function getWaylPaymentStatus(
   );
   if (!res.ok) return undefined;
   const json = (await res.json()) as {
-    data: { status: WaylStatus; paymentMethod: string | null };
+    data: { status: WaylStatus; paymentMethod: string | null; completedAt: string | null };
   };
   return json.data;
+}
+
+/** Bulk status check — powers the cron auto-sync (src/app/api/cron/
+ * sync-wayl-orders/route.ts), which would otherwise need one request per
+ * stuck order. Per Wayl's docs, `referenceIds` is capped at 100 per call;
+ * chunking is the caller's job. Silently returns an empty map on any
+ * transport/HTTP error — the cron just tries again next run. */
+export async function getWaylBatchStatus(
+  referenceIds: string[],
+): Promise<Map<string, { status: WaylStatus; paymentMethod: string | null; completedAt: string | null }>> {
+  const result = new Map<
+    string,
+    { status: WaylStatus; paymentMethod: string | null; completedAt: string | null }
+  >();
+  if (isWaylMockMode() || referenceIds.length === 0) return result;
+
+  const res = await fetch(`${WAYL_BASE_URL}/api/v1/links/batch`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-WAYL-AUTHENTICATION": process.env.WAYL_API_TOKEN!,
+    },
+    body: JSON.stringify({ referenceIds }),
+    cache: "no-store",
+  });
+  if (!res.ok) return result;
+
+  const json = (await res.json()) as {
+    data: {
+      referenceId: string;
+      status: WaylStatus;
+      paymentMethod: string | null;
+      completedAt: string | null;
+    }[];
+  };
+  for (const link of json.data) {
+    result.set(link.referenceId, {
+      status: link.status,
+      paymentMethod: link.paymentMethod,
+      completedAt: link.completedAt,
+    });
+  }
+  return result;
 }
 
 /** Constant-time HMAC-SHA256 verification of `x-wayl-signature-256`. */

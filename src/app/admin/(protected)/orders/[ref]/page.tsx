@@ -63,6 +63,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ re
           </h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Placed {formatDateTime(order.createdAt)}
+            {order.paidAt && ` · Paid ${formatDateTime(order.paidAt)}`}
           </p>
           {order.waylLinkId && !order.mock && (
             <p className="mt-0.5 font-mono text-xs text-slate-400 dark:text-slate-500">

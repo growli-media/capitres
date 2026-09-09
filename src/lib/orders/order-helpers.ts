@@ -45,6 +45,11 @@ export interface Order {
   status: WaylStatus | "MockPaid" | "CashOnDelivery";
   waylLinkId?: string;
   paymentMethod?: string | null;
+  /** When the order actually got paid — set once, never overwritten
+   * (see orderStore.setStatus). Wayl's own `completedAt` when we learned
+   * the status by asking Wayl directly; otherwise our own clock at the
+   * moment the webhook reported a paid status. */
+  paidAt?: string;
   mock: boolean;
   customer: {
     /** Absent for orders placed via the Wayl (card) path — we no longer

@@ -7,6 +7,7 @@ import { can, requirePermission } from "@/lib/admin/permissions";
 import { resolveTimeRange, type TimeRangeValue } from "@/lib/admin/time-range";
 import { logAdminActivity } from "@/lib/admin/activity";
 import { getWaylPaymentStatus } from "@/lib/payments/wayl";
+import { applyWaylStatus } from "@/lib/payments/sync-order";
 
 export async function getOrdersForRangeAction(range: TimeRangeValue): Promise<Order[]> {
   await requirePermission("orders");
@@ -85,12 +86,10 @@ export async function cancelOrderAction(ref: string): Promise<void> {
  * Manual "check Wayl now" — for an order stuck on "Created"/"Pending"
  * because the webhook never arrived (or the customer closed the tab
  * before the confirmation page's own short-lived poll — see
- * src/app/api/orders/[ref]/route.ts — caught up). Deliberately mirrors
- * that same route's sync logic exactly (ask Wayl for the live status,
- * write it if different) rather than firing the Meta CAPI purchase event
- * the webhook does — that event only ever fires from the webhook in this
- * codebase, and duplicating it here risks double-counting a conversion
- * if the webhook later arrives too.
+ * src/app/api/orders/[ref]/route.ts — caught up). Shares its actual
+ * sync-and-apply logic (including the Meta CAPI claim) with that route
+ * and the cron auto-sync via applyWaylStatus() — see that function's own
+ * comment for why calling it from more than one place is safe.
  */
 export async function checkWaylStatusAction(
   ref: string,
@@ -105,9 +104,8 @@ export async function checkWaylStatusAction(
   }
   const remote = await getWaylPaymentStatus(ref);
   if (!remote) return { error: "Couldn't reach Wayl just now — try again in a moment." };
-  const changed = remote.status !== order.status;
+  const { changed } = await applyWaylStatus(order, remote);
   if (changed) {
-    await orderStore.setStatus(ref, remote.status, remote.paymentMethod);
     await logAdminActivity(`Synced order ${ref} from Wayl: ${order.status} → ${remote.status}`);
     revalidatePath("/admin/orders");
     revalidatePath(`/admin/orders/${ref}`);

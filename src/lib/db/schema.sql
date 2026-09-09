@@ -395,3 +395,13 @@ CREATE TABLE IF NOT EXISTS admin_note_checks (
   checked_at  timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY (note_id, user_id)
 );
+
+-- When an order actually got paid — previously never recorded anywhere.
+-- Set once and never overwritten after (see orderStore.setStatus): the
+-- real value straight from Wayl's `completedAt` when available (the
+-- confirmation-page poll and the admin "Check Wayl" button both call
+-- GET /api/v1/links/{referenceId}, which returns it per Wayl's own
+-- OpenAPI spec), otherwise our own clock at the moment the webhook told
+-- us the order was paid — a close approximation, not Wayl's authoritative
+-- timestamp, for the common case where nothing ever needed to poll.
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS paid_at timestamptz;
