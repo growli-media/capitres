@@ -85,6 +85,20 @@ function sizeChartOf(formData: FormData): SizeChartRow[] {
   }));
 }
 
+/** Sizes & stock table (ProductForm.tsx) — one "variantSize"/"variantStock"
+ * pair of inputs per row, zipped by index like every other repeated-row
+ * field in this form. */
+function variantsOf(formData: FormData): { size: string; stock: number }[] {
+  const sizes = allOf(formData, "variantSize");
+  const stocks = allOf(formData, "variantStock");
+  return sizes
+    .map((size, i) => ({
+      size: size.trim(),
+      stock: Math.max(0, Number(stocks[i] ?? 0) || 0),
+    }))
+    .filter((v) => v.size);
+}
+
 function colorsOf(formData: FormData): ColorInput[] {
   const hex = allOf(formData, "colorHex");
   const nameEn = allOf(formData, "colorNameEn");
@@ -202,16 +216,7 @@ function parseInput(
     return { error: "Add at least one product photo (upload or paste a URL)." };
   }
 
-  const sizesRaw = String(formData.get("sizes") ?? "").trim();
-  const variants = sizesRaw
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => {
-      const [size, stockStr] = line.split(",").map((s) => s.trim());
-      return { size, stock: Math.max(0, Number(stockStr ?? 0) || 0) };
-    })
-    .filter((v) => v.size);
+  const variants = variantsOf(formData);
 
   const isGiftCard = category === "gift-cards";
   let giftcardDenominations: number[] | null = null;
@@ -225,7 +230,7 @@ function parseInput(
     }
   }
   if (!isGiftCard && variants.length === 0) {
-    return { error: "Add at least one size (e.g. \"M, 10\" — one per line)." };
+    return { error: "Add at least one size in the Sizes & stock table." };
   }
 
   return {

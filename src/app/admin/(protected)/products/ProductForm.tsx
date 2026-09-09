@@ -55,15 +55,16 @@ const SIZE_CHART_LABELS: Record<SizeChartField, string> = {
 type SizeChartRowValues = Record<SizeChartField, string>;
 const EMPTY_SIZE_CHART_ROW: SizeChartRowValues = { chest: "", length: "", sleeve: "", waist: "", shoulder: "" };
 
-/** Size labels come from the "Sizes & stock" textarea, parsed the same
- * way the server does (src/app/admin/(protected)/products/actions.ts) —
- * everything before the first comma, one per line. */
-function parseSizeLabels(text: string): string[] {
-  return text
-    .split("\n")
-    .map((line) => line.split(",")[0]?.trim() ?? "")
-    .filter(Boolean);
+interface SizeRow {
+  id: number;
+  size: string;
+  stock: string;
 }
+
+/** New products start with the shop's standard run (src/lib/commerce/
+ * filters.ts's FILTER_SIZES) at zero stock — admin fills in quantities
+ * and can add/remove rows for anything nonstandard (e.g. XS, One Size). */
+const DEFAULT_SIZES = ["S", "M", "L", "XL", "2XL"];
 
 /** Reparses whatever's currently typed and reformats it — used both to
  * convert a field's displayed value when the unit toggle flips, and to
@@ -159,15 +160,27 @@ export default function ProductForm({
   const fileInputRefs = useRef<Map<number, HTMLInputElement>>(new Map());
 
   const isGiftCard = category === "gift-cards";
-  const sizesDefault = (variants ?? [])
-    .filter((v) => v.size !== "DIGITAL")
-    .map((v) => `${v.size}, ${v.stock}`)
-    .join("\n");
+  const [sizeRows, setSizeRows] = useState<SizeRow[]>(() => {
+    const existing = (variants ?? []).filter((v) => v.size !== "DIGITAL");
+    if (existing.length > 0) {
+      return existing.map((v) => ({ id: nextRowId(), size: v.size, stock: String(v.stock) }));
+    }
+    return mode === "create"
+      ? DEFAULT_SIZES.map((size) => ({ id: nextRowId(), size, stock: "0" }))
+      : [];
+  });
+  // Drives the size chart below, live, as sizes are added/renamed/removed.
+  const sizeLabels = sizeRows.map((r) => r.size.trim()).filter(Boolean);
 
-  // Controlled (not just defaultValue) so the size chart below can derive
-  // its rows from whatever's currently typed here, live.
-  const [sizesText, setSizesText] = useState(sizesDefault);
-  const sizeLabels = parseSizeLabels(sizesText);
+  function updateSizeRow(id: number, patch: Partial<SizeRow>) {
+    setSizeRows((rows) => rows.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+  }
+  function addSizeRow() {
+    setSizeRows((rows) => [...rows, { id: nextRowId(), size: "", stock: "0" }]);
+  }
+  function removeSizeRow(id: number) {
+    setSizeRows((rows) => rows.filter((r) => r.id !== id));
+  }
 
   const [chartUnit, setChartUnit] = useState<"cm" | "in">("cm");
   const [chartValues, setChartValues] = useState<Record<string, SizeChartRowValues>>(() => {
@@ -794,17 +807,73 @@ export default function ProductForm({
             Sizes &amp; stock
           </h2>
           <p className="mb-3 text-xs text-slate-400 dark:text-slate-500">
-            One size per line, as &ldquo;size, quantity&rdquo; — e.g. &ldquo;M, 10&rdquo;. Set a
-            quantity to 0 to mark that size sold out.
+            One row per size. Set the quantity to 0 to mark that size sold
+            out — it still shows to customers, just dimmed and unselectable.
           </p>
-          <textarea
-            name="sizes"
-            rows={5}
-            value={sizesText}
-            onChange={(e) => setSizesText(e.target.value)}
-            placeholder={"S, 5\nM, 10\nL, 8"}
-            className={`${textareaClass} font-mono`}
-          />
+          <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 text-start text-xs font-semibold uppercase tracking-wide text-slate-400 dark:border-slate-800 dark:text-slate-500">
+                  <th className="px-3 py-2 text-start">Size</th>
+                  <th className="px-3 py-2 text-start">In stock</th>
+                  <th className="px-3 py-2" />
+                </tr>
+              </thead>
+              <tbody>
+                {sizeRows.map((row) => {
+                  const soldOut = Number(row.stock) <= 0;
+                  return (
+                    <tr key={row.id} className="border-b border-slate-100 last:border-0 dark:border-slate-800/60">
+                      <td className="px-3 py-2">
+                        <input
+                          type="text"
+                          name="variantSize"
+                          value={row.size}
+                          onChange={(e) => updateSizeRow(row.id, { size: e.target.value })}
+                          placeholder="e.g. M"
+                          className={`h-9 w-24 px-2 ${glassInput}`}
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <input
+                          type="number"
+                          name="variantStock"
+                          min={0}
+                          step={1}
+                          value={row.stock}
+                          onChange={(e) => updateSizeRow(row.id, { stock: e.target.value })}
+                          className={`h-9 w-24 px-2 ${glassInput} ${soldOut ? "opacity-50" : ""}`}
+                        />
+                        {soldOut && (
+                          <span className="ms-2 text-xs font-medium text-slate-400 dark:text-slate-500">
+                            Sold out
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-3 py-2">
+                        <button
+                          type="button"
+                          onClick={() => removeSizeRow(row.id)}
+                          aria-label="Remove size"
+                          className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-slate-500 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+                        >
+                          <Trash size={15} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <button
+            type="button"
+            onClick={addSizeRow}
+            className="mt-3 flex h-10 cursor-pointer items-center gap-1.5 rounded-lg border border-dashed border-slate-300 px-3.5 text-sm font-medium text-slate-600 transition-colors hover:border-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
+          >
+            <Plus size={14} aria-hidden="true" />
+            Add a size
+          </button>
         </section>
       )}
 

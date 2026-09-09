@@ -188,7 +188,7 @@ export default function AddToCart({ product }: { product: Product }) {
                     active
                       ? "cursor-pointer border-ink bg-ink text-paper"
                       : out
-                        ? "cursor-not-allowed border-line text-ink/30 line-through"
+                        ? "cursor-not-allowed border-line text-ink opacity-40"
                         : "cursor-pointer border-line hover:border-ink"
                   }`}
                 >
