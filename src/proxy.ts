@@ -3,6 +3,7 @@ import createMiddleware from "next-intl/middleware";
 import { routing } from "./i18n/routing";
 import { CURRENCY_COOKIE } from "./lib/currency/cookie";
 import { detectCurrencyFromCountry } from "./lib/currency/geo";
+import { VISITOR_COOKIE, VISITOR_COOKIE_MAX_AGE } from "./lib/analytics/visitor-cookie";
 
 const intlMiddleware = createMiddleware(routing);
 
@@ -20,6 +21,18 @@ export default function proxy(request: NextRequest) {
       path: "/",
       maxAge: 60 * 60 * 24 * 365,
       sameSite: "lax",
+    });
+  }
+
+  // Anonymous visitor id for the admin Analytics section (src/app/api/
+  // track/route.ts, checkout's orders.visitor_id) — minted once, never
+  // regenerated, httpOnly since nothing client-side reads or writes it.
+  if (!request.cookies.has(VISITOR_COOKIE)) {
+    response.cookies.set(VISITOR_COOKIE, crypto.randomUUID(), {
+      path: "/",
+      maxAge: VISITOR_COOKIE_MAX_AGE,
+      sameSite: "lax",
+      httpOnly: true,
     });
   }
 

@@ -9,6 +9,7 @@ import { convertFromIqd, formatIQD } from "@/lib/money";
 import { isValidEmailClient } from "@/lib/validate";
 import { pick } from "@/lib/content";
 import { trackAddToCart } from "@/lib/analytics/track";
+import { trackVisitEvent } from "@/lib/analytics/track-visit";
 import type { Product } from "@/lib/catalog/types";
 
 /**
@@ -65,6 +66,7 @@ export default function GiftCardConfigurator({
       title: pick(product.title, locale),
       price: denomination,
     });
+    trackVisitEvent("add_to_cart", { productSlug: product.slug });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   }

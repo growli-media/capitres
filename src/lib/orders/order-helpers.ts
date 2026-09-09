@@ -50,6 +50,11 @@ export interface Order {
    * the status by asking Wayl directly; otherwise our own clock at the
    * moment the webhook reported a paid status. */
   paidAt?: string;
+  /** The capitres_vid cookie value at checkout time — links this order
+   * back to its pre-purchase browsing trail (visits/visit_events) for
+   * the admin Analytics section. No FK; see schema.sql's comment on
+   * orders.visitor_id for why. */
+  visitorId?: string;
   mock: boolean;
   customer: {
     /** Absent for orders placed via the Wayl (card) path — we no longer

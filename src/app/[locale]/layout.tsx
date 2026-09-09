@@ -18,6 +18,7 @@ import PageTransition from "@/components/motion/PageTransition";
 import RouteWipe from "@/components/motion/RouteWipe";
 import AnalyticsScripts from "@/components/analytics/AnalyticsScripts";
 import PageviewTracker from "@/components/analytics/PageviewTracker";
+import VisitTracker from "@/components/analytics/VisitTracker";
 import "../globals.css";
 
 /**
@@ -139,6 +140,7 @@ export default async function LocaleLayout({
         <NextIntlClientProvider>
           <CurrencyProvider>
             <PageviewTracker />
+            <VisitTracker />
             <SmoothScroll />
             {/* Two RTL fixes, both about the *hidden* state of this link.
                 `sr-only` leaves it absolutely positioned at its static

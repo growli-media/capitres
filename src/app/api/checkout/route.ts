@@ -12,6 +12,7 @@ import {
 import { newOrderRef, orderStore, type OrderLine } from "@/lib/orders/store";
 import { isValidEmail } from "@/lib/server/records";
 import { sendMetaPurchaseEvent } from "@/lib/analytics/meta-capi";
+import { VISITOR_COOKIE } from "@/lib/analytics/visitor-cookie";
 
 interface CheckoutLineInput {
   productSlug: string;
@@ -263,6 +264,7 @@ export async function POST(request: NextRequest) {
   const userAgent = request.headers.get("user-agent") ?? undefined;
   const fbp = request.cookies.get("_fbp")?.value;
   const fbc = request.cookies.get("_fbc")?.value;
+  const visitorId = request.cookies.get(VISITOR_COOKIE)?.value;
 
   await orderStore.create({
     ref,
@@ -303,6 +305,7 @@ export async function POST(request: NextRequest) {
       clientIp || userAgent || fbp || fbc
         ? { clientIp, userAgent, fbp, fbc }
         : undefined,
+    visitorId,
   });
 
   if (paymentMethod === "cod") {

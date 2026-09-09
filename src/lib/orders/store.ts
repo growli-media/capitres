@@ -103,6 +103,7 @@ interface OrderRow {
   wayl_link_id: string | null;
   payment_method: string | null;
   paid_at: string | null;
+  visitor_id: string | null;
   mock: boolean;
   customer: Order["customer"];
   lines: OrderLine[];
@@ -123,6 +124,7 @@ function toOrder(row: OrderRow): Order {
     waylLinkId: row.wayl_link_id ?? undefined,
     paymentMethod: row.payment_method,
     paidAt: row.paid_at ?? undefined,
+    visitorId: row.visitor_id ?? undefined,
     mock: row.mock,
     customer: row.customer,
     lines: row.lines,
@@ -140,10 +142,11 @@ const postgresOrderStore: OrderStore = {
     await sql`
       insert into orders (
         ref, created_at, locale, status, wayl_link_id, payment_method,
-        mock, customer, lines, totals, promo_code, ad_tracking
+        visitor_id, mock, customer, lines, totals, promo_code, ad_tracking
       ) values (
         ${order.ref}, ${order.createdAt}, ${order.locale}, ${order.status},
         ${order.waylLinkId ?? null}, ${order.paymentMethod ?? null},
+        ${order.visitorId ?? null},
         ${order.mock}, ${jsonb(order.customer)}, ${jsonb(order.lines)},
         ${jsonb(order.totals)}, ${order.promoCode ?? null},
         ${order.adTracking ? jsonb(order.adTracking) : null}
@@ -153,7 +156,7 @@ const postgresOrderStore: OrderStore = {
   async get(ref) {
     const rows = await sql<OrderRow[]>`
       select ref, created_at::text as created_at, locale, status,
-             wayl_link_id, payment_method, paid_at::text as paid_at, mock, customer, lines, totals,
+             wayl_link_id, payment_method, paid_at::text as paid_at, visitor_id, mock, customer, lines, totals,
              promo_code, ad_tracking, meta_capi_sent, admin_note,
              deleted_at::text as deleted_at
       from orders where ref = ${ref} limit 1
@@ -169,7 +172,7 @@ const postgresOrderStore: OrderStore = {
           updated_at = now()
       where ref = ${ref}
       returning ref, created_at::text as created_at, locale, status,
-                wayl_link_id, payment_method, paid_at::text as paid_at, mock, customer, lines, totals,
+                wayl_link_id, payment_method, paid_at::text as paid_at, visitor_id, mock, customer, lines, totals,
                 promo_code, ad_tracking, meta_capi_sent, admin_note,
                 deleted_at::text as deleted_at
     `;
@@ -185,7 +188,7 @@ const postgresOrderStore: OrderStore = {
   async list() {
     const rows = await sql<OrderRow[]>`
       select ref, created_at::text as created_at, locale, status,
-             wayl_link_id, payment_method, paid_at::text as paid_at, mock, customer, lines, totals,
+             wayl_link_id, payment_method, paid_at::text as paid_at, visitor_id, mock, customer, lines, totals,
              promo_code, ad_tracking, meta_capi_sent, admin_note,
              deleted_at::text as deleted_at
       from orders where deleted_at is null order by created_at desc limit 500
@@ -198,7 +201,7 @@ const postgresOrderStore: OrderStore = {
       set meta_capi_sent = true
       where ref = ${ref} and meta_capi_sent = false
       returning ref, created_at::text as created_at, locale, status,
-                wayl_link_id, payment_method, paid_at::text as paid_at, mock, customer, lines, totals,
+                wayl_link_id, payment_method, paid_at::text as paid_at, visitor_id, mock, customer, lines, totals,
                 promo_code, ad_tracking, meta_capi_sent, admin_note,
                 deleted_at::text as deleted_at
     `;
@@ -213,7 +216,7 @@ const postgresOrderStore: OrderStore = {
     const rows = start
       ? await sql<OrderRow[]>`
           select ref, created_at::text as created_at, locale, status,
-                 wayl_link_id, payment_method, paid_at::text as paid_at, mock, customer, lines, totals,
+                 wayl_link_id, payment_method, paid_at::text as paid_at, visitor_id, mock, customer, lines, totals,
                  promo_code, ad_tracking, meta_capi_sent, admin_note,
                  deleted_at::text as deleted_at
           from orders
@@ -222,7 +225,7 @@ const postgresOrderStore: OrderStore = {
         `
       : await sql<OrderRow[]>`
           select ref, created_at::text as created_at, locale, status,
-                 wayl_link_id, payment_method, paid_at::text as paid_at, mock, customer, lines, totals,
+                 wayl_link_id, payment_method, paid_at::text as paid_at, visitor_id, mock, customer, lines, totals,
                  promo_code, ad_tracking, meta_capi_sent, admin_note,
                  deleted_at::text as deleted_at
           from orders
@@ -243,7 +246,7 @@ const postgresOrderStore: OrderStore = {
   async listDeleted(since) {
     const rows = await sql<OrderRow[]>`
       select ref, created_at::text as created_at, locale, status,
-             wayl_link_id, payment_method, paid_at::text as paid_at, mock, customer, lines, totals,
+             wayl_link_id, payment_method, paid_at::text as paid_at, visitor_id, mock, customer, lines, totals,
              promo_code, ad_tracking, meta_capi_sent, admin_note,
              deleted_at::text as deleted_at
       from orders
@@ -270,7 +273,7 @@ const postgresOrderStore: OrderStore = {
   async listStalePending(since) {
     const rows = await sql<OrderRow[]>`
       select ref, created_at::text as created_at, locale, status,
-             wayl_link_id, payment_method, paid_at::text as paid_at, mock, customer, lines, totals,
+             wayl_link_id, payment_method, paid_at::text as paid_at, visitor_id, mock, customer, lines, totals,
              promo_code, ad_tracking, meta_capi_sent, admin_note,
              deleted_at::text as deleted_at
       from orders

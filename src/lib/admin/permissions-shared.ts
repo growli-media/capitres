@@ -14,6 +14,7 @@
  */
 export const PERMISSIONS = [
   "revenue",
+  "analytics",
   "products",
   "collections",
   "categories",
@@ -30,6 +31,7 @@ export type Permission = (typeof PERMISSIONS)[number];
 
 export const PERMISSION_LABELS: Record<Permission, string> = {
   revenue: "Revenue",
+  analytics: "Analytics",
   products: "Products",
   collections: "Collections",
   categories: "Categories",

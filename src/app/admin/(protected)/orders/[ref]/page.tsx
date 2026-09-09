@@ -11,12 +11,14 @@ import {
 } from "@/lib/orders/order-helpers";
 import { PAID_STATUSES, FAILED_STATUSES } from "@/lib/admin/queries-shared";
 import { formatIQD } from "@/lib/money";
-import { requirePermission } from "@/lib/admin/permissions";
+import { requirePermission, can } from "@/lib/admin/permissions";
+import { getVisitEvents } from "@/lib/admin/analytics";
 import CancelOrderButton from "../CancelOrderButton";
 import NoteButton from "../NoteButton";
 import OrderTimeline from "./OrderTimeline";
 import OrderDetailActions from "./OrderDetailActions";
 import PackingSlip from "./PackingSlip";
+import BrowsingTrail from "./BrowsingTrail";
 import { glassCard, glassTone } from "../../../glass";
 
 export const metadata: Metadata = { title: "Order" };
@@ -40,6 +42,14 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ re
   const isPaid = (PAID_STATUSES as readonly string[]).includes(order.status);
   const isFailed = (FAILED_STATUSES as readonly string[]).includes(order.status);
   const statusTone = isPaid ? glassTone.success : isFailed ? glassTone.danger : glassTone.warning;
+
+  // Gated on "analytics" (not just "orders") since this is fundamentally
+  // analytics data, not order data — an admin who can see orders but
+  // wasn't granted analytics access won't see it. The visit itself can
+  // legitimately be gone by now (90-day retention outliving the order),
+  // in which case this just renders nothing — expected, not a bug.
+  const browsingTrail =
+    order.visitorId && (await can("analytics")) ? await getVisitEvents(order.visitorId) : [];
 
   const fullAddress = customerFullAddress(order.customer);
   const mapUrl = customerMapUrl(order.customer);
@@ -193,6 +203,8 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ re
               </p>
             </div>
           )}
+
+          <BrowsingTrail events={browsingTrail} />
         </div>
       </div>
     </div>

@@ -10,6 +10,7 @@ import { pick } from "@/lib/content";
 import { formatCurrency, formatIQD } from "@/lib/money";
 import { isValidEmailClient } from "@/lib/validate";
 import { trackAddToCart, trackViewContent } from "@/lib/analytics/track";
+import { trackVisitEvent } from "@/lib/analytics/track-visit";
 import { useCurrency } from "@/components/currency/CurrencyProvider";
 import { cmToIn } from "@/lib/measurements";
 import type { SizeChartRow } from "@/lib/catalog/types";
@@ -66,6 +67,7 @@ export default function AddToCart({ product }: { product: Product }) {
       title: pick(product.title, locale),
       price: product.price.amount,
     });
+    trackVisitEvent("product_view", { productSlug: product.slug });
   }, [product.slug, product.title, product.price.amount, locale]);
 
   function onAdd() {
@@ -88,6 +90,7 @@ export default function AddToCart({ product }: { product: Product }) {
       price: product.price.amount,
       qty,
     });
+    trackVisitEvent("add_to_cart", { productSlug: product.slug });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   }

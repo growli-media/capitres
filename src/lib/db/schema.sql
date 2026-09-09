@@ -405,3 +405,60 @@ CREATE TABLE IF NOT EXISTS admin_note_checks (
 -- us the order was paid — a close approximation, not Wayl's authoritative
 -- timestamp, for the common case where nothing ever needed to poll.
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS paid_at timestamptz;
+
+-- Anonymous storefront visitor tracking (admin Analytics section) — one
+-- row per visitor-id cookie (capitres_vid, see src/lib/analytics/
+-- visitor-cookie.ts), minted once by src/proxy.ts on a visitor's first
+-- storefront request. id IS the cookie value, not a synthetic surrogate
+-- key — one row per visitor, upserted on every tracked event. No PII and
+-- no raw IP address is ever stored here, only Vercel's already-coarse
+-- geo headers (country/region/city). If a tracked visit later converts
+-- into a real order, orders.visitor_id (below) links the two —
+-- deliberately not a foreign key, see that column's own comment.
+CREATE TABLE IF NOT EXISTS visits (
+  id               text PRIMARY KEY,
+  first_seen       timestamptz NOT NULL DEFAULT now(),
+  last_seen        timestamptz NOT NULL DEFAULT now(),
+  country          text,
+  region           text,
+  city             text,
+  landing_path     text NOT NULL,
+  referrer_source  text NOT NULL DEFAULT 'direct'
+                     CHECK (referrer_source IN ('direct','organic_search','social','referral')),
+  referrer_host    text,
+  utm_source       text,
+  utm_medium       text,
+  utm_campaign     text,
+  user_agent       text
+);
+-- Retention cron's WHERE clause (visits inactive 90+ days).
+CREATE INDEX IF NOT EXISTS idx_visits_last_seen ON visits (last_seen DESC);
+-- Map aggregate counts (visitors per country/region/city).
+CREATE INDEX IF NOT EXISTS idx_visits_geo ON visits (country, region, city);
+
+-- One row per tracked interaction within a visit. No separate "time
+-- spent" column — the activity-log view derives per-step dwell time as
+-- the gap between one event's occurred_at and the next. ON DELETE
+-- CASCADE so the retention cron only ever deletes from `visits`; every
+-- dependent event goes with it automatically.
+CREATE TABLE IF NOT EXISTS visit_events (
+  id            bigserial PRIMARY KEY,
+  visit_id      text NOT NULL REFERENCES visits(id) ON DELETE CASCADE,
+  type          text NOT NULL CHECK (type IN ('page_view','product_view','add_to_cart')),
+  path          text,
+  product_slug  text,
+  occurred_at   timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_visit_events_visit_id ON visit_events (visit_id, occurred_at);
+
+-- Links a real order back to the anonymous visit that led to it,
+-- captured from the capitres_vid cookie at checkout time (see
+-- src/app/api/checkout/route.ts). Deliberately NOT a foreign key: order
+-- creation must never fail or block on an analytics-only linkage, and a
+-- hard FK forces an ON DELETE decision that doesn't actually matter here
+-- — the 90-day visit retention window means the referenced visits row
+-- can legitimately be gone long before the order stops mattering. The
+-- order detail page does a plain best-effort lookup and shows nothing
+-- extra when it's gone — expected, not a bug.
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS visitor_id text;
+CREATE INDEX IF NOT EXISTS idx_orders_visitor_id ON orders (visitor_id) WHERE visitor_id IS NOT NULL;
