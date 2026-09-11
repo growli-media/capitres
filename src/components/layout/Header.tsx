@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import {
   ArrowUpRight,
@@ -51,6 +52,15 @@ export default function Header({
   const t = useTranslations("nav");
   const tA11y = useTranslations("a11y");
   const pathname = usePathname();
+  // usePathname() alone never changes for a query-only navigation (e.g.
+  // /shop -> /shop?gender=men both report pathname "/shop"), so the
+  // close-on-navigate effect below used to silently no-op for exactly the
+  // links this menu is built around — tap "Men", then "New Arrivals" from
+  // there, and the overlay never closed, hiding the page that loaded
+  // underneath it. Tracking the query string too (next/navigation's
+  // useSearchParams, not next-intl's wrapper — it doesn't re-export this)
+  // makes every one of those transitions count as "navigated" as well.
+  const searchParams = useSearchParams();
   const openCart = useCart((s) => s.open);
   const count = useCartCount();
 
@@ -81,7 +91,7 @@ export default function Header({
   useEffect(() => {
     setPanel(null);
     setMobileOpen(false);
-  }, [pathname]);
+  }, [pathname, searchParams]);
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";

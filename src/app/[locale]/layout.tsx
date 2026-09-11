@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -156,7 +157,14 @@ export default async function LocaleLayout({
             >
               {t("skipToContent")}
             </a>
-            <Header collections={navCollections} categories={navCategories} />
+            {/* Header now reads useSearchParams() (to close the mobile
+                menu on query-only navigations too — see Header.tsx),
+                which requires a Suspense boundary or Next forces the
+                whole route to render dynamically. The fallback matches
+                the header's own height so there's no layout shift. */}
+            <Suspense fallback={<div className="h-16 md:h-[4.75rem]" />}>
+              <Header collections={navCollections} categories={navCategories} />
+            </Suspense>
             <main id="main">
               <PageTransition>{children}</PageTransition>
             </main>
