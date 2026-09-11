@@ -1,4 +1,5 @@
 import "server-only";
+import { unstable_cache } from "next/cache";
 import { sql } from "@/lib/db/client";
 import { dbReadCategories } from "../categories";
 import { applyFilter, applySort } from "../filter-sort";
@@ -283,22 +284,60 @@ async function fetchAllVariants(): Promise<VariantRow[]> {
   return sql<VariantRow[]>`select id, product_id, size, stock from product_variants`;
 }
 
-export const postgresProvider: CatalogProvider = {
-  async getProducts(filter?: ProductFilter, sort?: ProductSort) {
+/** Catalog reads that fire on effectively every storefront page (the root
+ * layout calls getCollections/getCategories for the header on EVERY
+ * navigation; the shop page's getProducts pulls every product/variant/
+ * review row regardless of which filter was actually requested, since
+ * filtering happens in memory below) were each a fresh, uncached round
+ * trip to Postgres — confirmed via curl to cost 0.5-2.5s per hit. Wrapping
+ * the raw fetches in unstable_cache cuts that to one DB hit per window
+ * instead of one per request; a short revalidate (not tag-based
+ * invalidation) is the deliberate tradeoff here — an admin edit can take
+ * up to this long to reach the storefront, which is fine for a catalog
+ * that changes rarely, in exchange for not having to wire cache
+ * invalidation into every product/collection/category/review mutation. */
+const CATALOG_REVALIDATE_SECONDS = 60;
+
+const getCachedAllProductRows = unstable_cache(
+  async () => {
     const [rows, variants, reviews] = await Promise.all([
       sql<ProductRow[]>`select * from products where archived = false`,
       fetchAllVariants(),
       fetchApprovedReviews(),
     ]);
+    return { rows, variants, reviews };
+  },
+  ["catalog:products:all"],
+  { revalidate: CATALOG_REVALIDATE_SECONDS },
+);
+
+const getCachedCollectionRows = unstable_cache(
+  async () => sql<CollectionRow[]>`select * from collections order by sort_order asc`,
+  ["catalog:collections:all"],
+  { revalidate: CATALOG_REVALIDATE_SECONDS },
+);
+
+const getCachedStorefrontCategories = unstable_cache(
+  async () => dbReadCategories(false),
+  ["catalog:categories:storefront"],
+  { revalidate: CATALOG_REVALIDATE_SECONDS },
+);
+
+export const postgresProvider: CatalogProvider = {
+  async getProducts(filter?: ProductFilter, sort?: ProductSort) {
+    const { rows, variants, reviews } = await getCachedAllProductRows();
     const products = rows.map((r) => toProduct(r, variants, reviews));
     return applySort(applyFilter(products, filter), sort);
   },
 
   async getProduct(slug: string) {
-    const [rows, variants, reviews] = await Promise.all([
+    // The specific product row stays a fresh, uncached lookup (a single
+    // product page benefits less from caching, and price/stock accuracy
+    // matters more there) — only the variants/reviews it's joined against
+    // reuse the cached full-catalog fetch above.
+    const [rows, { variants, reviews }] = await Promise.all([
       sql<ProductRow[]>`select * from products where slug = ${slug} limit 1`,
-      fetchAllVariants(),
-      fetchApprovedReviews(),
+      getCachedAllProductRows(),
     ]);
     const row = rows[0];
     return row ? toProduct(row, variants, reviews) : undefined;
@@ -313,11 +352,7 @@ export const postgresProvider: CatalogProvider = {
    * working regardless of archived status. */
   async getProductsBySlugs(slugs: string[]) {
     if (slugs.length === 0) return [];
-    const [rows, variants, reviews] = await Promise.all([
-      sql<ProductRow[]>`select * from products where slug = any(${slugs}) and archived = false`,
-      fetchAllVariants(),
-      fetchApprovedReviews(),
-    ]);
+    const { rows, variants, reviews } = await getCachedAllProductRows();
     const bySlug = new Map(rows.map((r) => [r.slug, r]));
     return slugs
       .map((s) => bySlug.get(s))
@@ -326,9 +361,7 @@ export const postgresProvider: CatalogProvider = {
   },
 
   async getCollections() {
-    const rows = await sql<CollectionRow[]>`
-      select * from collections order by sort_order asc
-    `;
+    const rows = await getCachedCollectionRows();
     return rows.map(toCollection);
   },
 
@@ -340,7 +373,7 @@ export const postgresProvider: CatalogProvider = {
   },
 
   async getCategories() {
-    const rows = await dbReadCategories(false);
+    const rows = await getCachedStorefrontCategories();
     return rows.map(({ slug, title, sortOrder }) => ({ slug, title, sortOrder }));
   },
 

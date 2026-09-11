@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Check } from "@phosphor-icons/react";
+import { Check, Ruler, X } from "@phosphor-icons/react";
 import { Link } from "@/i18n/navigation";
 import type { Product } from "@/lib/catalog/types";
 import { useCart } from "@/lib/cart/store";
@@ -32,6 +32,68 @@ const SIZE_CHART_FIELD_KEYS: Record<SizeChartField, "sizeChartChest" | "sizeChar
   shoulder: "sizeChartShoulder",
 };
 
+/** Unit toggle + measurement table — shared between the desktop inline
+ * <details> and the mobile popup so the two surfaces can't drift apart. */
+function SizeChartTable({
+  sizeChart,
+  chartUnit,
+  setChartUnit,
+}: {
+  sizeChart: SizeChartRow[];
+  chartUnit: "cm" | "in";
+  setChartUnit: (u: "cm" | "in") => void;
+}) {
+  const t = useTranslations("product");
+  const fields = activeSizeChartFields(sizeChart);
+  return (
+    <>
+      <div className="mb-2 flex w-fit items-center gap-1 rounded-full border border-line p-0.5">
+        {(["cm", "in"] as const).map((u) => (
+          <button
+            key={u}
+            type="button"
+            onClick={() => setChartUnit(u)}
+            className={`cursor-pointer rounded-full px-3 py-1 text-[11px] font-semibold transition-colors ${
+              chartUnit === u ? "bg-ink text-paper" : "text-ink/50 hover:text-ink"
+            }`}
+          >
+            {u === "cm" ? t("sizeChartCm") : t("sizeChartIn")}
+          </button>
+        ))}
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="border-b border-line text-start">
+              <th className="px-2 py-2 text-start font-semibold">{t("sizeChartSize")}</th>
+              {fields.map((f) => (
+                <th key={f} className="px-2 py-2 text-start font-semibold">
+                  {t(SIZE_CHART_FIELD_KEYS[f])}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {sizeChart.map((row) => (
+              <tr key={row.size} className="border-b border-line/60 last:border-0">
+                <td className="px-2 py-2 font-medium">{row.size}</td>
+                {fields.map((f) => {
+                  const cm = row[f];
+                  return (
+                    <td key={f} className="px-2 py-2 text-ink/70">
+                      {cm == null ? "—" : chartUnit === "in" ? cmToIn(cm) : cm}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
+  );
+}
+
 /** Buy box: size selection with live stock, quantity, add-to-cart. */
 export default function AddToCart({ product }: { product: Product }) {
   const locale = useLocale();
@@ -53,6 +115,10 @@ export default function AddToCart({ product }: { product: Product }) {
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
   const [chartUnit, setChartUnit] = useState<"cm" | "in">("cm");
+  // Mobile-only: the same table shown inline (as a <details>) on desktop
+  // opens as a popup instead on small screens, where an inline table
+  // pushes the whole buy box down and forces awkward scrolling.
+  const [chartModalOpen, setChartModalOpen] = useState(false);
 
   const selectedColor = product.colors.find((c) => c.key === colorKey);
 
@@ -60,6 +126,19 @@ export default function AddToCart({ product }: { product: Product }) {
     () => product.variants.find((v) => v.size === size),
     [product.variants, size],
   );
+
+  useEffect(() => {
+    if (!chartModalOpen) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setChartModalOpen(false);
+    }
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [chartModalOpen]);
 
   useEffect(() => {
     trackViewContent({
@@ -200,70 +279,88 @@ export default function AddToCart({ product }: { product: Product }) {
               );
             })}
           </div>
-          <Link
-            href="/size-guide"
-            className="link-underline mt-3 inline-block text-xs font-semibold text-ink/60"
-          >
-            {t("sizeGuide")}
-          </Link>
+          {/* A boxed, icon-led CTA instead of a small text link — this was
+              easy to miss entirely on most products (see git history: it
+              used to be a text-xs/60%-opacity link). Only one box shows at
+              a time: the inline per-product chart when there's real
+              measurement data for it, otherwise the general size-guide
+              page — never both competing for attention. On desktop the
+              chart expands in place (a "mini table" is fine with the
+              extra width); on phone the same box opens a popup instead,
+              since an inline table there forces the whole buy box to
+              scroll awkwardly. */}
+          {product.sizeChart && activeSizeChartFields(product.sizeChart).length > 0 ? (
+            <>
+              <details className="group mt-4 hidden md:block">
+                <summary className="flex min-h-11 w-fit cursor-pointer list-none items-center gap-2 bg-ink px-4 text-xs font-bold tracking-wide text-paper uppercase transition-colors hover:bg-ink/85">
+                  <Ruler size={16} aria-hidden="true" />
+                  {t("sizeChartTitle")}
+                  <span
+                    aria-hidden="true"
+                    className="text-sm transition-transform duration-300 group-open:rotate-45"
+                  >
+                    +
+                  </span>
+                </summary>
+                <div className="mt-3">
+                  <SizeChartTable
+                    sizeChart={product.sizeChart}
+                    chartUnit={chartUnit}
+                    setChartUnit={setChartUnit}
+                  />
+                </div>
+              </details>
 
-          {product.sizeChart && product.sizeChart.length > 0 && (
-            <details className="group mt-3">
-              <summary className="flex min-h-9 w-fit cursor-pointer list-none items-center gap-1.5 text-xs font-semibold text-ink/60 hover:text-ink">
+              <button
+                type="button"
+                aria-haspopup="dialog"
+                onClick={() => setChartModalOpen(true)}
+                className="mt-4 flex min-h-11 w-fit cursor-pointer items-center gap-2 bg-ink px-4 text-xs font-bold tracking-wide text-paper uppercase transition-colors hover:bg-ink/85 md:hidden"
+              >
+                <Ruler size={16} aria-hidden="true" />
                 {t("sizeChartTitle")}
-                <span
-                  aria-hidden="true"
-                  className="text-sm transition-transform duration-300 group-open:rotate-45"
+              </button>
+
+              {chartModalOpen && (
+                <div
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label={t("sizeChartTitle")}
+                  onClick={() => setChartModalOpen(false)}
+                  className="fixed inset-0 z-[70] flex items-end justify-center bg-ink/50 md:hidden"
                 >
-                  +
-                </span>
-              </summary>
-              <div className="mt-3">
-                <div className="mb-2 flex items-center gap-1 rounded-full border border-line p-0.5 w-fit">
-                  {(["cm", "in"] as const).map((u) => (
-                    <button
-                      key={u}
-                      type="button"
-                      onClick={() => setChartUnit(u)}
-                      className={`cursor-pointer rounded-full px-3 py-1 text-[11px] font-semibold transition-colors ${
-                        chartUnit === u ? "bg-ink text-paper" : "text-ink/50 hover:text-ink"
-                      }`}
-                    >
-                      {u === "cm" ? t("sizeChartCm") : t("sizeChartIn")}
-                    </button>
-                  ))}
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    className="relative max-h-[80dvh] w-full overflow-y-auto bg-paper p-6 pb-8"
+                  >
+                    <div className="mb-4 flex items-center justify-between">
+                      <h2 className="text-display text-xl">{t("sizeChartTitle")}</h2>
+                      <button
+                        type="button"
+                        aria-label={tA11y("closeMenu")}
+                        onClick={() => setChartModalOpen(false)}
+                        className="-me-2 flex h-10 w-10 cursor-pointer items-center justify-center transition-opacity hover:opacity-60"
+                      >
+                        <X size={20} />
+                      </button>
+                    </div>
+                    <SizeChartTable
+                      sizeChart={product.sizeChart}
+                      chartUnit={chartUnit}
+                      setChartUnit={setChartUnit}
+                    />
+                  </div>
                 </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs">
-                    <thead>
-                      <tr className="border-b border-line text-start">
-                        <th className="px-2 py-2 text-start font-semibold">{t("sizeChartSize")}</th>
-                        {activeSizeChartFields(product.sizeChart).map((f) => (
-                          <th key={f} className="px-2 py-2 text-start font-semibold">
-                            {t(SIZE_CHART_FIELD_KEYS[f])}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {product.sizeChart.map((row) => (
-                        <tr key={row.size} className="border-b border-line/60 last:border-0">
-                          <td className="px-2 py-2 font-medium">{row.size}</td>
-                          {activeSizeChartFields(product.sizeChart!).map((f) => {
-                            const cm = row[f];
-                            return (
-                              <td key={f} className="px-2 py-2 text-ink/70">
-                                {cm == null ? "—" : chartUnit === "in" ? cmToIn(cm) : cm}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </details>
+              )}
+            </>
+          ) : (
+            <Link
+              href="/size-guide"
+              className="mt-4 flex min-h-11 w-fit items-center gap-2 bg-ink px-4 text-xs font-bold tracking-wide text-paper uppercase transition-colors hover:bg-ink/85"
+            >
+              <Ruler size={16} aria-hidden="true" />
+              {t("sizeGuide")}
+            </Link>
           )}
         </fieldset>
       )}
