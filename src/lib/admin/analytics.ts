@@ -79,6 +79,7 @@ export async function getRecentVisits(
   limit = 50,
   start: Date | null = null,
   end: Date = new Date(),
+  offset = 0,
 ): Promise<VisitSummary[]> {
   const rows = start
     ? await sql<VisitRow[]>`
@@ -92,7 +93,7 @@ export async function getRecentVisits(
         from visits v
         where v.first_seen >= ${start} and v.first_seen <= ${end}
         order by v.last_seen desc
-        limit ${limit}
+        limit ${limit} offset ${offset}
       `
     : await sql<VisitRow[]>`
         select v.id, v.first_seen::text as first_seen, v.last_seen::text as last_seen,
@@ -105,7 +106,7 @@ export async function getRecentVisits(
         from visits v
         where v.first_seen <= ${end}
         order by v.last_seen desc
-        limit ${limit}
+        limit ${limit} offset ${offset}
       `;
   return rows.map(toVisitSummary);
 }
@@ -153,6 +154,25 @@ export async function getVisitCount(start: Date | null, end: Date): Promise<numb
       `
     : await sql<{ count: string }[]>`
         select count(*)::text as count from visits where first_seen <= ${end}
+      `;
+  return Number(rows[0]?.count ?? 0);
+}
+
+/** How many visits in range went on to place an order (best-effort, via
+ * the same orders.visitor_id lookup getRecentVisits already uses for its
+ * per-row "converted" link) — feeds the Analytics page's conversion-rate
+ * tile. */
+export async function getConvertedVisitCount(start: Date | null, end: Date): Promise<number> {
+  const rows = start
+    ? await sql<{ count: string }[]>`
+        select count(*)::text as count from visits v
+        where v.first_seen >= ${start} and v.first_seen <= ${end}
+          and exists (select 1 from orders o where o.visitor_id = v.id and o.deleted_at is null)
+      `
+    : await sql<{ count: string }[]>`
+        select count(*)::text as count from visits v
+        where v.first_seen <= ${end}
+          and exists (select 1 from orders o where o.visitor_id = v.id and o.deleted_at is null)
       `;
   return Number(rows[0]?.count ?? 0);
 }

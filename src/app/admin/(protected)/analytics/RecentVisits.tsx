@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { ArrowSquareOut, CaretDown, CaretUp, ShoppingCartSimple } from "@phosphor-icons/react";
+import { ArrowSquareOut, CaretDown, CaretLeft, CaretRight, CaretUp, ShoppingCartSimple } from "@phosphor-icons/react";
 import type { VisitSummary, VisitEvent } from "@/lib/admin/analytics";
 import { getVisitEventsAction } from "./actions";
 import { glassCard, glassTone } from "../../glass";
@@ -53,10 +53,18 @@ export default function RecentVisits({
   visits,
   selectedVisitId,
   onSelectVisit,
+  page,
+  totalPages,
+  onPageChange,
 }: {
   visits: VisitSummary[];
   selectedVisitId: string | null;
   onSelectVisit: (id: string | null) => void;
+  /** 1-based — the whole list re-fetches per page (AnalyticsView.tsx),
+   * there's no client-side slicing here. */
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
 }) {
   const [eventsByVisit, setEventsByVisit] = useState<Record<string, VisitEvent[]>>({});
   const [loadingId, setLoadingId] = useState<string | null>(null);
@@ -170,6 +178,32 @@ export default function RecentVisits({
           </div>
         );
       })}
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-5 py-3">
+          <button
+            type="button"
+            onClick={() => onPageChange(page - 1)}
+            disabled={page <= 1}
+            aria-label="Newer visits"
+            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+          >
+            <CaretLeft size={14} aria-hidden="true" />
+          </button>
+          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+            Page {page} of {totalPages}
+          </span>
+          <button
+            type="button"
+            onClick={() => onPageChange(page + 1)}
+            disabled={page >= totalPages}
+            aria-label="Older visits"
+            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+          >
+            <CaretRight size={14} aria-hidden="true" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
