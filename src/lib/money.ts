@@ -4,13 +4,16 @@ import type { Currency, Money } from "@/lib/catalog/types";
  * Deterministic money formatting (no Intl) so server and client output are
  * byte-identical across runtimes — avoids hydration mismatches.
  *
+ * Digits are always Western/Latin numerals, in every locale — an explicit
+ * store decision, not an oversight: Eastern Arabic-Indic numerals used to
+ * appear for ar/ku, but customers found a mismatched digit style
+ * confusing next to a Latin-numeral keyboard/receipt, so every locale now
+ * renders the same digits and only the currency label changes.
+ *
  * en  -> "IQD 65,000"
- * ar  -> "٦٥٬٠٠٠ د.ع"
- * ku  -> "٦٥٬٠٠٠ د.ع"
+ * ar  -> "65,000 د.ع"
+ * ku  -> "65,000 د.ع"
  */
-
-const EASTERN_DIGITS = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
-const ARABIC_THOUSANDS = "٬";
 
 /** Reference market rates — used for the "≈" hint and as a fallback when a
  * product has no admin-set explicit price for that currency. Not used for
@@ -24,13 +27,9 @@ function group(n: number, separator: string): string {
     .replace(/\B(?=(\d{3})+(?!\d))/g, separator);
 }
 
-function toEasternDigits(value: string): string {
-  return value.replace(/\d/g, (d) => EASTERN_DIGITS[Number(d)]);
-}
-
 export function formatIQD(amount: number, locale: string): string {
   if (locale === "ar" || locale === "ku") {
-    return `${toEasternDigits(group(amount, ARABIC_THOUSANDS))} د.ع`;
+    return `${group(amount, ",")} د.ع`;
   }
   return `IQD ${group(amount, ",")}`;
 }
@@ -43,9 +42,12 @@ export function approxUsd(amount: number): string {
   return `$${group(Math.round(amount / IQD_PER_USD), ",")}`;
 }
 
+/** Digits are always Western now (see the file-level note above) — this
+ * stays a no-op passthrough rather than being removed so existing call
+ * sites that thread a locale through don't need to change. */
 export function localizeDigits(value: string | number, locale: string): string {
-  const s = String(value);
-  return locale === "ar" || locale === "ku" ? toEasternDigits(s) : s;
+  void locale;
+  return String(value);
 }
 
 /** Converts a whole-IQD amount into the given currency's minor unit (cents
@@ -81,7 +83,5 @@ export function formatCurrency(
   const whole = Math.floor(cents / 100);
   const frac = (cents % 100).toString().padStart(2, "0");
   const sign = amount < 0 ? "-" : "";
-  const wholeStr = group(whole, locale === "ar" || locale === "ku" ? ARABIC_THOUSANDS : ",");
-  const digits = `${wholeStr}.${frac}`;
-  return `${sign}${symbol}${locale === "ar" || locale === "ku" ? toEasternDigits(digits) : digits}`;
+  return `${sign}${symbol}${group(whole, ",")}.${frac}`;
 }

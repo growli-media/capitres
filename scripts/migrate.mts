@@ -11,6 +11,7 @@
  */
 import { readFileSync, existsSync, mkdirSync, copyFileSync } from "node:fs";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import postgres from "postgres";
 import { seedProducts, seedCollections, seedPosts, type SeedImage } from "./seed-data";
 import { formatIQD, formatCurrency, localizeDigits } from "../src/lib/money";
@@ -97,7 +98,7 @@ async function resolveImage(img: SeedImage) {
  * runs once per slug (ON CONFLICT DO NOTHING below), so editing these
  * from the admin is never overwritten by a later migrate.
  */
-type Locale = "en" | "ar" | "ku";
+export type Locale = "en" | "ar" | "ku";
 
 function privacyBody(locale: Locale): string {
   const copy: Record<Locale, [string, string]> = {
@@ -135,7 +136,7 @@ function termsBody(locale: Locale): string {
   return copy[locale].join("\n\n");
 }
 
-function shippingReturnsBody(locale: Locale): string {
+export function shippingReturnsBody(locale: Locale): string {
   const flatDomestic = formatIQD(SHIPPING_RATE_IQ, locale);
   const flatIntl = formatCurrency(SHIPPING_RATE_INTL_USD * 100, "USD", locale);
   const threshold = formatIQD(FREE_SHIPPING_THRESHOLD, locale);
@@ -156,22 +157,22 @@ function shippingReturnsBody(locale: Locale): string {
     ar: {
       intro: "نشحن إلى كل محافظات العراق، وإلى العالم عند الطلب.",
       domesticTitle: "داخل العراق",
-      domesticBody: `٢–٥ أيام عمل عبر شركات توصيل موثوقة. أجرة ثابتة ${flatDomestic}؛ ومجاناً للطلبات فوق ${threshold}. الدفع عند الاستلام غير متاح — تُعالج المدفوعات بأمان عبر ويل قبل الشحن.`,
+      domesticBody: `2–5 أيام عمل عبر شركات توصيل موثوقة. أجرة ثابتة ${flatDomestic}؛ ومجاناً للطلبات فوق ${threshold}. الدفع عند الاستلام غير متاح — تُعالج المدفوعات بأمان عبر ويل قبل الشحن.`,
       intlTitle: "خارج العراق",
       intlBody: `أجرة ثابتة ${flatIntl} إلى أي مكان في العالم، تُحتسب تلقائياً عند إتمام الطلب — وتُطبَّق هذه الأجرة بغض النظر عن قيمة الطلب أو بلد الوجهة.`,
       returnsTitle: "الاستبدال والإرجاع",
       returnsBody:
-        "المقاس غير مناسب؟ لديك ٧ أيام من الاستلام للاستبدال، بشرط عدم الاستخدام وبقاء البطاقات. إصدارات التراث محدودة — يُعاد المبلغ إلى وسيلة الدفع الأصلية عبر ويل إذا تعذّر الاستبدال.",
+        "المقاس غير مناسب؟ لديك 7 أيام من الاستلام للاستبدال، بشرط عدم الاستخدام وبقاء البطاقات. إصدارات التراث محدودة — يُعاد المبلغ إلى وسيلة الدفع الأصلية عبر ويل إذا تعذّر الاستبدال.",
     },
     ku: {
       intro: "بۆ هەموو پارێزگاکانی عێراق دەگەیەنین، و بە داواکاری بۆ هەموو جیهان.",
       domesticTitle: "ناو عێراق",
-      domesticBody: `٢–٥ ڕۆژی کار بە گەیاندنی متمانەپێکراو. کرێی جێگیر ${flatDomestic}؛ بەخۆڕایی بۆ داواکاری سەرووی ${threshold}. پارەدان لە کاتی وەرگرتن بەردەست نییە — پارەدانەکان پێش ناردن بە پارێزراوی لە ڕێگەی وەیلەوە جێبەجێدەکرێن.`,
+      domesticBody: `2–5 ڕۆژی کار بە گەیاندنی متمانەپێکراو. کرێی جێگیر ${flatDomestic}؛ بەخۆڕایی بۆ داواکاری سەرووی ${threshold}. پارەدان لە کاتی وەرگرتن بەردەست نییە — پارەدانەکان پێش ناردن بە پارێزراوی لە ڕێگەی وەیلەوە جێبەجێدەکرێن.`,
       intlTitle: "دەرەوەی عێراق",
       intlBody: `کرێی جێگیر ${flatIntl} بۆ هەموو جیهان، لە کاتی تەواوکردنی داواکاری بە شێوەیەکی ئۆتۆماتیکی دەژمێردرێت — ئەم کرێیە بەبێ گوێدانە بڕی داواکاری یان وڵاتی مەبەست جێبەجێ دەکرێت.`,
       returnsTitle: "گۆڕینەوە و گەڕاندنەوە",
       returnsBody:
-        "قەبارەکە نەگونجا؟ ٧ ڕۆژت هەیە لە گەیشتنەوە بۆ گۆڕینەوە، بە مەرجی لەبەرنەکردن و مانەوەی تاگەکان. بەرهەمەکانی میرات سنووردارن — ئەگەر گۆڕینەوە نەکرا، پارەکە لە ڕێگەی وەیلەوە دەگەڕێتەوە بۆ هەمان شێوازی پارەدان.",
+        "قەبارەکە نەگونجا؟ 7 ڕۆژت هەیە لە گەیشتنەوە بۆ گۆڕینەوە، بە مەرجی لەبەرنەکردن و مانەوەی تاگەکان. بەرهەمەکانی میرات سنووردارن — ئەگەر گۆڕینەوە نەکرا، پارەکە لە ڕێگەی وەیلەوە دەگەڕێتەوە بۆ هەمان شێوازی پارەدان.",
     },
   };
   const c = copy[locale];
@@ -192,7 +193,7 @@ const SIZE_GUIDE_OUTERWEAR: [string, number, number, number][] = [
   ["2XL", 69, 74, 66.5],
 ];
 
-function sizeGuideBody(locale: Locale): string {
+export function sizeGuideBody(locale: Locale): string {
   const cm = locale === "en" ? "cm" : "سم";
   const copy: Record<
     Locale,
@@ -408,7 +409,13 @@ async function main() {
   await sql.end();
 }
 
-main().catch((err) => {
-  console.error("[migrate] failed:", err);
-  process.exit(1);
-});
+// Guarded so `shippingReturnsBody`/`sizeGuideBody` can be imported by other
+// one-off scripts (e.g. regenerating already-seeded legal-page content
+// after a copy fix) without re-running the whole migration as a side
+// effect of the import.
+if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
+  main().catch((err) => {
+    console.error("[migrate] failed:", err);
+    process.exit(1);
+  });
+}

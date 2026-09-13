@@ -15,8 +15,8 @@ export const collections: Collection[] = [
     },
     tagline: {
       en: "1984. Los Angeles. The dream begins.",
-      ar: "١٩٨٤. لوس أنجلس. بداية الحلم.",
-      ku: "١٩٨٤. لۆس ئەنجلس. دەستپێکی خەونەکە.",
+      ar: "1984. لوس أنجلس. بداية الحلم.",
+      ku: "1984. لۆس ئەنجلس. دەستپێکی خەونەکە.",
     },
     description: {
       en: "The kits that made a nation believe, rebuilt from the archive — Olympic olive, floodlit nights and the decade football never gave back.",
@@ -27,8 +27,8 @@ export const collections: Collection[] = [
       src: imgIraq84,
       alt: {
         en: "Iraq 84 heritage tee on studio backdrop",
-        ar: "تيشيرت العراق ٨٤ التراثي على خلفية استوديو",
-        ku: "تیشێرتی میراتی عێراق ٨٤ لەسەر باکگراوندی ستۆدیۆ",
+        ar: "تيشيرت العراق 84 التراثي على خلفية استوديو",
+        ku: "تیشێرتی میراتی عێراق 84 لەسەر باکگراوندی ستۆدیۆ",
       },
     },
     textAlign: { en: "left", ar: "right", ku: "right" },
@@ -52,8 +52,8 @@ export const collections: Collection[] = [
       src: imgIraq40,
       alt: {
         en: "Iraq 40 jersey in desert taupe",
-        ar: "قميص العراق ٤٠ بالترابي الصحراوي",
-        ku: "کراسی عێراق ٤٠ بە خۆڵەمێشی بیابانی",
+        ar: "قميص العراق 40 بالترابي الصحراوي",
+        ku: "کراسی عێراق 40 بە خۆڵەمێشی بیابانی",
       },
     },
     textAlign: { en: "left", ar: "right", ku: "right" },

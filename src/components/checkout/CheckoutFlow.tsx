@@ -26,35 +26,15 @@ import { isValidEmailClient, isValidPhone } from "@/lib/validate";
 import { trackInitiateCheckout } from "@/lib/analytics/track";
 import { useCurrency } from "@/components/currency/CurrencyProvider";
 import type { GesCountry, GesRateQuote, GesTierName } from "@/lib/shipping/ges";
+
+/** Country name pre-localized server-side — see checkout/page.tsx for why
+ * (Chromium's own ICU data has no Kurdish region names, so this can't be
+ * computed client-side with Intl.DisplayNames). `countryName` stays the
+ * English name GES itself expects and is what actually gets submitted;
+ * `displayName` is only ever shown to the customer. */
+export type LocalizedGesCountry = GesCountry & { displayName: string };
 import { FALLBACK_SHIPPING_METHOD } from "@/lib/shipping/constants";
 import { SHIPPING_RATE_INTL, SHIPPING_RATE_INTL_USD } from "@/lib/commerce/config";
-
-/** GES's API returns no delivery-time field at all (confirmed against
- * their full docs) — these are placeholder ranges, not real GES-confirmed
- * transit times. Swap in real numbers once GES confirms them.
- *
- * Deliberately keyed by PRICE RANK within a quote, not by tier name:
- * real GES pricing doesn't respect a fixed name-based speed hierarchy
- * (e.g. XLine is pricier than Rapid for some destinations, cheaper for
- * others), so a name-based mapping could show a pricier tier as slower
- * than a cheaper one — a contradiction a customer would rightly balk at.
- * Ranking by each quote's own price instead guarantees cheapest = slowest
- * placeholder and priciest = fastest, every time. */
-const RANKED_DELIVERY_ESTIMATE_KEYS = [
-  "deliveryEstimate.slowest",
-  "deliveryEstimate.slow",
-  "deliveryEstimate.fast",
-  "deliveryEstimate.fastest",
-] as const;
-
-function deliveryEstimateKeyForRank(rank: number, tierCount: number): string {
-  // A lone tier (some destinations only have one GES service at all) has
-  // nothing to be ranked against — "slowest" would unfairly badmouth the
-  // only option available. Land on a middling estimate instead.
-  if (tierCount <= 1) return RANKED_DELIVERY_ESTIMATE_KEYS[1];
-  const idx = Math.round((rank * (RANKED_DELIVERY_ESTIMATE_KEYS.length - 1)) / (tierCount - 1));
-  return RANKED_DELIVERY_ESTIMATE_KEYS[idx];
-}
 
 const GOVERNORATES = [
   "baghdad",
@@ -155,7 +135,7 @@ function SummaryLine({ line, locale }: { line: CartLine; locale: string }) {
   );
 }
 
-export default function CheckoutFlow({ countries }: { countries: GesCountry[] }) {
+export default function CheckoutFlow({ countries }: { countries: LocalizedGesCountry[] }) {
   const locale = useLocale();
   const t = useTranslations("checkout");
   const tCart = useTranslations("cart");
@@ -686,7 +666,7 @@ export default function CheckoutFlow({ countries }: { countries: GesCountry[] })
                     </option>
                     {countries.map((c) => (
                       <option key={c.id} value={c.countryName}>
-                        {c.countryName}
+                        {c.displayName}
                       </option>
                     ))}
                   </select>
@@ -730,11 +710,6 @@ export default function CheckoutFlow({ countries }: { countries: GesCountry[] })
                             }`}
                           >
                             <span className="font-bold">{t("standardShipping")}</span>
-                            <span
-                              className={`text-xs ${selectedTier === FALLBACK_SHIPPING_METHOD ? "text-paper/70" : "text-ink/50"}`}
-                            >
-                              {t("deliveryEstimate.standard")}
-                            </span>
                             <span className="price mt-1.5 text-base font-semibold">
                               {formatCurrency(
                                 convertFromIqd(SHIPPING_RATE_INTL, currency),
@@ -782,9 +757,6 @@ export default function CheckoutFlow({ countries }: { countries: GesCountry[] })
                                   </span>
                                 )}
                                 <span className="font-bold">{tier.name}</span>
-                                <span className={`text-xs ${active ? "text-paper/70" : "text-ink/50"}`}>
-                                  {t(deliveryEstimateKeyForRank(i, sortedTiers.length))}
-                                </span>
                                 <span className="price mt-1.5 text-base font-semibold">
                                   {formatCurrency(convertFromIqd(tierIqd, currency), currency, locale)}
                                 </span>

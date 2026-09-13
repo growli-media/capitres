@@ -38,22 +38,22 @@ const rawProducts: Omit<Product, "priceByCurrency" | "compareAtPriceByCurrency">
   {
     id: "p-iraq-84",
     slug: "iraq-84",
-    title: { en: "Iraq 84 Tee", ar: "تيشيرت العراق ٨٤", ku: "تیشێرتی عێراق ٨٤" },
+    title: { en: "Iraq 84 Tee", ar: "تيشيرت العراق 84", ku: "تیشێرتی عێراق 84" },
     description: {
       en: "Heavyweight cotton tee inspired by the shirt Iraq wore at the Los Angeles 1984 Olympic Games. Maroon and off-white — the elegant palette of a generation that wrote its name among the game's greats.",
-      ar: "تيشيرت قطني ثقيل مستوحى من القميص الذي ارتداه المنتخب العراقي في أولمبياد لوس أنجلس ١٩٨٤. الماروني والأوف وايت — لوحة ألوان أنيقة لجيل خطّ اسمه بين كبار اللعبة.",
-      ku: "تیشێرتی لۆکەی قورس بە ئیلهام لەو کراسەی عێراق لە ئۆڵۆمپیادی لۆس ئەنجلس ١٩٨٤ لەبەری کرد. مارۆنی و ئۆف وایت — ڕەنگە جوانەکانی ئەو نەوەیەی ناوی خۆی لەنێو گەورەکانی یارییەکەدا نووسی.",
+      ar: "تيشيرت قطني ثقيل مستوحى من القميص الذي ارتداه المنتخب العراقي في أولمبياد لوس أنجلس 1984. الماروني والأوف وايت — لوحة ألوان أنيقة لجيل خطّ اسمه بين كبار اللعبة.",
+      ku: "تیشێرتی لۆکەی قورس بە ئیلهام لەو کراسەی عێراق لە ئۆڵۆمپیادی لۆس ئەنجلس 1984 لەبەری کرد. مارۆنی و ئۆف وایت — ڕەنگە جوانەکانی ئەو نەوەیەی ناوی خۆی لەنێو گەورەکانی یارییەکەدا نووسی.",
     },
     story: {
       en: "Los Angeles 1984 — where the dream began. Inspired by the shirt the Iraqi national team wore at the Los Angeles Olympic Games, this cotton tee embodies one of the most important chapters in Iraqi football history. Maroon and off-white revive the elegant, distinctive character of the generation that wrote its name among the world's great teams.",
       ar: "Los Angeles 1984 – بداية الحلم. مستوحى من القميص الذي ارتداه المنتخب العراقي في دورة الألعاب الأولمبية في لوس أنجلِس 1984، يأتي هذا التيشيرت القطني ليجسد واحدة من أهم المحطات في تاريخ الكرة العراقية. ألوان الماروني والأوف وايت تعيد إحياء الطابع الأنيق والمميز لذلك الجيل الذي خطّ اسمه بين كبار المنتخبات على الساحة الدولية.",
-      ku: "لۆس ئەنجلس ١٩٨٤ — دەستپێکی خەونەکە. بە ئیلهام لەو کراسەی هەڵبژاردەی عێراق لە یارییە ئۆڵۆمپیادییەکانی لۆس ئەنجلس لەبەری کرد، ئەم تیشێرتە لۆکەییە یەکێک لە گرنگترین وێستگەکانی مێژووی تۆپی پێی عێراق دەگێڕێتەوە. مارۆنی و ئۆف وایت کەسایەتییە جوان و تایبەتەکەی ئەو نەوەیە زیندوو دەکەنەوە کە ناوی خۆی لەنێو گەورە هەڵبژاردەکانی جیهاندا نووسی.",
+      ku: "لۆس ئەنجلس 1984 — دەستپێکی خەونەکە. بە ئیلهام لەو کراسەی هەڵبژاردەی عێراق لە یارییە ئۆڵۆمپیادییەکانی لۆس ئەنجلس لەبەری کرد، ئەم تیشێرتە لۆکەییە یەکێک لە گرنگترین وێستگەکانی مێژووی تۆپی پێی عێراق دەگێڕێتەوە. مارۆنی و ئۆف وایت کەسایەتییە جوان و تایبەتەکەی ئەو نەوەیە زیندوو دەکەنەوە کە ناوی خۆی لەنێو گەورە هەڵبژاردەکانی جیهاندا نووسی.",
     },
     details: [
       {
         en: "240 gsm heavyweight combed cotton",
-        ar: "قطن ممشط ثقيل ٢٤٠ غم/م²",
-        ku: "لۆکەی شانەکراوی قورس ٢٤٠ گم/م²",
+        ar: "قطن ممشط ثقيل 240 غم/م²",
+        ku: "لۆکەی شانەکراوی قورس 240 گم/م²",
       },
       {
         en: "Boxy heritage fit with dropped shoulder",
@@ -87,8 +87,8 @@ const rawProducts: Omit<Product, "priceByCurrency" | "compareAtPriceByCurrency">
         src: imgIraq84,
         alt: {
           en: "Iraq 84 heritage tee — off-white with maroon chest print",
-          ar: "تيشيرت العراق ٨٤ التراثي — أوف وايت بطبعة صدر مارونية",
-          ku: "تیشێرتی میراتی عێراق ٨٤ — ئۆف وایت بە چاپی سنگی مارۆنی",
+          ar: "تيشيرت العراق 84 التراثي — أوف وايت بطبعة صدر مارونية",
+          ku: "تیشێرتی میراتی عێراق 84 — ئۆف وایت بە چاپی سنگی مارۆنی",
         },
       },
     ],
@@ -124,8 +124,8 @@ const rawProducts: Omit<Product, "priceByCurrency" | "compareAtPriceByCurrency">
     slug: "iraq-40-jersey",
     title: {
       en: "Iraq 40 Jersey",
-      ar: "قميص العراق ٤٠",
-      ku: "کراسی عێراق ٤٠",
+      ar: "قميص العراق 40",
+      ku: "کراسی عێراق 40",
     },
     description: {
       en: "A matchday jersey for the fortieth chapter — desert taupe body, tonal collar, breathable knit. Built for the terraces in July and the street in October.",
@@ -134,14 +134,14 @@ const rawProducts: Omit<Product, "priceByCurrency" | "compareAtPriceByCurrency">
     },
     story: {
       en: "Forty years separate the boys of '84 from today's faithful. The Iraq 40 Jersey bridges them — a modern cut carrying four decades of chants, heartbreak and impossible comebacks.",
-      ar: "أربعون عاماً تفصل فتية ٨٤ عن جمهور اليوم. قميص العراق ٤٠ يصل بينهما — قصّة عصرية تحمل أربعة عقود من الهتاف والانكسار والعودات المستحيلة.",
-      ku: "چل ساڵ کوڕانی ٨٤ لە دڵسۆزانی ئەمڕۆ جیادەکاتەوە. کراسی عێراق ٤٠ پەیوەندییان پێکەوە دەکات — بڕینێکی هاوچەرخ کە چوار دەیە هاوار و دڵشکان و گەڕانەوەی نەگونجاو هەڵدەگرێت.",
+      ar: "أربعون عاماً تفصل فتية 84 عن جمهور اليوم. قميص العراق 40 يصل بينهما — قصّة عصرية تحمل أربعة عقود من الهتاف والانكسار والعودات المستحيلة.",
+      ku: "چل ساڵ کوڕانی 84 لە دڵسۆزانی ئەمڕۆ جیادەکاتەوە. کراسی عێراق 40 پەیوەندییان پێکەوە دەکات — بڕینێکی هاوچەرخ کە چوار دەیە هاوار و دڵشکان و گەڕانەوەی نەگونجاو هەڵدەگرێت.",
     },
     details: [
       {
         en: "Breathable jacquard knit, 165 gsm",
-        ar: "نسيج جاكار يتنفس، ١٦٥ غم/م²",
-        ku: "چنینی جاکاردی هەناسەدار، ١٦٥ گم/م²",
+        ar: "نسيج جاكار يتنفس، 165 غم/م²",
+        ku: "چنینی جاکاردی هەناسەدار، 165 گم/م²",
       },
       {
         en: "Embroidered crest, numbered hem tag",
@@ -170,8 +170,8 @@ const rawProducts: Omit<Product, "priceByCurrency" | "compareAtPriceByCurrency">
         src: imgIraq40,
         alt: {
           en: "Iraq 40 jersey in desert taupe with tonal collar",
-          ar: "قميص العراق ٤٠ باللون الترابي الصحراوي وياقة متناغمة",
-          ku: "کراسی عێراق ٤٠ بە ڕەنگی خۆڵەمێشی بیابانی و یەخەی هاوڕەنگ",
+          ar: "قميص العراق 40 باللون الترابي الصحراوي وياقة متناغمة",
+          ku: "کراسی عێراق 40 بە ڕەنگی خۆڵەمێشی بیابانی و یەخەی هاوڕەنگ",
         },
       },
     ],
@@ -199,17 +199,17 @@ const rawProducts: Omit<Product, "priceByCurrency" | "compareAtPriceByCurrency">
   {
     id: "p-iraq-88",
     slug: "iraq-88",
-    title: { en: "Iraq 88 Tee", ar: "تيشيرت العراق ٨٨", ku: "تیشێرتی عێراق ٨٨" },
+    title: { en: "Iraq 88 Tee", ar: "تيشيرت العراق 88", ku: "تیشێرتی عێراق 88" },
     description: {
       en: "Ink-black heavyweight tee marking 1988 — a year of defiance played out under floodlights. Minimal front, archive print across the back.",
-      ar: "تيشيرت أسود ثقيل يوثّق عام ١٩٨٨ — عام من التحدي تحت الأضواء الكاشفة. واجهة بسيطة وطبعة أرشيفية على الظهر.",
-      ku: "تیشێرتی ڕەشی قورس بۆ ساڵی ١٩٨٨ — ساڵێکی بەرەنگاری لەژێر پرۆژەکتەرەکاندا. پێشەوەیەکی سادە و چاپێکی ئەرشیفی لە پشتەوە.",
+      ar: "تيشيرت أسود ثقيل يوثّق عام 1988 — عام من التحدي تحت الأضواء الكاشفة. واجهة بسيطة وطبعة أرشيفية على الظهر.",
+      ku: "تیشێرتی ڕەشی قورس بۆ ساڵی 1988 — ساڵێکی بەرەنگاری لەژێر پرۆژەکتەرەکاندا. پێشەوەیەکی سادە و چاپێکی ئەرشیفی لە پشتەوە.",
     },
     details: [
       {
         en: "240 gsm heavyweight combed cotton",
-        ar: "قطن ممشط ثقيل ٢٤٠ غم/م²",
-        ku: "لۆکەی شانەکراوی قورس ٢٤٠ گم/م²",
+        ar: "قطن ممشط ثقيل 240 غم/م²",
+        ku: "لۆکەی شانەکراوی قورس 240 گم/م²",
       },
       {
         en: "Back archive print, tonal neck tape",
@@ -233,8 +233,8 @@ const rawProducts: Omit<Product, "priceByCurrency" | "compareAtPriceByCurrency">
         src: imgIraq88,
         alt: {
           en: "Iraq 88 tee in ink black",
-          ar: "تيشيرت العراق ٨٨ بالأسود الحبري",
-          ku: "تیشێرتی عێراق ٨٨ بە ڕەشی مەرەکەبی",
+          ar: "تيشيرت العراق 88 بالأسود الحبري",
+          ku: "تیشێرتی عێراق 88 بە ڕەشی مەرەکەبی",
         },
       },
     ],
@@ -322,8 +322,8 @@ const rawProducts: Omit<Product, "priceByCurrency" | "compareAtPriceByCurrency">
     details: [
       {
         en: "220 gsm cotton, relaxed fit",
-        ar: "قطن ٢٢٠ غم/م² بقصّة مريحة",
-        ku: "لۆکەی ٢٢٠ گم/م²، بڕینی ئاسوودە",
+        ar: "قطن 220 غم/م² بقصّة مريحة",
+        ku: "لۆکەی 220 گم/م²، بڕینی ئاسوودە",
       },
       {
         en: "Archive portrait print",
@@ -376,7 +376,7 @@ const rawProducts: Omit<Product, "priceByCurrency" | "compareAtPriceByCurrency">
   {
     id: "p-iraq-70",
     slug: "iraq-70",
-    title: { en: "IRAQ 70 Tee", ar: "تيشيرت العراق ٧٠", ku: "تیشێرتی عێراق ٧٠" },
+    title: { en: "IRAQ 70 Tee", ar: "تيشيرت العراق 70", ku: "تیشێرتی عێراق 70" },
     description: {
       en: "Terracotta and sand — the palette of 1970s football photography. A sun-faded tribute to the pioneers who built the foundations.",
       ar: "تيراكوتا ورملي — ألوان صور كرة السبعينات. تحية بلون الشمس الباهتة للروّاد الذين وضعوا الأساس.",
@@ -385,8 +385,8 @@ const rawProducts: Omit<Product, "priceByCurrency" | "compareAtPriceByCurrency">
     details: [
       {
         en: "Garment-dyed 230 gsm cotton",
-        ar: "قطن مصبوغ بعد الحياكة ٢٣٠ غم/م²",
-        ku: "لۆکەی ٢٣٠ گم/م² دوای دورمان ڕەنگکراو",
+        ar: "قطن مصبوغ بعد الحياكة 230 غم/م²",
+        ku: "لۆکەی 230 گم/م² دوای دورمان ڕەنگکراو",
       },
       {
         en: "Faded retro front print",
@@ -410,8 +410,8 @@ const rawProducts: Omit<Product, "priceByCurrency" | "compareAtPriceByCurrency">
         src: imgIraq70,
         alt: {
           en: "IRAQ 70 tee in sun-faded terracotta",
-          ar: "تيشيرت العراق ٧٠ بلون التيراكوتا الباهت",
-          ku: "تیشێرتی عێراق ٧٠ بە تیراکۆتای کاڵبووەوە",
+          ar: "تيشيرت العراق 70 بلون التيراكوتا الباهت",
+          ku: "تیشێرتی عێراق 70 بە تیراکۆتای کاڵبووەوە",
         },
       },
     ],
@@ -435,8 +435,8 @@ const rawProducts: Omit<Product, "priceByCurrency" | "compareAtPriceByCurrency">
     details: [
       {
         en: "220 gsm cotton, regular fit",
-        ar: "قطن ٢٢٠ غم/م² بقصّة عادية",
-        ku: "لۆکەی ٢٢٠ گم/م²، بڕینی ئاسایی",
+        ar: "قطن 220 غم/م² بقصّة عادية",
+        ku: "لۆکەی 220 گم/م²، بڕینی ئاسایی",
       },
       {
         en: "High-density pitch-green print",
@@ -488,8 +488,8 @@ const rawProducts: Omit<Product, "priceByCurrency" | "compareAtPriceByCurrency">
     },
     description: {
       en: "For the one who never stopped believing. Delivered by email with your message, redeemable on everything, valid 24 months.",
-      ar: "لمن لم يتوقف يوماً عن الإيمان. تُرسل بالبريد الإلكتروني مع رسالتك، وتُستخدم على كل شيء، وصالحة ٢٤ شهراً.",
-      ku: "بۆ ئەو کەسەی هەرگیز لە باوەڕ نەوەستا. بە ئیمەیڵ لەگەڵ پەیامەکەت دەگەیەنرێت، بۆ هەموو شتێک بەکاردێت، ٢٤ مانگ کاردەکات.",
+      ar: "لمن لم يتوقف يوماً عن الإيمان. تُرسل بالبريد الإلكتروني مع رسالتك، وتُستخدم على كل شيء، وصالحة 24 شهراً.",
+      ku: "بۆ ئەو کەسەی هەرگیز لە باوەڕ نەوەستا. بە ئیمەیڵ لەگەڵ پەیامەکەت دەگەیەنرێت، بۆ هەموو شتێک بەکاردێت، 24 مانگ کاردەکات.",
     },
     details: [
       {

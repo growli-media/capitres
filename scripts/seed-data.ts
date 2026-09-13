@@ -100,19 +100,19 @@ function variants(
 export const seedProducts: SeedProduct[] = [
   {
     slug: "iraq-84",
-    title: { en: "Iraq 84 Tee", ar: "تيشيرت العراق ٨٤", ku: "تیشێرتی عێراق ٨٤" },
+    title: { en: "Iraq 84 Tee", ar: "تيشيرت العراق 84", ku: "تیشێرتی عێراق 84" },
     description: {
       en: "Heavyweight cotton tee inspired by the shirt Iraq wore at the Los Angeles 1984 Olympic Games. Maroon and off-white — the elegant palette of a generation that wrote its name among the game's greats.",
-      ar: "تيشيرت قطني ثقيل مستوحى من القميص الذي ارتداه المنتخب العراقي في أولمبياد لوس أنجلس ١٩٨٤. الماروني والأوف وايت — لوحة ألوان أنيقة لجيل خطّ اسمه بين كبار اللعبة.",
-      ku: "تیشێرتی لۆکەی قورس بە ئیلهام لەو کراسەی عێراق لە ئۆڵۆمپیادی لۆس ئەنجلس ١٩٨٤ لەبەری کرد. مارۆنی و ئۆف وایت — ڕەنگە جوانەکانی ئەو نەوەیەی ناوی خۆی لەنێو گەورەکانی یارییەکەدا نووسی.",
+      ar: "تيشيرت قطني ثقيل مستوحى من القميص الذي ارتداه المنتخب العراقي في أولمبياد لوس أنجلس 1984. الماروني والأوف وايت — لوحة ألوان أنيقة لجيل خطّ اسمه بين كبار اللعبة.",
+      ku: "تیشێرتی لۆکەی قورس بە ئیلهام لەو کراسەی عێراق لە ئۆڵۆمپیادی لۆس ئەنجلس 1984 لەبەری کرد. مارۆنی و ئۆف وایت — ڕەنگە جوانەکانی ئەو نەوەیەی ناوی خۆی لەنێو گەورەکانی یارییەکەدا نووسی.",
     },
     story: {
       en: "Los Angeles 1984 — where the dream began. Inspired by the shirt the Iraqi national team wore at the Los Angeles Olympic Games, this cotton tee embodies one of the most important chapters in Iraqi football history. Maroon and off-white revive the elegant, distinctive character of the generation that wrote its name among the world's great teams.",
       ar: "Los Angeles 1984 – بداية الحلم. مستوحى من القميص الذي ارتداه المنتخب العراقي في دورة الألعاب الأولمبية في لوس أنجلِس 1984، يأتي هذا التيشيرت القطني ليجسد واحدة من أهم المحطات في تاريخ الكرة العراقية. ألوان الماروني والأوف وايت تعيد إحياء الطابع الأنيق والمميز لذلك الجيل الذي خطّ اسمه بين كبار المنتخبات على الساحة الدولية.",
-      ku: "لۆس ئەنجلس ١٩٨٤ — دەستپێکی خەونەکە. بە ئیلهام لەو کراسەی هەڵبژاردەی عێراق لە یارییە ئۆڵۆمپیادییەکانی لۆس ئەنجلس لەبەری کرد، ئەم تیشێرتە لۆکەییە یەکێک لە گرنگترین وێستگەکانی مێژووی تۆپی پێی عێراق دەگێڕێتەوە. مارۆنی و ئۆف وایت کەسایەتییە جوان و تایبەتەکەی ئەو نەوەیە زیندوو دەکەنەوە کە ناوی خۆی لەنێو گەورە هەڵبژاردەکانی جیهاندا نووسی.",
+      ku: "لۆس ئەنجلس 1984 — دەستپێکی خەونەکە. بە ئیلهام لەو کراسەی هەڵبژاردەی عێراق لە یارییە ئۆڵۆمپیادییەکانی لۆس ئەنجلس لەبەری کرد، ئەم تیشێرتە لۆکەییە یەکێک لە گرنگترین وێستگەکانی مێژووی تۆپی پێی عێراق دەگێڕێتەوە. مارۆنی و ئۆف وایت کەسایەتییە جوان و تایبەتەکەی ئەو نەوەیە زیندوو دەکەنەوە کە ناوی خۆی لەنێو گەورە هەڵبژاردەکانی جیهاندا نووسی.",
     },
     details: [
-      { en: "240 gsm heavyweight combed cotton", ar: "قطن ممشط ثقيل ٢٤٠ غم/م²", ku: "لۆکەی شانەکراوی قورس ٢٤٠ گم/م²" },
+      { en: "240 gsm heavyweight combed cotton", ar: "قطن ممشط ثقيل 240 غم/م²", ku: "لۆکەی شانەکراوی قورس 240 گم/م²" },
       { en: "Boxy heritage fit with dropped shoulder", ar: "قصّة تراثية واسعة بكتف نازل", ku: "بڕینی میراتی بەرفراوان بە شانی شۆڕ" },
       { en: "Archive-referenced chest print", ar: "طبعة صدر مستندة إلى الأرشيف", ku: "چاپی سنگ لە ئەرشیفەوە وەرگیراو" },
       { en: "Cold wash, inside out. Do not tumble dry.", ar: "غسيل بارد مقلوباً. لا يُجفف بالمجفف.", ku: "بە ئاوی سارد و پێچەوانە بیشۆ. وشککەرەوە بەکارمەهێنە." },
@@ -127,24 +127,24 @@ export const seedProducts: SeedProduct[] = [
         key: "products/banner-2.png",
         alt: {
           en: "Iraq 84 heritage tee — cream with sky-blue trim",
-          ar: "تيشيرت العراق ٨٤ التراثي — كريمي بحواف سماوية",
-          ku: "تیشێرتی میراتی عێراق ٨٤ — کرێمی بە کەنارەی ئاسمانی",
+          ar: "تيشيرت العراق 84 التراثي — كريمي بحواف سماوية",
+          ku: "تیشێرتی میراتی عێراق 84 — کرێمی بە کەنارەی ئاسمانی",
         },
       },
       {
         key: "products/banner-1.png",
         alt: {
           en: "Iraq 84 heritage tee, campaign shot against a floodlit net",
-          ar: "تيشيرت العراق ٨٤ في لقطة حملة أمام شباك مضاءة",
-          ku: "تیشێرتی عێراق ٨٤ لە وێنەیەکی کەمپەین لەبەردەم تۆڕی ڕووناک",
+          ar: "تيشيرت العراق 84 في لقطة حملة أمام شباك مضاءة",
+          ku: "تیشێرتی عێراق 84 لە وێنەیەکی کەمپەین لەبەردەم تۆڕی ڕووناک",
         },
       },
       {
         key: "products/banner-6.png",
         alt: {
           en: "Iraq 84 heritage tee, detail shot",
-          ar: "تيشيرت العراق ٨٤، لقطة تفصيلية",
-          ku: "تیشێرتی عێراق ٨٤، وێنەی وردەکاری",
+          ar: "تيشيرت العراق 84، لقطة تفصيلية",
+          ku: "تیشێرتی عێراق 84، وێنەی وردەکاری",
         },
       },
     ],
@@ -159,7 +159,7 @@ export const seedProducts: SeedProduct[] = [
   },
   {
     slug: "iraq-40-jersey",
-    title: { en: "Iraq 40 Jersey", ar: "قميص العراق ٤٠", ku: "کراسی عێراق ٤٠" },
+    title: { en: "Iraq 40 Jersey", ar: "قميص العراق 40", ku: "کراسی عێراق 40" },
     description: {
       en: "A matchday jersey for the fortieth chapter — forest green body, white collar, breathable knit. Built for the terraces in July and the street in October.",
       ar: "قميص يوم المباراة للفصل الأربعين — لون أخضر غابي، وياقة بيضاء، ونسيج يتنفس. صُنع للمدرجات في تموز وللشارع في تشرين.",
@@ -167,11 +167,11 @@ export const seedProducts: SeedProduct[] = [
     },
     story: {
       en: "Forty years separate the boys of '84 from today's faithful. The Iraq 40 Jersey bridges them — a modern cut carrying four decades of chants, heartbreak and impossible comebacks.",
-      ar: "أربعون عاماً تفصل فتية ٨٤ عن جمهور اليوم. قميص العراق ٤٠ يصل بينهما — قصّة عصرية تحمل أربعة عقود من الهتاف والانكسار والعودات المستحيلة.",
-      ku: "چل ساڵ کوڕانی ٨٤ لە دڵسۆزانی ئەمڕۆ جیادەکاتەوە. کراسی عێراق ٤٠ پەیوەندییان پێکەوە دەکات — بڕینێکی هاوچەرخ کە چوار دەیە هاوار و دڵشکان و گەڕانەوەی نەگونجاو هەڵدەگرێت.",
+      ar: "أربعون عاماً تفصل فتية 84 عن جمهور اليوم. قميص العراق 40 يصل بينهما — قصّة عصرية تحمل أربعة عقود من الهتاف والانكسار والعودات المستحيلة.",
+      ku: "چل ساڵ کوڕانی 84 لە دڵسۆزانی ئەمڕۆ جیادەکاتەوە. کراسی عێراق 40 پەیوەندییان پێکەوە دەکات — بڕینێکی هاوچەرخ کە چوار دەیە هاوار و دڵشکان و گەڕانەوەی نەگونجاو هەڵدەگرێت.",
     },
     details: [
-      { en: "Breathable jacquard knit, 165 gsm", ar: "نسيج جاكار يتنفس، ١٦٥ غم/م²", ku: "چنینی جاکاردی هەناسەدار، ١٦٥ گم/م²" },
+      { en: "Breathable jacquard knit, 165 gsm", ar: "نسيج جاكار يتنفس، 165 غم/م²", ku: "چنینی جاکاردی هەناسەدار، 165 گم/م²" },
       { en: "Embroidered crest, numbered hem tag", ar: "شعار مطرز وبطاقة حاشية مرقمة", ku: "نیشانەی دورماوکراو و تاگی ژمارەدار" },
       { en: "Athletic fit — size up for a terrace fit", ar: "قصّة رياضية — اختر مقاساً أكبر لإطلالة المدرجات", ku: "بڕینی وەرزشی — بۆ ستایلی تریبوون قەبارەیەک گەورەتر ببە" },
     ],
@@ -185,24 +185,24 @@ export const seedProducts: SeedProduct[] = [
         key: "products/banner-3.png",
         alt: {
           en: "Iraq 40 jersey in forest green with white collar",
-          ar: "قميص العراق ٤٠ باللون الأخضر الغابي وياقة بيضاء",
-          ku: "کراسی عێراق ٤٠ بە سەوزی دارستان و یەخەی سپی",
+          ar: "قميص العراق 40 باللون الأخضر الغابي وياقة بيضاء",
+          ku: "کراسی عێراق 40 بە سەوزی دارستان و یەخەی سپی",
         },
       },
       {
         key: "products/banner-4.png",
         alt: {
           en: "Iraq 40 jersey, worn portrait shot",
-          ar: "قميص العراق ٤٠، لقطة بورتريه أثناء الارتداء",
-          ku: "کراسی عێراق ٤٠، وێنەی پۆرترەیت لەکاتی لەبەرکردن",
+          ar: "قميص العراق 40، لقطة بورتريه أثناء الارتداء",
+          ku: "کراسی عێراق 40، وێنەی پۆرترەیت لەکاتی لەبەرکردن",
         },
       },
       {
         key: "products/banner-5.png",
         alt: {
           en: "Iraq 40 jersey styled alongside the heritage capsule",
-          ar: "قميص العراق ٤٠ إلى جانب كبسولة التراث",
-          ku: "کراسی عێراق ٤٠ لەگەڵ کۆلێکشنی میرات",
+          ar: "قميص العراق 40 إلى جانب كبسولة التراث",
+          ku: "کراسی عێراق 40 لەگەڵ کۆلێکشنی میرات",
         },
       },
     ],
@@ -217,14 +217,14 @@ export const seedProducts: SeedProduct[] = [
   },
   {
     slug: "iraq-88",
-    title: { en: "Iraq 88 Tee", ar: "تيشيرت العراق ٨٨", ku: "تیشێرتی عێراق ٨٨" },
+    title: { en: "Iraq 88 Tee", ar: "تيشيرت العراق 88", ku: "تیشێرتی عێراق 88" },
     description: {
       en: "Ink-black heavyweight tee marking 1988 — a year of defiance played out under floodlights. Minimal front, archive print across the back.",
-      ar: "تيشيرت أسود ثقيل يوثّق عام ١٩٨٨ — عام من التحدي تحت الأضواء الكاشفة. واجهة بسيطة وطبعة أرشيفية على الظهر.",
-      ku: "تیشێرتی ڕەشی قورس بۆ ساڵی ١٩٨٨ — ساڵێکی بەرەنگاری لەژێر پرۆژەکتەرەکاندا. پێشەوەیەکی سادە و چاپێکی ئەرشیفی لە پشتەوە.",
+      ar: "تيشيرت أسود ثقيل يوثّق عام 1988 — عام من التحدي تحت الأضواء الكاشفة. واجهة بسيطة وطبعة أرشيفية على الظهر.",
+      ku: "تیشێرتی ڕەشی قورس بۆ ساڵی 1988 — ساڵێکی بەرەنگاری لەژێر پرۆژەکتەرەکاندا. پێشەوەیەکی سادە و چاپێکی ئەرشیفی لە پشتەوە.",
     },
     details: [
-      { en: "240 gsm heavyweight combed cotton", ar: "قطن ممشط ثقيل ٢٤٠ غم/م²", ku: "لۆکەی شانەکراوی قورس ٢٤٠ گم/م²" },
+      { en: "240 gsm heavyweight combed cotton", ar: "قطن ممشط ثقيل 240 غم/م²", ku: "لۆکەی شانەکراوی قورس 240 گم/م²" },
       { en: "Back archive print, tonal neck tape", ar: "طبعة أرشيفية على الظهر وشريط رقبة متناغم", ku: "چاپی ئەرشیفی لە پشت و شریتی ملی هاوڕەنگ" },
     ],
     category: "tees",
@@ -235,15 +235,15 @@ export const seedProducts: SeedProduct[] = [
     images: [
       {
         key: "products/banner-1.png",
-        alt: { en: "Iraq 88 tee in cream", ar: "تيشيرت العراق ٨٨ بالكريمي", ku: "تیشێرتی عێراق ٨٨ بە کرێمی" },
+        alt: { en: "Iraq 88 tee in cream", ar: "تيشيرت العراق 88 بالكريمي", ku: "تیشێرتی عێراق 88 بە کرێمی" },
       },
       {
         key: "products/banner-2.png",
-        alt: { en: "Iraq 88 tee, clean product shot", ar: "تيشيرت العراق ٨٨، لقطة منتج نظيفة", ku: "تیشێرتی عێراق ٨٨، وێنەی بەرهەمی پاک" },
+        alt: { en: "Iraq 88 tee, clean product shot", ar: "تيشيرت العراق 88، لقطة منتج نظيفة", ku: "تیشێرتی عێراق 88، وێنەی بەرهەمی پاک" },
       },
       {
         key: "products/banner-6.png",
-        alt: { en: "Iraq 88 tee, detail shot", ar: "تيشيرت العراق ٨٨، لقطة تفصيلية", ku: "تیشێرتی عێراق ٨٨، وێنەی وردەکاری" },
+        alt: { en: "Iraq 88 tee, detail shot", ar: "تيشيرت العراق 88، لقطة تفصيلية", ku: "تیشێرتی عێراق 88، وێنەی وردەکاری" },
       },
     ],
     collectionSlugs: ["heritage-capsule"],
@@ -308,7 +308,7 @@ export const seedProducts: SeedProduct[] = [
       ku: "پێش جامەکان و پێش ئەکادیمیاکان، پیاوێک لەسەر هێڵی یاری بە جلی وەرزشییەوە داوای زیاتری دەکرد. عەمۆ بابا بڕبڕەی پشتی بە تۆپی پێی عێراق بەخشی. ئەمە بۆ ئەوە.",
     },
     details: [
-      { en: "220 gsm cotton, relaxed fit", ar: "قطن ٢٢٠ غم/م² بقصّة مريحة", ku: "لۆکەی ٢٢٠ گم/م²، بڕینی ئاسوودە" },
+      { en: "220 gsm cotton, relaxed fit", ar: "قطن 220 غم/م² بقصّة مريحة", ku: "لۆکەی 220 گم/م²، بڕینی ئاسوودە" },
       { en: "Archive portrait print", ar: "طبعة بورتريه أرشيفية", ku: "چاپی پۆرترەیتی ئەرشیفی" },
     ],
     category: "tees",
@@ -337,14 +337,14 @@ export const seedProducts: SeedProduct[] = [
   },
   {
     slug: "iraq-70",
-    title: { en: "IRAQ 70 Tee", ar: "تيشيرت العراق ٧٠", ku: "تیشێرتی عێراق ٧٠" },
+    title: { en: "IRAQ 70 Tee", ar: "تيشيرت العراق 70", ku: "تیشێرتی عێراق 70" },
     description: {
       en: "Terracotta and sand — the palette of 1970s football photography. A sun-faded tribute to the pioneers who built the foundations.",
       ar: "تيراكوتا ورملي — ألوان صور كرة السبعينات. تحية بلون الشمس الباهتة للروّاد الذين وضعوا الأساس.",
       ku: "تیراکۆتا و لمی — ڕەنگەکانی وێنەگری تۆپی پێی حەفتاکان. ڕێزلێنانێکی خۆرهەڵهاتوو بۆ پێشەنگەکان کە بناغەکەیان داڕشت.",
     },
     details: [
-      { en: "Garment-dyed 230 gsm cotton", ar: "قطن مصبوغ بعد الحياكة ٢٣٠ غم/م²", ku: "لۆکەی ٢٣٠ گم/م² دوای دورمان ڕەنگکراو" },
+      { en: "Garment-dyed 230 gsm cotton", ar: "قطن مصبوغ بعد الحياكة 230 غم/م²", ku: "لۆکەی 230 گم/م² دوای دورمان ڕەنگکراو" },
       { en: "Faded retro front print", ar: "طبعة أمامية ريترو باهتة", ku: "چاپی پێشەوەی ڕێترۆی کاڵبووەوە" },
     ],
     category: "tees",
@@ -355,15 +355,15 @@ export const seedProducts: SeedProduct[] = [
     images: [
       {
         key: "products/banner-6.png",
-        alt: { en: "IRAQ 70 tee in cream with sky-blue detailing", ar: "تيشيرت العراق ٧٠ بالكريمي وتفاصيل سماوية", ku: "تیشێرتی عێراق ٧٠ بە کرێمی و وردەکاری ئاسمانی" },
+        alt: { en: "IRAQ 70 tee in cream with sky-blue detailing", ar: "تيشيرت العراق 70 بالكريمي وتفاصيل سماوية", ku: "تیشێرتی عێراق 70 بە کرێمی و وردەکاری ئاسمانی" },
       },
       {
         key: "products/banner-1.png",
-        alt: { en: "IRAQ 70 tee, campaign shot", ar: "تيشيرت العراق ٧٠، لقطة حملة", ku: "تیشێرتی عێراق ٧٠، وێنەی کەمپەین" },
+        alt: { en: "IRAQ 70 tee, campaign shot", ar: "تيشيرت العراق 70، لقطة حملة", ku: "تیشێرتی عێراق 70، وێنەی کەمپەین" },
       },
       {
         key: "products/banner-2.png",
-        alt: { en: "IRAQ 70 tee, clean product shot", ar: "تيشيرت العراق ٧٠، لقطة منتج نظيفة", ku: "تیشێرتی عێراق ٧٠، وێنەی بەرهەمی پاک" },
+        alt: { en: "IRAQ 70 tee, clean product shot", ar: "تيشيرت العراق 70، لقطة منتج نظيفة", ku: "تیشێرتی عێراق 70، وێنەی بەرهەمی پاک" },
       },
     ],
     collectionSlugs: ["heritage-capsule"],
@@ -379,7 +379,7 @@ export const seedProducts: SeedProduct[] = [
       ku: "سەوزی یاریگا لەسەر سپی ستۆدیۆ — بێدەنگترین و بەرزترین تیشێرتی کۆلێکشنەکە. ئاڵایەکی ڕۆژانە بۆ دەیە زێڕینەکە.",
     },
     details: [
-      { en: "220 gsm cotton, regular fit", ar: "قطن ٢٢٠ غم/م² بقصّة عادية", ku: "لۆکەی ٢٢٠ گم/م²، بڕینی ئاسایی" },
+      { en: "220 gsm cotton, regular fit", ar: "قطن 220 غم/م² بقصّة عادية", ku: "لۆکەی 220 گم/م²، بڕینی ئاسایی" },
       { en: "High-density pitch-green print", ar: "طبعة خضراء عالية الكثافة", ku: "چاپی سەوزی چڕی بەرز" },
     ],
     category: "tees",
@@ -413,8 +413,8 @@ export const seedProducts: SeedProduct[] = [
     title: { en: "Capitres Gift Card", ar: "بطاقة هدايا كابتريس", ku: "کارتی دیاری کاپیترێس" },
     description: {
       en: "For the one who never stopped believing. Delivered by email with your message, redeemable on everything, valid 24 months.",
-      ar: "لمن لم يتوقف يوماً عن الإيمان. تُرسل بالبريد الإلكتروني مع رسالتك، وتُستخدم على كل شيء، وصالحة ٢٤ شهراً.",
-      ku: "بۆ ئەو کەسەی هەرگیز لە باوەڕ نەوەستا. بە ئیمەیڵ لەگەڵ پەیامەکەت دەگەیەنرێت، بۆ هەموو شتێک بەکاردێت، ٢٤ مانگ کاردەکات.",
+      ar: "لمن لم يتوقف يوماً عن الإيمان. تُرسل بالبريد الإلكتروني مع رسالتك، وتُستخدم على كل شيء، وصالحة 24 شهراً.",
+      ku: "بۆ ئەو کەسەی هەرگیز لە باوەڕ نەوەستا. بە ئیمەیڵ لەگەڵ پەیامەکەت دەگەیەنرێت، بۆ هەموو شتێک بەکاردێت، 24 مانگ کاردەکات.",
     },
     details: [
       { en: "Digital delivery by email", ar: "تسليم رقمي عبر البريد الإلكتروني", ku: "گەیاندنی دیجیتاڵ بە ئیمەیڵ" },
@@ -442,7 +442,7 @@ export const seedCollections: SeedCollection[] = [
   {
     slug: "heritage-capsule",
     title: { en: "Heritage Capsule", ar: "كبسولة التراث", ku: "کۆلێکشنی میرات" },
-    tagline: { en: "1984. Los Angeles. The dream begins.", ar: "١٩٨٤. لوس أنجلس. بداية الحلم.", ku: "١٩٨٤. لۆس ئەنجلس. دەستپێکی خەونەکە." },
+    tagline: { en: "1984. Los Angeles. The dream begins.", ar: "1984. لوس أنجلس. بداية الحلم.", ku: "1984. لۆس ئەنجلس. دەستپێکی خەونەکە." },
     description: {
       en: "The kits that made a nation believe, rebuilt from the archive — Olympic olive, floodlit nights and the decade football never gave back.",
       ar: "الأطقم التي جعلت أمة كاملة تؤمن، أُعيد بناؤها من الأرشيف — زيتوني الأولمبياد، وليالي الأضواء الكاشفة، والعقد الذي لم تُعده الكرة أبداً.",
@@ -509,7 +509,7 @@ export const seedCollections: SeedCollection[] = [
 export const seedPosts: SeedPost[] = [
   {
     slug: "1984-los-angeles-the-dream-begins",
-    title: { en: "1984, Los Angeles: The Dream Begins", ar: "١٩٨٤، لوس أنجلس: بداية الحلم", ku: "١٩٨٤، لۆس ئەنجلس: دەستپێکی خەونەکە" },
+    title: { en: "1984, Los Angeles: The Dream Begins", ar: "1984، لوس أنجلس: بداية الحلم", ku: "1984، لۆس ئەنجلس: دەستپێکی خەونەکە" },
     excerpt: {
       en: "Why a single summer on Californian grass still shapes what we sew four decades later.",
       ar: "لماذا لا يزال صيف واحد على عشب كاليفورنيا يشكّل ما نخيطه بعد أربعة عقود.",
@@ -517,7 +517,7 @@ export const seedPosts: SeedPost[] = [
     },
     cover: {
       key: "products/iraq-84.jpg",
-      alt: { en: "Iraq 84 heritage tee", ar: "تيشيرت العراق ٨٤ التراثي", ku: "تیشێرتی میراتی عێراق ٨٤" },
+      alt: { en: "Iraq 84 heritage tee", ar: "تيشيرت العراق 84 التراثي", ku: "تیشێرتی میراتی عێراق 84" },
     },
     date: "2026-06-12",
     readingMinutes: 4,
@@ -526,8 +526,8 @@ export const seedPosts: SeedPost[] = [
     body: [
       { type: "p", text: {
         en: "Every brand has a founding image. Ours is a television set in a Baghdad living room in the summer of 1984, and eleven men in olive walking out under Californian sun.",
-        ar: "لكل علامة صورة تأسيسية. صورتنا جهاز تلفزيون في صالة بغدادية صيف ١٩٨٤، وأحد عشر رجلاً بالزيتوني يخرجون تحت شمس كاليفورنيا.",
-        ku: "هەموو براندێک وێنەیەکی دامەزراندنی هەیە. هی ئێمە تەلەفزیۆنێکە لە هۆڵێکی بەغدا لە هاوینی ١٩٨٤، و یازدە پیاو بە زەیتوونییەوە لەژێر خۆری کالیفۆرنیا دەردەچن.",
+        ar: "لكل علامة صورة تأسيسية. صورتنا جهاز تلفزيون في صالة بغدادية صيف 1984، وأحد عشر رجلاً بالزيتوني يخرجون تحت شمس كاليفورنيا.",
+        ku: "هەموو براندێک وێنەیەکی دامەزراندنی هەیە. هی ئێمە تەلەفزیۆنێکە لە هۆڵێکی بەغدا لە هاوینی 1984، و یازدە پیاو بە زەیتوونییەوە لەژێر خۆری کالیفۆرنیا دەردەچن.",
       } },
       { type: "p", text: {
         en: "The Los Angeles Olympics were not Iraq's first international stage, but they were the one that made the dream feel touchable. Qualification alone put a generation of kids in the street with a ball and a borrowed name on their back.",
@@ -539,13 +539,13 @@ export const seedPosts: SeedPost[] = [
         ar: "الماروني والأوف وايت — لوحة أنيقة لجيل خطّ اسمه بين الكبار.",
         ku: "مارۆنی و ئۆف وایت — ڕەنگە جوانەکانی نەوەیەک کە ناوی لەنێو گەورەکاندا نووسی.",
       }, attribution: {
-        en: "From the Iraq 84 design notes", ar: "من ملاحظات تصميم العراق ٨٤", ku: "لە تێبینییەکانی دیزاینی عێراق ٨٤",
+        en: "From the Iraq 84 design notes", ar: "من ملاحظات تصميم العراق 84", ku: "لە تێبینییەکانی دیزاینی عێراق 84",
       } },
       { type: "h2", text: { en: "From archive to garment", ar: "من الأرشيف إلى القطعة", ku: "لە ئەرشیفەوە بۆ پارچە" } },
       { type: "p", text: {
         en: "The Iraq 84 tee began with photographs — the collar line, the weight of the cloth, the exact distance between crest and heart. We matched the maroon by eye against three surviving prints, then let a 240gsm cotton carry the memory.",
-        ar: "بدأ تيشيرت العراق ٨٤ من الصور — خط الياقة، ووزن القماش، والمسافة الدقيقة بين الشعار والقلب. طابقنا الماروني بالعين على ثلاث صور باقية، ثم تركنا قطناً بوزن ٢٤٠ غراماً يحمل الذاكرة.",
-        ku: "تیشێرتی عێراق ٨٤ لە وێنەکانەوە دەستیپێکرد — هێڵی یەخە، کێشی قوماش، و دووری وردی نێوان نیشانە و دڵ. مارۆنییەکەمان بە چاو لەگەڵ سێ وێنەی ماوە بەراورد کرد، پاشان وامانلێکرد لۆکەیەکی ٢٤٠ گرامی یادگارییەکە هەڵبگرێت.",
+        ar: "بدأ تيشيرت العراق 84 من الصور — خط الياقة، ووزن القماش، والمسافة الدقيقة بين الشعار والقلب. طابقنا الماروني بالعين على ثلاث صور باقية، ثم تركنا قطناً بوزن 240 غراماً يحمل الذاكرة.",
+        ku: "تیشێرتی عێراق 84 لە وێنەکانەوە دەستیپێکرد — هێڵی یەخە، کێشی قوماش، و دووری وردی نێوان نیشانە و دڵ. مارۆنییەکەمان بە چاو لەگەڵ سێ وێنەی ماوە بەراورد کرد، پاشان وامانلێکرد لۆکەیەکی 240 گرامی یادگارییەکە هەڵبگرێت.",
       } },
       { type: "p", text: {
         en: "Heritage is not a costume. It has to survive the wash, the crowd and the years — like the memory it carries.",
@@ -609,7 +609,7 @@ export const seedPosts: SeedPost[] = [
     },
     cover: {
       key: "products/iraq-40-jersey.jpg",
-      alt: { en: "Iraq 40 jersey styled flat", ar: "قميص العراق ٤٠", ku: "کراسی عێراق ٤٠" },
+      alt: { en: "Iraq 40 jersey styled flat", ar: "قميص العراق 40", ku: "کراسی عێراق 40" },
     },
     date: "2026-07-05",
     readingMinutes: 3,
@@ -630,8 +630,8 @@ export const seedPosts: SeedPost[] = [
       { type: "h2", text: { en: "Two: layer like the nineties", ar: "ثانياً: طبّق كما في التسعينات", ku: "دووەم: چینبەندی وەک نەوەدەکان" } },
       { type: "p", text: {
         en: "Our 90's Jacket exists for exactly this — snap it open over the Iraq 40 Jersey and you have the warm-up-tunnel look that photographs never get old.",
-        ar: "جاكيت التسعينات موجود لهذا بالضبط — افتحه فوق قميص العراق ٤٠ لتحصل على إطلالة نفق الإحماء التي لا تشيخ صورها أبداً.",
-        ku: "چاکەتی نەوەدەکانمان بۆ ئەمە هەیە — بەسەر کراسی عێراق ٤٠دا بیکەوە و دیمەنی تونێلی گەرمکردنەوەت هەیە کە وێنەکانی هەرگیز کۆن نابن.",
+        ar: "جاكيت التسعينات موجود لهذا بالضبط — افتحه فوق قميص العراق 40 لتحصل على إطلالة نفق الإحماء التي لا تشيخ صورها أبداً.",
+        ku: "چاکەتی نەوەدەکانمان بۆ ئەمە هەیە — بەسەر کراسی عێراق 40دا بیکەوە و دیمەنی تونێلی گەرمکردنەوەت هەیە کە وێنەکانی هەرگیز کۆن نابن.",
       } },
       { type: "p", text: {
         en: "Three: size up. Four: never tuck it. Five — and this is the only rule that matters — wear it on matchday, win or lose.",
