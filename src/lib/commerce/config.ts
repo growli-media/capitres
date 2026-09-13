@@ -90,6 +90,13 @@ export function computeTotals(
      * percent/fixed formula below, though in practice only one of the two
      * is ever nonzero for a given promo since a code has exactly one type. */
     extraDiscount?: number;
+    /** A real-time GES Express quote for the chosen destination + tier,
+     * already converted to whole IQD (GES quotes in USD — see
+     * IQD_PER_USD in src/lib/money.ts). Only meaningful for region
+     * "INTL"; undefined falls back to the flat SHIPPING_RATE_INTL below
+     * (used for the pre-selection preview, before a country/tier has
+     * been chosen). */
+    shippingAmountIntl?: number;
   },
 ): Totals {
   const formulaDiscount =
@@ -105,9 +112,14 @@ export function computeTotals(
     !options.physicalItems ||
     promo?.type === "free-shipping" ||
     // The order-value threshold is a domestic perk — international is
-    // always the flat rate below, no matter how large the order is.
+    // always priced by GES (or the flat fallback) below, no matter how
+    // large the order is.
     (region === "IQ" && discounted >= FREE_SHIPPING_THRESHOLD);
-  const shipping = freeShipping ? 0 : shippingRateFor(region);
+  const shipping = freeShipping
+    ? 0
+    : region === "INTL" && options.shippingAmountIntl !== undefined
+      ? options.shippingAmountIntl
+      : shippingRateFor(region);
   return {
     subtotal,
     discount,
@@ -134,6 +146,9 @@ export function computeDisplayTotals(
   promo: PromoCode | undefined,
   currency: Currency,
   region?: "IQ" | "INTL",
+  /** Same already-IQD GES quote passed to computeTotals — see its own
+   * option doc. */
+  shippingAmountIntl?: number,
 ): Totals {
   const discount =
     promo?.type === "percent"
@@ -148,7 +163,10 @@ export function computeDisplayTotals(
         : 0;
   const shipping = totals.freeShipping
     ? 0
-    : convertFromIqd(shippingRateFor(region ?? "IQ"), currency);
+    : convertFromIqd(
+        region === "INTL" && shippingAmountIntl !== undefined ? shippingAmountIntl : shippingRateFor(region ?? "IQ"),
+        currency,
+      );
   return {
     subtotal: displaySubtotal,
     discount,

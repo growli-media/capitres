@@ -104,6 +104,10 @@ export interface Order {
     shipping: number;
     total: number;
   };
+  /** Which GES Express service tier (Prime/Rapid/XLine/EcoLine) was
+   * quoted and charged for an international Wayl order — undefined for
+   * domestic orders and for orders placed before this feature shipped. */
+  shippingMethod?: string;
   promoCode?: string;
   adTracking?: AdTracking;
   metaCapiSent?: boolean;

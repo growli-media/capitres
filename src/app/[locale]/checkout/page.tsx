@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import CheckoutFlow from "@/components/checkout/CheckoutFlow";
+import { getGesCountries, type GesCountry } from "@/lib/shipping/ges";
 
 export async function generateMetadata({
   params,
@@ -19,5 +20,13 @@ export default async function CheckoutPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  return <CheckoutFlow />;
+  let countries: GesCountry[] = [];
+  try {
+    countries = await getGesCountries();
+  } catch (err) {
+    // The international shipping-country picker just shows a retry
+    // prompt instead — see CheckoutFlow.tsx.
+    console.error("[checkout] Failed to load GES country list:", err);
+  }
+  return <CheckoutFlow countries={countries} />;
 }

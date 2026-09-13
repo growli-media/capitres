@@ -178,13 +178,20 @@ function resolvePromo(
 
 /** `region` defaults to "IQ" (domestic shipping rate) — pass "INTL" only
  * where the shipping destination is actually known, e.g. checkout once
- * the customer has picked a region. */
-export function useCartTotals(region?: "IQ" | "INTL", promoOverride?: PromoCode | null) {
+ * the customer has picked a region. `shippingAmountIntl` is a real GES
+ * Express quote (already in whole IQD) for the chosen destination +
+ * tier — see computeTotals' own option doc; omit until one's been
+ * quoted. */
+export function useCartTotals(
+  region?: "IQ" | "INTL",
+  promoOverride?: PromoCode | null,
+  shippingAmountIntl?: number,
+) {
   const lines = useCart((s) => s.lines);
   const promo = resolvePromo(useCartPromo(), promoOverride);
   const subtotal = lines.reduce((sum, l) => sum + l.unitAmount * l.qty, 0);
   const physicalItems = lines.some((l) => !l.giftCard);
-  return computeTotals(subtotal, promo, { physicalItems, region });
+  return computeTotals(subtotal, promo, { physicalItems, region, shippingAmountIntl });
 }
 
 /** Display-only totals in the given currency — see computeDisplayTotals. */
@@ -192,13 +199,19 @@ export function useCartTotalsByCurrency(
   currency: Currency,
   region?: "IQ" | "INTL",
   promoOverride?: PromoCode | null,
+  shippingAmountIntl?: number,
 ) {
   const lines = useCart((s) => s.lines);
   const promo = resolvePromo(useCartPromo(), promoOverride);
-  const totals = useCartTotals(region, promoOverride);
+  // Forwarded here too, not just into computeDisplayTotals below —
+  // otherwise `totals.total`/`totals.freeShipping` (used elsewhere, e.g.
+  // the "charged as IQD" hint in CheckoutFlow.tsx) would silently still
+  // reflect the flat rate while the displayed shipping line reflects the
+  // real GES quote.
+  const totals = useCartTotals(region, promoOverride, shippingAmountIntl);
   const displaySubtotal = lines.reduce(
     (sum, l) => sum + l.unitAmountByCurrency[currency] * l.qty,
     0,
   );
-  return computeDisplayTotals(totals, displaySubtotal, promo, currency, region);
+  return computeDisplayTotals(totals, displaySubtotal, promo, currency, region, shippingAmountIntl);
 }

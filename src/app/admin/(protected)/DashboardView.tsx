@@ -58,7 +58,8 @@ export default function DashboardView({
     });
   }
 
-  const { kpis, kpiDeltas, abandonedCount, recentOrders, topProducts } = data;
+  const { kpis, kpiDeltas, abandonedCount, recentOrders, topProducts, shippingMethods } = data;
+  const maxShippingCount = Math.max(1, ...shippingMethods.map((m) => m.count));
 
   return (
     <div>
@@ -212,6 +213,48 @@ export default function DashboardView({
             </div>
           )}
         </div>
+      </div>
+
+      <div className={`mt-8 transition-opacity ${isPending ? "opacity-60" : ""}`}>
+        <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">International shipping</h2>
+        {shippingMethods.length === 0 ? (
+          <div className="mt-3 rounded-xl border border-dashed border-slate-300 py-10 text-center dark:border-slate-700">
+            <p className="text-sm text-slate-500 dark:text-slate-400">No international orders in this range.</p>
+          </div>
+        ) : (
+          <div className="mt-3 grid gap-2 lg:grid-cols-2">
+            {shippingMethods.map((m) => {
+              const isFallback = m.method === "Standard";
+              const pct = Math.round((m.count / maxShippingCount) * 100);
+              return (
+                <div key={m.method} className={`flex items-center justify-between gap-4 px-4 py-3 ${glassCard}`}>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-slate-900 dark:text-slate-100">{m.method}</p>
+                      {isFallback && (
+                        <span className="rounded-full bg-amber-50/70 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-950/30 dark:text-amber-400">
+                          No GES coverage
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                      <div
+                        className={`h-full rounded-full ${isFallback ? "bg-amber-400 dark:bg-amber-500" : "bg-slate-900 dark:bg-slate-100"}`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+                      {m.count} order{m.count === 1 ? "" : "s"}
+                    </p>
+                  </div>
+                  <span className="price shrink-0 text-sm font-medium text-slate-900 dark:text-slate-100">
+                    {formatIQD(m.revenue, "en")}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

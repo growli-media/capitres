@@ -477,3 +477,9 @@ CREATE INDEX IF NOT EXISTS idx_orders_visitor_id ON orders (visitor_id) WHERE vi
 -- those fall back to the original text matching in geo-match.ts.
 ALTER TABLE visits ADD COLUMN IF NOT EXISTS latitude double precision;
 ALTER TABLE visits ADD COLUMN IF NOT EXISTS longitude double precision;
+
+-- GES Express (gesexpress.com) service tier — Prime/Rapid/XLine/EcoLine —
+-- quoted and charged for an international Wayl order's shipping cost.
+-- See src/lib/shipping/ges.ts. Null for domestic orders and for orders
+-- placed before this feature shipped.
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_method text;

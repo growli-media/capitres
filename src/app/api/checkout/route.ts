@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isValidPhoneNumber } from "libphonenumber-js/min";
 import { catalog } from "@/lib/catalog";
-import { computeTotals } from "@/lib/commerce/config";
+import { computeTotals, SHIPPING_RATE_INTL } from "@/lib/commerce/config";
 import { computeBogoDiscount, type BogoLine } from "@/lib/commerce/bogo";
 import { validatePromoCode } from "@/lib/promo-codes";
 import {
@@ -9,6 +9,10 @@ import {
   isWaylMockMode,
   type WaylLineItem,
 } from "@/lib/payments/wayl";
+import { getGesRates, getGesCountries, type GesRateQuote } from "@/lib/shipping/ges";
+import { FALLBACK_SHIPPING_METHOD } from "@/lib/shipping/constants";
+import { estimatePhysicalWeightKg } from "@/lib/shipping/weight";
+import { IQD_PER_USD } from "@/lib/money";
 import { newOrderRef, orderStore, type OrderLine } from "@/lib/orders/store";
 import { isValidEmail } from "@/lib/server/records";
 import { sendMetaPurchaseEvent } from "@/lib/analytics/meta-capi";
@@ -36,10 +40,22 @@ interface CheckoutInput {
    * (Cash on Delivery, Iraq-only, collected directly on our form). */
   paymentMethod?: "wayl" | "cod";
   /** The region choice made at the top of checkout — drives the shipping
-   * rate (5,000 IQD domestic vs. flat $30 international). Required for
-   * "wayl" (the only signal we have, since that path collects no address
-   * on our side); ignored for "cod", which is always "IQ" by construction. */
+   * rate (5,000 IQD domestic; international is priced by GES Express,
+   * see shippingCountry/shippingMethod below). Required for "wayl" (the
+   * only signal we have, since that path collects no address on our
+   * side); ignored for "cod", which is always "IQ" by construction. */
   region?: "IQ" | "INTL";
+  /** Required when paymentMethod === "wayl" && region === "INTL" and the
+   * cart has physical items — the destination the customer picked in the
+   * GES shipping-options screen, exactly as returned by GES's own
+   * /api/countries country_name (so this re-query hits the same record
+   * the client's preview priced). */
+  shippingCountry?: string;
+  /** Which of Prime/Rapid/XLine/EcoLine the customer clicked — a service
+   * *name* only, never a price. The authoritative USD amount is always
+   * re-fetched from GES right here, matching this route's existing rule
+   * of never trusting the client for a priced amount. */
+  shippingMethod?: string;
   /** Required only when paymentMethod === "cod". Iraq-only by
    * construction — no country field, since COD never ships elsewhere. */
   customer?: {
@@ -91,6 +107,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "invalid-region" }, { status: 400 });
   }
   const region: "IQ" | "INTL" = paymentMethod === "cod" ? "IQ" : input.region!;
+
+  if (paymentMethod === "wayl" && region === "INTL" && hasPhysical) {
+    if (!input.shippingCountry?.trim() || !input.shippingMethod?.trim()) {
+      return NextResponse.json({ error: "missing-shipping-selection" }, { status: 400 });
+    }
+  }
 
   const c = input.customer;
   const emailTrimmed = c?.email?.trim() ?? "";
@@ -208,7 +230,61 @@ export async function POST(request: NextRequest) {
   const bogoDiscount =
     promo?.type === "bogo" && promo.bogo ? computeBogoDiscount(bogoLines, promo.bogo) : 0;
   const physicalItems = orderLines.some((l) => !l.giftCard);
-  const totals = computeTotals(subtotal, promo, { physicalItems, region, extraDiscount: bogoDiscount });
+
+  // Authoritative shipping quote — the client's earlier pick (from the
+  // GES shipping-options screen) is only ever a preview. Re-derive both
+  // the weight and the price server-side from the just-validated order
+  // lines, and fail outright on any disagreement rather than silently
+  // falling back to a guess, exactly like an invalid promo code above.
+  let shippingAmountIntlIqd: number | undefined;
+  let confirmedShippingMethod: string | undefined;
+  let shippingCountryCode: string | undefined;
+
+  if (paymentMethod === "wayl" && region === "INTL" && physicalItems) {
+    const physicalQty = orderLines.filter((l) => !l.giftCard).reduce((s, l) => s + l.qty, 0);
+    const weightKg = estimatePhysicalWeightKg(physicalQty);
+    let quote: GesRateQuote;
+    try {
+      quote = await getGesRates(input.shippingCountry!, weightKg);
+    } catch (err) {
+      console.error("[checkout] GES rate re-check failed:", err);
+      return NextResponse.json({ error: "shipping-quote-failed" }, { status: 502 });
+    }
+    if (!quote.available) {
+      // GES genuinely has no service for this destination right now —
+      // the only thing the client could have offered here is the flat
+      // fallback rate (CheckoutFlow.tsx only shows that option when its
+      // own quote also came back unavailable). Anything else means the
+      // client is out of sync with what's actually being charged.
+      if (input.shippingMethod !== FALLBACK_SHIPPING_METHOD) {
+        return NextResponse.json({ error: "shipping-unavailable" }, { status: 409 });
+      }
+      const countries = await getGesCountries().catch(() => []);
+      shippingCountryCode = countries.find((c) => c.countryName === input.shippingCountry)?.countryCode;
+      shippingAmountIntlIqd = SHIPPING_RATE_INTL;
+      confirmedShippingMethod = FALLBACK_SHIPPING_METHOD;
+    } else {
+      // GES does have service now — always price from its real tiers
+      // even if the client's stale preview only offered the fallback
+      // (e.g. GES came back up between the quote and this submit), so a
+      // destination with real coverage is never charged the flatter,
+      // possibly-worse legacy rate instead.
+      const tier = quote.tiers.find((t) => t.name === input.shippingMethod);
+      if (!tier) {
+        return NextResponse.json({ error: "shipping-method-unavailable" }, { status: 409 });
+      }
+      shippingAmountIntlIqd = Math.round(tier.priceUsd * IQD_PER_USD);
+      confirmedShippingMethod = tier.name;
+      shippingCountryCode = quote.countryCode;
+    }
+  }
+
+  const totals = computeTotals(subtotal, promo, {
+    physicalItems,
+    region,
+    extraDiscount: bogoDiscount,
+    shippingAmountIntl: shippingAmountIntlIqd,
+  });
 
   if (totals.discount > 0) {
     waylLineItems.push({
@@ -292,7 +368,12 @@ export async function POST(request: NextRequest) {
             governorate: c!.governorate.trim(),
             notes: c!.notes?.slice(0, 500),
           }
-        : { country: region },
+        // A real ISO code once GES has confirmed a serviceable
+        // destination, instead of the bare "IQ"/"INTL" placeholder — may
+        // still be overwritten later by the Wayl webhook's own
+        // mergeCustomer patch once the customer tells Wayl their actual
+        // delivery address, which is expected, not a bug.
+        : { country: shippingCountryCode ?? region },
     lines: orderLines,
     totals: {
       subtotal: totals.subtotal,
@@ -300,6 +381,7 @@ export async function POST(request: NextRequest) {
       shipping: totals.shipping,
       total: totals.total,
     },
+    shippingMethod: confirmedShippingMethod,
     promoCode: promo?.code,
     adTracking:
       clientIp || userAgent || fbp || fbc

@@ -112,6 +112,7 @@ interface OrderRow {
   ad_tracking: AdTracking | null;
   meta_capi_sent: boolean;
   admin_note: string | null;
+  shipping_method: string | null;
   deleted_at: string | null;
 }
 
@@ -133,6 +134,7 @@ function toOrder(row: OrderRow): Order {
     adTracking: row.ad_tracking ?? undefined,
     metaCapiSent: row.meta_capi_sent,
     adminNote: row.admin_note ?? undefined,
+    shippingMethod: row.shipping_method ?? undefined,
     deletedAt: row.deleted_at ?? undefined,
   };
 }
@@ -142,14 +144,16 @@ const postgresOrderStore: OrderStore = {
     await sql`
       insert into orders (
         ref, created_at, locale, status, wayl_link_id, payment_method,
-        visitor_id, mock, customer, lines, totals, promo_code, ad_tracking
+        visitor_id, mock, customer, lines, totals, promo_code, ad_tracking,
+        shipping_method
       ) values (
         ${order.ref}, ${order.createdAt}, ${order.locale}, ${order.status},
         ${order.waylLinkId ?? null}, ${order.paymentMethod ?? null},
         ${order.visitorId ?? null},
         ${order.mock}, ${jsonb(order.customer)}, ${jsonb(order.lines)},
         ${jsonb(order.totals)}, ${order.promoCode ?? null},
-        ${order.adTracking ? jsonb(order.adTracking) : null}
+        ${order.adTracking ? jsonb(order.adTracking) : null},
+        ${order.shippingMethod ?? null}
       )
     `;
   },
@@ -157,7 +161,7 @@ const postgresOrderStore: OrderStore = {
     const rows = await sql<OrderRow[]>`
       select ref, created_at::text as created_at, locale, status,
              wayl_link_id, payment_method, paid_at::text as paid_at, visitor_id, mock, customer, lines, totals,
-             promo_code, ad_tracking, meta_capi_sent, admin_note,
+             promo_code, ad_tracking, meta_capi_sent, admin_note, shipping_method,
              deleted_at::text as deleted_at
       from orders where ref = ${ref} limit 1
     `;
@@ -173,7 +177,7 @@ const postgresOrderStore: OrderStore = {
       where ref = ${ref}
       returning ref, created_at::text as created_at, locale, status,
                 wayl_link_id, payment_method, paid_at::text as paid_at, visitor_id, mock, customer, lines, totals,
-                promo_code, ad_tracking, meta_capi_sent, admin_note,
+                promo_code, ad_tracking, meta_capi_sent, admin_note, shipping_method,
                 deleted_at::text as deleted_at
     `;
     return rows[0] ? toOrder(rows[0]) : undefined;
@@ -189,7 +193,7 @@ const postgresOrderStore: OrderStore = {
     const rows = await sql<OrderRow[]>`
       select ref, created_at::text as created_at, locale, status,
              wayl_link_id, payment_method, paid_at::text as paid_at, visitor_id, mock, customer, lines, totals,
-             promo_code, ad_tracking, meta_capi_sent, admin_note,
+             promo_code, ad_tracking, meta_capi_sent, admin_note, shipping_method,
              deleted_at::text as deleted_at
       from orders where deleted_at is null order by created_at desc limit 500
     `;
@@ -202,7 +206,7 @@ const postgresOrderStore: OrderStore = {
       where ref = ${ref} and meta_capi_sent = false
       returning ref, created_at::text as created_at, locale, status,
                 wayl_link_id, payment_method, paid_at::text as paid_at, visitor_id, mock, customer, lines, totals,
-                promo_code, ad_tracking, meta_capi_sent, admin_note,
+                promo_code, ad_tracking, meta_capi_sent, admin_note, shipping_method,
                 deleted_at::text as deleted_at
     `;
     return rows[0] ? toOrder(rows[0]) : undefined;
@@ -217,7 +221,7 @@ const postgresOrderStore: OrderStore = {
       ? await sql<OrderRow[]>`
           select ref, created_at::text as created_at, locale, status,
                  wayl_link_id, payment_method, paid_at::text as paid_at, visitor_id, mock, customer, lines, totals,
-                 promo_code, ad_tracking, meta_capi_sent, admin_note,
+                 promo_code, ad_tracking, meta_capi_sent, admin_note, shipping_method,
                  deleted_at::text as deleted_at
           from orders
           where deleted_at is null and created_at >= ${start} and created_at <= ${end}
@@ -226,7 +230,7 @@ const postgresOrderStore: OrderStore = {
       : await sql<OrderRow[]>`
           select ref, created_at::text as created_at, locale, status,
                  wayl_link_id, payment_method, paid_at::text as paid_at, visitor_id, mock, customer, lines, totals,
-                 promo_code, ad_tracking, meta_capi_sent, admin_note,
+                 promo_code, ad_tracking, meta_capi_sent, admin_note, shipping_method,
                  deleted_at::text as deleted_at
           from orders
           where deleted_at is null and created_at <= ${end}
@@ -247,7 +251,7 @@ const postgresOrderStore: OrderStore = {
     const rows = await sql<OrderRow[]>`
       select ref, created_at::text as created_at, locale, status,
              wayl_link_id, payment_method, paid_at::text as paid_at, visitor_id, mock, customer, lines, totals,
-             promo_code, ad_tracking, meta_capi_sent, admin_note,
+             promo_code, ad_tracking, meta_capi_sent, admin_note, shipping_method,
              deleted_at::text as deleted_at
       from orders
       where deleted_at is not null and deleted_at >= ${since}
@@ -274,7 +278,7 @@ const postgresOrderStore: OrderStore = {
     const rows = await sql<OrderRow[]>`
       select ref, created_at::text as created_at, locale, status,
              wayl_link_id, payment_method, paid_at::text as paid_at, visitor_id, mock, customer, lines, totals,
-             promo_code, ad_tracking, meta_capi_sent, admin_note,
+             promo_code, ad_tracking, meta_capi_sent, admin_note, shipping_method,
              deleted_at::text as deleted_at
       from orders
       where deleted_at is null and mock = false

@@ -136,6 +136,12 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ re
                 <span>Shipping</span>
                 <span className="price">{formatIQD(order.totals.shipping, "en")}</span>
               </div>
+              {order.shippingMethod && (
+                <div className="flex justify-between text-slate-500 dark:text-slate-400">
+                  <span>Shipping method</span>
+                  <span>{order.shippingMethod} (GES Express)</span>
+                </div>
+              )}
               <div className="flex justify-between border-t border-slate-200 pt-1.5 font-semibold text-slate-900 dark:border-slate-800 dark:text-slate-100">
                 <span>Total</span>
                 <span className="price">{formatIQD(order.totals.total, "en")}</span>

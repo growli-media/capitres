@@ -80,3 +80,54 @@ export async function getTopProducts(
     revenue: Number(r.revenue),
   }));
 }
+
+export interface ShippingMethodStat {
+  /** A real GES Express tier (Prime/Rapid/XLine/EcoLine), or "Standard"
+   * for the legacy flat rate used when GES has no service for that
+   * destination — see src/lib/shipping/constants.ts. A high count here
+   * relative to the real tiers is a signal worth acting on: those are
+   * destinations with no actual courier coverage. */
+  method: string;
+  count: number;
+  /** Sum of totals.shipping (IQD) for orders using this method — what
+   * shipping itself brought in, not the whole order. */
+  revenue: number;
+}
+
+/** International shipping method breakdown for the Dashboard's shipping
+ * section — paid orders only, same convention as every other Dashboard
+ * number (getDashboardKpis/getTopProducts above). Domestic orders never
+ * set shipping_method, so this is INTL-only without needing its own
+ * region filter. */
+export async function getShippingMethodBreakdown(
+  start: Date | null = null,
+  end: Date = new Date(),
+): Promise<ShippingMethodStat[]> {
+  const rows = start
+    ? await sql<{ shipping_method: string; count: string; revenue: string }[]>`
+        select shipping_method,
+               count(*)::text as count,
+               coalesce(sum((totals->>'shipping')::int), 0)::text as revenue
+        from orders
+        where status = any(${PAID_STATUSES}) and deleted_at is null
+          and shipping_method is not null
+          and created_at >= ${start} and created_at <= ${end}
+        group by shipping_method
+        order by count(*) desc
+      `
+    : await sql<{ shipping_method: string; count: string; revenue: string }[]>`
+        select shipping_method,
+               count(*)::text as count,
+               coalesce(sum((totals->>'shipping')::int), 0)::text as revenue
+        from orders
+        where status = any(${PAID_STATUSES}) and deleted_at is null
+          and shipping_method is not null and created_at <= ${end}
+        group by shipping_method
+        order by count(*) desc
+      `;
+  return rows.map((r) => ({
+    method: r.shipping_method,
+    count: Number(r.count),
+    revenue: Number(r.revenue),
+  }));
+}

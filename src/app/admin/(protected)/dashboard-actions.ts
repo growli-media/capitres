@@ -1,6 +1,13 @@
 "use server";
 
-import { getDashboardKpis, getTopProducts, type DashboardKpis, type TopProduct } from "@/lib/admin/dashboard";
+import {
+  getDashboardKpis,
+  getTopProducts,
+  getShippingMethodBreakdown,
+  type DashboardKpis,
+  type TopProduct,
+  type ShippingMethodStat,
+} from "@/lib/admin/dashboard";
 import { getAbandonedCount } from "@/lib/admin/queries";
 import { orderStore, type Order } from "@/lib/orders/store";
 import { resolveTimeRange, previousPeriod, type TimeRangeValue } from "@/lib/admin/time-range";
@@ -22,6 +29,7 @@ export interface DashboardRangeResult {
   abandonedCount: number;
   recentOrders: Order[];
   topProducts: TopProduct[];
+  shippingMethods: ShippingMethodStat[];
 }
 
 /** null = "new" (previous period was zero, a percentage would be
@@ -35,14 +43,16 @@ function computeDelta(current: number, previous: number): number | null {
 export async function getDashboardForRangeAction(range: TimeRangeValue): Promise<DashboardRangeResult> {
   const { start, end } = resolveTimeRange(range);
   const prev = previousPeriod(start, end);
-  const [kpis, prevKpis, prevAbandoned, abandonedCount, recentOrders, topProducts] = await Promise.all([
-    getDashboardKpis(start, end),
-    prev ? getDashboardKpis(prev.start, prev.end) : Promise.resolve(null),
-    prev ? getAbandonedCount(prev.start, prev.end) : Promise.resolve(null),
-    getAbandonedCount(start, end),
-    orderStore.listInRange(start, end),
-    getTopProducts(5, start, end),
-  ]);
+  const [kpis, prevKpis, prevAbandoned, abandonedCount, recentOrders, topProducts, shippingMethods] =
+    await Promise.all([
+      getDashboardKpis(start, end),
+      prev ? getDashboardKpis(prev.start, prev.end) : Promise.resolve(null),
+      prev ? getAbandonedCount(prev.start, prev.end) : Promise.resolve(null),
+      getAbandonedCount(start, end),
+      orderStore.listInRange(start, end),
+      getTopProducts(5, start, end),
+      getShippingMethodBreakdown(start, end),
+    ]);
   const kpiDeltas =
     prevKpis && prevAbandoned !== null
       ? {
@@ -58,5 +68,6 @@ export async function getDashboardForRangeAction(range: TimeRangeValue): Promise
     abandonedCount,
     recentOrders: recentOrders.slice(0, 6),
     topProducts,
+    shippingMethods,
   };
 }

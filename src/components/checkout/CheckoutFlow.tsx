@@ -3,9 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
-import { CaretLeft, Globe, LockSimple, ShieldCheck, Truck } from "@phosphor-icons/react";
+import {
+  CaretLeft,
+  CircleNotch,
+  Globe,
+  LockSimple,
+  ShieldCheck,
+  Truck,
+} from "@phosphor-icons/react";
 import { parsePhoneNumber } from "libphonenumber-js/min";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import {
   useCart,
   useCartPromo,
@@ -14,10 +21,13 @@ import {
   type CartLine,
 } from "@/lib/cart/store";
 import { pick } from "@/lib/content";
-import { formatCurrency, formatIQD } from "@/lib/money";
+import { convertFromIqd, formatCurrency, formatIQD, IQD_PER_USD } from "@/lib/money";
 import { isValidEmailClient, isValidPhone } from "@/lib/validate";
 import { trackInitiateCheckout } from "@/lib/analytics/track";
 import { useCurrency } from "@/components/currency/CurrencyProvider";
+import type { GesCountry, GesRateQuote, GesTierName } from "@/lib/shipping/ges";
+import { FALLBACK_SHIPPING_METHOD } from "@/lib/shipping/constants";
+import { SHIPPING_RATE_INTL, SHIPPING_RATE_INTL_USD } from "@/lib/commerce/config";
 
 const GOVERNORATES = [
   "baghdad",
@@ -118,11 +128,12 @@ function SummaryLine({ line, locale }: { line: CartLine; locale: string }) {
   );
 }
 
-export default function CheckoutFlow() {
+export default function CheckoutFlow({ countries }: { countries: GesCountry[] }) {
   const locale = useLocale();
   const t = useTranslations("checkout");
   const tCart = useTranslations("cart");
   const tGov = useTranslations("governorates");
+  const router = useRouter();
   const { lines, promoCode, hasHydrated } = useCart();
   const promo = useCartPromo();
   const { currency } = useCurrency();
@@ -133,6 +144,24 @@ export default function CheckoutFlow() {
   const [region, setRegion] = useState<"IQ" | "INTL" | null>(null);
   const [method, setMethod] = useState<"card" | "cod" | null>(null);
 
+  // International shipping: destination + GES Express rate quote. The
+  // customer can click freely between tiers (setSelectedTier only ever
+  // highlights — never navigates) and only reaches Wayl by explicitly
+  // confirming. No tier is pre-selected — this is a money choice, not a
+  // default to accept.
+  const [destinationCountry, setDestinationCountry] = useState<string | null>(null);
+  const [rateQuote, setRateQuote] = useState<GesRateQuote | null>(null);
+  const [quoteLoading, setQuoteLoading] = useState(false);
+  const [quoteError, setQuoteError] = useState(false);
+  const [selectedTier, setSelectedTier] = useState<GesTierName | typeof FALLBACK_SHIPPING_METHOD | null>(
+    null,
+  );
+  const [intlConfirmed, setIntlConfirmed] = useState(false);
+  // A monotonically increasing id so a slow, now-stale response (the
+  // customer already picked a different country) can't overwrite a
+  // newer one that resolved first.
+  const quoteRequestIdRef = useRef(0);
+
   // A promo applied earlier in the cart drawer (before region was known)
   // might be restricted to the other region — price the order as if no
   // promo were applied at all in that case, matching exactly what
@@ -141,11 +170,35 @@ export default function CheckoutFlow() {
   const regionMismatch = Boolean(promo?.region && region && promo.region !== region);
   const effectivePromoCode = regionMismatch ? undefined : promoCode;
 
-  // Shipping is region-dependent (5,000 IQD domestic, flat $30
-  // international) — defaults to domestic before a region is chosen,
-  // matching computeTotals' own default, then updates once picked.
-  const totals = useCartTotals(region ?? "IQ", regionMismatch ? null : undefined);
-  const displayTotals = useCartTotalsByCurrency(currency, region ?? "IQ", regionMismatch ? null : undefined);
+  const hasPhysical = lines.some((l) => !l.giftCard);
+  // A gift-card-only cart never ships anywhere, domestic or not — skip
+  // the whole GES step for it, same as computeTotals already treats it
+  // as automatically free-shipping.
+  const requiresIntlShipping = region === "INTL" && hasPhysical;
+  const totalPhysicalQty = lines.filter((l) => !l.giftCard).reduce((sum, l) => sum + l.qty, 0);
+
+  // Live preview only — never trusted for the actual charge, which
+  // /api/checkout re-fetches from GES itself at submit time.
+  const selectedPriceUsd =
+    selectedTier === FALLBACK_SHIPPING_METHOD
+      ? SHIPPING_RATE_INTL_USD
+      : rateQuote?.available && selectedTier
+        ? rateQuote.tiers.find((tier) => tier.name === selectedTier)?.priceUsd
+        : undefined;
+  const shippingAmountIntl =
+    selectedPriceUsd !== undefined ? Math.round(selectedPriceUsd * IQD_PER_USD) : undefined;
+
+  // Shipping is region-dependent (5,000 IQD domestic, a real GES Express
+  // quote once picked international) — defaults to domestic before a
+  // region is chosen, matching computeTotals' own default, then updates
+  // once picked.
+  const totals = useCartTotals(region ?? "IQ", regionMismatch ? null : undefined, shippingAmountIntl);
+  const displayTotals = useCartTotalsByCurrency(
+    currency,
+    region ?? "IQ",
+    regionMismatch ? null : undefined,
+    shippingAmountIntl,
+  );
   const [info, setInfo] = useState<CodInfo>({
     firstName: "",
     middleName: "",
@@ -161,14 +214,43 @@ export default function CheckoutFlow() {
   const [busy, setBusy] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const hasPhysical = lines.some((l) => !l.giftCard);
-
   // Cash on Delivery doesn't make sense for a gift-card-only cart — if
   // the cart changes out from under an already-open COD form, bounce
   // back to the method chooser rather than let an invalid order submit.
   useEffect(() => {
     if (method === "cod" && !hasPhysical) setMethod(null);
   }, [method, hasPhysical]);
+
+  // Triggered directly from the country <select>'s onChange and the
+  // "try again" button below — not a reactive effect, since the fetch is
+  // always the direct result of a specific user action, never something
+  // that should silently re-run on its own. Called once per destination
+  // pick (not once per tier click — GES's /calculate already returns all
+  // four tiers together in one response).
+  async function quoteShipping(country: string) {
+    setDestinationCountry(country);
+    setRateQuote(null);
+    setSelectedTier(null);
+    setQuoteError(false);
+    setQuoteLoading(true);
+    const requestId = ++quoteRequestIdRef.current;
+    try {
+      const res = await fetch("/api/shipping/rates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ toCountry: country, totalPhysicalQty }),
+      });
+      if (!res.ok) throw new Error("rate-quote-failed");
+      const quote = (await res.json()) as GesRateQuote;
+      if (requestId !== quoteRequestIdRef.current) return; // a newer pick already superseded this one
+      setRateQuote(quote);
+    } catch {
+      if (requestId !== quoteRequestIdRef.current) return;
+      setQuoteError(true);
+    } finally {
+      if (requestId === quoteRequestIdRef.current) setQuoteLoading(false);
+    }
+  }
 
   const checkoutTrackedRef = useRef(false);
   useEffect(() => {
@@ -192,6 +274,7 @@ export default function CheckoutFlow() {
   // of leaving the customer looking at the order summary.
   const regionCardsRef = useRef<HTMLDivElement>(null);
   const methodCardsRef = useRef<HTMLDivElement>(null);
+  const intlShippingRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (region === null && hasHydrated && lines.length > 0) {
       regionCardsRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -202,6 +285,11 @@ export default function CheckoutFlow() {
       methodCardsRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }, [region, method]);
+  useEffect(() => {
+    if (requiresIntlShipping && !intlConfirmed) {
+      intlShippingRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [requiresIntlShipping, intlConfirmed]);
 
   if (!hasHydrated) {
     return (
@@ -263,6 +351,11 @@ export default function CheckoutFlow() {
           promoCode: effectivePromoCode,
           paymentMethod: "wayl",
           region: region ?? "IQ",
+          // Name only — the server always re-fetches the authoritative
+          // price from GES itself at submit time, never trusts a
+          // client-reported amount.
+          shippingCountry: requiresIntlShipping ? (destinationCountry ?? undefined) : undefined,
+          shippingMethod: requiresIntlShipping ? (selectedTier ?? undefined) : undefined,
           lines: lines.map((l) => ({
             productSlug: l.productSlug,
             variantId: l.variantId,
@@ -344,14 +437,23 @@ export default function CheckoutFlow() {
     }`;
 
   const steps = [t("stepShipping"), t("stepConfirm")];
-  const showWayl = region === "INTL" || method === "card";
+  const showIntlShipping = requiresIntlShipping && !intlConfirmed;
+  const showWayl = method === "card" || (region === "INTL" && (!requiresIntlShipping || intlConfirmed));
   const showMethodChoice = region === "IQ" && method === null;
   const showCod = region === "IQ" && method === "cod";
 
   function backFromWayl() {
     setSubmitError(null);
-    if (region === "INTL") setRegion(null);
-    else setMethod(null);
+    if (region === "INTL") {
+      // A gift-card-only cart skips the shipping-options screen
+      // entirely (nothing to quote), so there's nothing to go "back"
+      // to there — return to the region picker instead, exactly like
+      // this button already behaved before the GES step existed.
+      if (requiresIntlShipping) setIntlConfirmed(false);
+      else setRegion(null);
+    } else {
+      setMethod(null);
+    }
   }
 
   return (
@@ -511,6 +613,158 @@ export default function CheckoutFlow() {
             </div>
           )}
 
+          {showIntlShipping && (
+            <div ref={intlShippingRef} className="scroll-mt-28">
+              <button
+                type="button"
+                onClick={() => setRegion(null)}
+                className="mb-6 flex cursor-pointer items-center gap-1.5 text-sm font-semibold text-ink/60 transition-colors hover:text-ink"
+              >
+                <CaretLeft size={14} aria-hidden="true" className="rtl:-scale-x-100" />
+                {t("back")}
+              </button>
+              <h2 className="text-eyebrow mb-6 text-ink/60">{t("chooseShippingTitle")}</h2>
+
+              <div className="border border-line bg-white p-6 md:p-8">
+                <label htmlFor="co-country" className="mb-2 block text-sm font-semibold">
+                  {t("country")} *
+                </label>
+                {countries.length === 0 ? (
+                  <div className="flex flex-wrap items-center gap-3">
+                    <p className="text-sm text-danger">{t("errors.paymentInit")}</p>
+                    <button
+                      type="button"
+                      onClick={() => router.refresh()}
+                      className="btn btn-outline text-sm"
+                    >
+                      {t("tryAgain")}
+                    </button>
+                  </div>
+                ) : (
+                  <select
+                    id="co-country"
+                    value={destinationCountry ?? ""}
+                    onChange={(e) => {
+                      if (e.target.value) quoteShipping(e.target.value);
+                      else {
+                        setDestinationCountry(null);
+                        setRateQuote(null);
+                        setSelectedTier(null);
+                      }
+                    }}
+                    className={`${inputClass(false)} cursor-pointer appearance-none`}
+                  >
+                    <option value="" disabled>
+                      {t("selectCountry")}
+                    </option>
+                    {countries.map((c) => (
+                      <option key={c.id} value={c.countryName}>
+                        {c.countryName}
+                      </option>
+                    ))}
+                  </select>
+                )}
+
+                {destinationCountry && (
+                  <div className="mt-7 border-t border-line pt-6">
+                    {quoteLoading && (
+                      <p className="flex items-center gap-2 text-sm text-ink/60">
+                        <CircleNotch size={16} aria-hidden="true" className="animate-spin" />
+                        {t("calculatingShipping")}
+                      </p>
+                    )}
+
+                    {!quoteLoading && quoteError && (
+                      <div className="flex flex-wrap items-center gap-3">
+                        <p className="text-sm text-danger">{t("errors.paymentInit")}</p>
+                        <button
+                          type="button"
+                          onClick={() => destinationCountry && quoteShipping(destinationCountry)}
+                          className="btn btn-outline text-sm"
+                        >
+                          {t("tryAgain")}
+                        </button>
+                      </div>
+                    )}
+
+                    {!quoteLoading && !quoteError && rateQuote?.available === false && (
+                      <div>
+                        <p className="mb-3 text-sm text-ink/60">{t("standardShippingNote")}</p>
+                        <div role="radiogroup" aria-label={t("chooseShippingTitle")}>
+                          <button
+                            type="button"
+                            role="radio"
+                            aria-checked={selectedTier === FALLBACK_SHIPPING_METHOD}
+                            onClick={() => setSelectedTier(FALLBACK_SHIPPING_METHOD)}
+                            className={`flex w-full flex-col items-center gap-1.5 border px-3 py-5 text-center transition-colors sm:w-1/4 ${
+                              selectedTier === FALLBACK_SHIPPING_METHOD
+                                ? "cursor-pointer border-ink bg-ink text-paper"
+                                : "cursor-pointer border-line hover:border-ink"
+                            }`}
+                          >
+                            <span className="font-bold">{t("standardShipping")}</span>
+                            <span className="price text-sm">
+                              {formatCurrency(
+                                convertFromIqd(SHIPPING_RATE_INTL, currency),
+                                currency,
+                                locale,
+                              )}
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {!quoteLoading && !quoteError && rateQuote?.available && (
+                      <div
+                        role="radiogroup"
+                        aria-label={t("chooseShippingTitle")}
+                        className="grid grid-cols-2 gap-3 sm:grid-cols-4"
+                      >
+                        {[...rateQuote.tiers]
+                          .sort((a, b) => a.priceUsd - b.priceUsd)
+                          .map((tier) => {
+                            const active = selectedTier === tier.name;
+                            const tierIqd = Math.round(tier.priceUsd * IQD_PER_USD);
+                            return (
+                              <button
+                                key={tier.name}
+                                type="button"
+                                role="radio"
+                                aria-checked={active}
+                                onClick={() => setSelectedTier(tier.name)}
+                                className={`flex flex-col items-center gap-1.5 border px-3 py-5 text-center transition-colors ${
+                                  active
+                                    ? "cursor-pointer border-ink bg-ink text-paper"
+                                    : "cursor-pointer border-line hover:border-ink"
+                                }`}
+                              >
+                                <span className="font-bold">{tier.name}</span>
+                                <span className="price text-sm">
+                                  {formatCurrency(convertFromIqd(tierIqd, currency), currency, locale)}
+                                </span>
+                              </button>
+                            );
+                          })}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="mt-7 border-t border-line pt-6">
+                  <button
+                    type="button"
+                    onClick={() => setIntlConfirmed(true)}
+                    disabled={!selectedTier}
+                    className="btn btn-ink w-full text-base"
+                  >
+                    {t("toPayment")}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {showWayl && (
             <div>
               <button
@@ -519,7 +773,7 @@ export default function CheckoutFlow() {
                 className="mb-6 flex cursor-pointer items-center gap-1.5 text-sm font-semibold text-ink/60 transition-colors hover:text-ink"
               >
                 <CaretLeft size={14} aria-hidden="true" className="rtl:-scale-x-100" />
-                {t("back")}
+                {requiresIntlShipping ? t("backToShipping") : t("back")}
               </button>
               <h2 className="text-eyebrow mb-6 text-ink/60">{t("payTitle")}</h2>
 
