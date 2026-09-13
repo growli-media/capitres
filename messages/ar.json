@@ -207,6 +207,14 @@
     "standardShipping": "الشحن الدولي القياسي",
     "standardShippingNote": "لا يتوفر لدينا سعر شركة شحن خاص بهذه الوجهة بعد — ستحصل على سعر الشحن الدولي القياسي بدلاً من ذلك.",
     "calculatingShipping": "جارٍ حساب تكلفة الشحن…",
+    "recommendedBadge": "الأنسب لطلبك",
+    "deliveryEstimate": {
+      "prime": "٢–٤ أيام عمل",
+      "rapid": "٤–٦ أيام عمل",
+      "xline": "٦–٩ أيام عمل",
+      "ecoline": "٩–١٤ يوم عمل",
+      "standard": "٧–١٤ يوم عمل"
+    },
     "regionIraq": "العراق",
     "regionInternational": "خارج العراق",
     "chooseMethodTitle": "كيف تودّ الدفع؟",

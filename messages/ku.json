@@ -207,6 +207,14 @@
     "standardShipping": "گەیاندنی نێودەوڵەتی ئاسایی",
     "standardShippingNote": "هێشتا نرخی تایبەت بە کۆمپانیای گەیاندنمان بۆ ئەم وڵاتە نییە — لەبری ئەوە نرخی گەیاندنی نێودەوڵەتی ئاساییت بۆ دادەنرێت.",
     "calculatingShipping": "تێچووی گەیاندن دەژمێردرێت...",
+    "recommendedBadge": "پێشنیارکراو بۆ داواکارییەکەت",
+    "deliveryEstimate": {
+      "prime": "٢–٤ ڕۆژی کار",
+      "rapid": "٤–٦ ڕۆژی کار",
+      "xline": "٦–٩ ڕۆژی کار",
+      "ecoline": "٩–١٤ ڕۆژی کار",
+      "standard": "٧–١٤ ڕۆژی کار"
+    },
     "regionIraq": "عێراق",
     "regionInternational": "دەرەوەی عێراق",
     "chooseMethodTitle": "چۆن دەتەوێت پارە بدەیت؟",

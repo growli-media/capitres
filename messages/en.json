@@ -207,6 +207,14 @@
     "standardShipping": "Standard International",
     "standardShippingNote": "We don't have a courier partner rate for this destination yet — you'll get our standard international shipping rate instead.",
     "calculatingShipping": "Calculating shipping…",
+    "recommendedBadge": "Recommended for your order",
+    "deliveryEstimate": {
+      "prime": "2–4 business days",
+      "rapid": "4–6 business days",
+      "xline": "6–9 business days",
+      "ecoline": "9–14 business days",
+      "standard": "7–14 business days"
+    },
     "regionIraq": "Iraq",
     "regionInternational": "Rest of the world",
     "chooseMethodTitle": "How would you like to pay?",

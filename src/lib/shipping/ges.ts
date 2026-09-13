@@ -52,6 +52,30 @@ export function isGesMockMode(): boolean {
   return !process.env.GES_EXPRESS_TOKEN;
 }
 
+/**
+ * GES lists Iraq alongside every other destination, but Iraq is handled
+ * entirely by the separate domestic checkout path — it must never appear
+ * as an "international" destination choice. The rest are either
+ * uninhabited scientific-station/military-only territories no real
+ * customer could ever ship to, or stale ISO entries GES's list never
+ * dropped after the territory split into the separate countries it
+ * already lists on their own (Serbia and Montenegro dissolved in 2006;
+ * Netherlands Antilles dissolved in 2010, both now covered by their
+ * successor entries already present in this same list).
+ */
+const EXCLUDED_COUNTRY_NAMES = new Set([
+  "Iraq",
+  "Antarctica",
+  "Bouvet Island",
+  "Heard Island and Mcdonald Islands",
+  "French Southern Territories",
+  "British Indian Ocean Territory",
+  "South Georgia and the South Sandwich Islands",
+  "United States Minor Outlying Islands",
+  "Serbia and Montenegro",
+  "Netherlands Antilles",
+]);
+
 async function fetchGesCountries(): Promise<GesCountry[]> {
   const res = await fetch(`${GES_BASE_URL}/countries`, {
     headers: { Accept: "application/json" },
@@ -63,7 +87,9 @@ async function fetchGesCountries(): Promise<GesCountry[]> {
     success: boolean;
     data: { id: number; country_name: string; country_code: string }[];
   };
-  return json.data.map((c) => ({ id: c.id, countryName: c.country_name, countryCode: c.country_code }));
+  return json.data
+    .filter((c) => !EXCLUDED_COUNTRY_NAMES.has(c.country_name))
+    .map((c) => ({ id: c.id, countryName: c.country_name, countryCode: c.country_code }));
 }
 
 /** Political geography barely ever changes — cached a full day, same

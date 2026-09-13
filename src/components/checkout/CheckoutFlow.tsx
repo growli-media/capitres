@@ -29,6 +29,19 @@ import type { GesCountry, GesRateQuote, GesTierName } from "@/lib/shipping/ges";
 import { FALLBACK_SHIPPING_METHOD } from "@/lib/shipping/constants";
 import { SHIPPING_RATE_INTL, SHIPPING_RATE_INTL_USD } from "@/lib/commerce/config";
 
+/** GES's API returns no delivery-time field at all (confirmed against
+ * their full docs) — these are placeholder ranges ordered by what each
+ * tier name conventionally implies (Prime fastest, EcoLine slowest), not
+ * real GES-confirmed transit times. Swap in real numbers once GES
+ * confirms them. */
+const DELIVERY_ESTIMATE_KEY: Record<GesTierName | typeof FALLBACK_SHIPPING_METHOD, string> = {
+  Prime: "deliveryEstimate.prime",
+  Rapid: "deliveryEstimate.rapid",
+  XLine: "deliveryEstimate.xline",
+  EcoLine: "deliveryEstimate.ecoline",
+  [FALLBACK_SHIPPING_METHOD]: "deliveryEstimate.standard",
+};
+
 const GOVERNORATES = [
   "baghdad",
   "basra",
@@ -696,14 +709,19 @@ export default function CheckoutFlow({ countries }: { countries: GesCountry[] })
                             role="radio"
                             aria-checked={selectedTier === FALLBACK_SHIPPING_METHOD}
                             onClick={() => setSelectedTier(FALLBACK_SHIPPING_METHOD)}
-                            className={`flex w-full flex-col items-center gap-1.5 border px-3 py-5 text-center transition-colors sm:w-1/4 ${
+                            className={`flex w-full flex-col items-center gap-1 border px-3 py-5 text-center transition-colors sm:w-1/4 ${
                               selectedTier === FALLBACK_SHIPPING_METHOD
                                 ? "cursor-pointer border-ink bg-ink text-paper"
                                 : "cursor-pointer border-line hover:border-ink"
                             }`}
                           >
                             <span className="font-bold">{t("standardShipping")}</span>
-                            <span className="price text-sm">
+                            <span
+                              className={`text-xs ${selectedTier === FALLBACK_SHIPPING_METHOD ? "text-paper/70" : "text-ink/50"}`}
+                            >
+                              {t(DELIVERY_ESTIMATE_KEY[FALLBACK_SHIPPING_METHOD])}
+                            </span>
+                            <span className="price mt-1.5 text-base font-semibold">
                               {formatCurrency(
                                 convertFromIqd(SHIPPING_RATE_INTL, currency),
                                 currency,
@@ -719,12 +737,13 @@ export default function CheckoutFlow({ countries }: { countries: GesCountry[] })
                       <div
                         role="radiogroup"
                         aria-label={t("chooseShippingTitle")}
-                        className="grid grid-cols-2 gap-3 sm:grid-cols-4"
+                        className="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-4"
                       >
                         {[...rateQuote.tiers]
                           .sort((a, b) => a.priceUsd - b.priceUsd)
-                          .map((tier) => {
+                          .map((tier, i) => {
                             const active = selectedTier === tier.name;
+                            const recommended = i === 0;
                             const tierIqd = Math.round(tier.priceUsd * IQD_PER_USD);
                             return (
                               <button
@@ -733,14 +752,26 @@ export default function CheckoutFlow({ countries }: { countries: GesCountry[] })
                                 role="radio"
                                 aria-checked={active}
                                 onClick={() => setSelectedTier(tier.name)}
-                                className={`flex flex-col items-center gap-1.5 border px-3 py-5 text-center transition-colors ${
+                                className={`relative flex flex-col items-center gap-1 border px-3 pt-6 pb-5 text-center transition-colors ${
                                   active
                                     ? "cursor-pointer border-ink bg-ink text-paper"
                                     : "cursor-pointer border-line hover:border-ink"
                                 }`}
                               >
+                                {recommended && (
+                                  <span
+                                    className={`absolute inset-x-1.5 -top-2.5 px-1 py-0.5 text-[9px] leading-tight font-bold uppercase tracking-wide ${
+                                      active ? "bg-paper text-ink" : "bg-ink text-paper"
+                                    }`}
+                                  >
+                                    {t("recommendedBadge")}
+                                  </span>
+                                )}
                                 <span className="font-bold">{tier.name}</span>
-                                <span className="price text-sm">
+                                <span className={`text-xs ${active ? "text-paper/70" : "text-ink/50"}`}>
+                                  {t(DELIVERY_ESTIMATE_KEY[tier.name])}
+                                </span>
+                                <span className="price mt-1.5 text-base font-semibold">
                                   {formatCurrency(convertFromIqd(tierIqd, currency), currency, locale)}
                                 </span>
                               </button>
