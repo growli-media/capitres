@@ -30,17 +30,28 @@ import { FALLBACK_SHIPPING_METHOD } from "@/lib/shipping/constants";
 import { SHIPPING_RATE_INTL, SHIPPING_RATE_INTL_USD } from "@/lib/commerce/config";
 
 /** GES's API returns no delivery-time field at all (confirmed against
- * their full docs) — these are placeholder ranges ordered by what each
- * tier name conventionally implies (Prime fastest, EcoLine slowest), not
- * real GES-confirmed transit times. Swap in real numbers once GES
- * confirms them. */
-const DELIVERY_ESTIMATE_KEY: Record<GesTierName | typeof FALLBACK_SHIPPING_METHOD, string> = {
-  Prime: "deliveryEstimate.prime",
-  Rapid: "deliveryEstimate.rapid",
-  XLine: "deliveryEstimate.xline",
-  EcoLine: "deliveryEstimate.ecoline",
-  [FALLBACK_SHIPPING_METHOD]: "deliveryEstimate.standard",
-};
+ * their full docs) — these are placeholder ranges, not real GES-confirmed
+ * transit times. Swap in real numbers once GES confirms them.
+ *
+ * Deliberately keyed by PRICE RANK within a quote, not by tier name:
+ * real GES pricing doesn't respect a fixed name-based speed hierarchy
+ * (e.g. XLine is pricier than Rapid for some destinations, cheaper for
+ * others), so a name-based mapping could show a pricier tier as slower
+ * than a cheaper one — a contradiction a customer would rightly balk at.
+ * Ranking by each quote's own price instead guarantees cheapest = slowest
+ * placeholder and priciest = fastest, every time. */
+const RANKED_DELIVERY_ESTIMATE_KEYS = [
+  "deliveryEstimate.slowest",
+  "deliveryEstimate.slow",
+  "deliveryEstimate.fast",
+  "deliveryEstimate.fastest",
+] as const;
+
+function deliveryEstimateKeyForRank(rank: number, tierCount: number): string {
+  if (tierCount <= 1) return RANKED_DELIVERY_ESTIMATE_KEYS[0];
+  const idx = Math.round((rank * (RANKED_DELIVERY_ESTIMATE_KEYS.length - 1)) / (tierCount - 1));
+  return RANKED_DELIVERY_ESTIMATE_KEYS[idx];
+}
 
 const GOVERNORATES = [
   "baghdad",
@@ -719,7 +730,7 @@ export default function CheckoutFlow({ countries }: { countries: GesCountry[] })
                             <span
                               className={`text-xs ${selectedTier === FALLBACK_SHIPPING_METHOD ? "text-paper/70" : "text-ink/50"}`}
                             >
-                              {t(DELIVERY_ESTIMATE_KEY[FALLBACK_SHIPPING_METHOD])}
+                              {t("deliveryEstimate.standard")}
                             </span>
                             <span className="price mt-1.5 text-base font-semibold">
                               {formatCurrency(
@@ -739,9 +750,9 @@ export default function CheckoutFlow({ countries }: { countries: GesCountry[] })
                         aria-label={t("chooseShippingTitle")}
                         className="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-4"
                       >
-                        {[...rateQuote.tiers]
-                          .sort((a, b) => a.priceUsd - b.priceUsd)
-                          .map((tier, i) => {
+                        {(() => {
+                          const sortedTiers = [...rateQuote.tiers].sort((a, b) => a.priceUsd - b.priceUsd);
+                          return sortedTiers.map((tier, i) => {
                             const active = selectedTier === tier.name;
                             const recommended = i === 0;
                             const tierIqd = Math.round(tier.priceUsd * IQD_PER_USD);
@@ -769,14 +780,15 @@ export default function CheckoutFlow({ countries }: { countries: GesCountry[] })
                                 )}
                                 <span className="font-bold">{tier.name}</span>
                                 <span className={`text-xs ${active ? "text-paper/70" : "text-ink/50"}`}>
-                                  {t(DELIVERY_ESTIMATE_KEY[tier.name])}
+                                  {t(deliveryEstimateKeyForRank(i, sortedTiers.length))}
                                 </span>
                                 <span className="price mt-1.5 text-base font-semibold">
                                   {formatCurrency(convertFromIqd(tierIqd, currency), currency, locale)}
                                 </span>
                               </button>
                             );
-                          })}
+                          });
+                        })()}
                       </div>
                     )}
                   </div>

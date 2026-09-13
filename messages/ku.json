@@ -209,10 +209,10 @@
     "calculatingShipping": "تێچووی گەیاندن دەژمێردرێت...",
     "recommendedBadge": "پێشنیارکراو بۆ داواکارییەکەت",
     "deliveryEstimate": {
-      "prime": "٢–٤ ڕۆژی کار",
-      "rapid": "٤–٦ ڕۆژی کار",
-      "xline": "٦–٩ ڕۆژی کار",
-      "ecoline": "٩–١٤ ڕۆژی کار",
+      "fastest": "٢–٤ ڕۆژی کار",
+      "fast": "٤–٦ ڕۆژی کار",
+      "slow": "٦–٩ ڕۆژی کار",
+      "slowest": "٩–١٤ ڕۆژی کار",
       "standard": "٧–١٤ ڕۆژی کار"
     },
     "regionIraq": "عێراق",

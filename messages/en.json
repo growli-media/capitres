@@ -209,10 +209,10 @@
     "calculatingShipping": "Calculating shipping…",
     "recommendedBadge": "Recommended for your order",
     "deliveryEstimate": {
-      "prime": "2–4 business days",
-      "rapid": "4–6 business days",
-      "xline": "6–9 business days",
-      "ecoline": "9–14 business days",
+      "fastest": "2–4 business days",
+      "fast": "4–6 business days",
+      "slow": "6–9 business days",
+      "slowest": "9–14 business days",
       "standard": "7–14 business days"
     },
     "regionIraq": "Iraq",

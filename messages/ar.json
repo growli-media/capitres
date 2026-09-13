@@ -209,10 +209,10 @@
     "calculatingShipping": "جارٍ حساب تكلفة الشحن…",
     "recommendedBadge": "الأنسب لطلبك",
     "deliveryEstimate": {
-      "prime": "٢–٤ أيام عمل",
-      "rapid": "٤–٦ أيام عمل",
-      "xline": "٦–٩ أيام عمل",
-      "ecoline": "٩–١٤ يوم عمل",
+      "fastest": "٢–٤ أيام عمل",
+      "fast": "٤–٦ أيام عمل",
+      "slow": "٦–٩ أيام عمل",
+      "slowest": "٩–١٤ يوم عمل",
       "standard": "٧–١٤ يوم عمل"
     },
     "regionIraq": "العراق",
