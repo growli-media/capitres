@@ -48,7 +48,10 @@ const RANKED_DELIVERY_ESTIMATE_KEYS = [
 ] as const;
 
 function deliveryEstimateKeyForRank(rank: number, tierCount: number): string {
-  if (tierCount <= 1) return RANKED_DELIVERY_ESTIMATE_KEYS[0];
+  // A lone tier (some destinations only have one GES service at all) has
+  // nothing to be ranked against — "slowest" would unfairly badmouth the
+  // only option available. Land on a middling estimate instead.
+  if (tierCount <= 1) return RANKED_DELIVERY_ESTIMATE_KEYS[1];
   const idx = Math.round((rank * (RANKED_DELIVERY_ESTIMATE_KEYS.length - 1)) / (tierCount - 1));
   return RANKED_DELIVERY_ESTIMATE_KEYS[idx];
 }
@@ -754,7 +757,7 @@ export default function CheckoutFlow({ countries }: { countries: GesCountry[] })
                           const sortedTiers = [...rateQuote.tiers].sort((a, b) => a.priceUsd - b.priceUsd);
                           return sortedTiers.map((tier, i) => {
                             const active = selectedTier === tier.name;
-                            const recommended = i === 0;
+                            const recommended = i === 0 && sortedTiers.length > 1;
                             const tierIqd = Math.round(tier.priceUsd * IQD_PER_USD);
                             return (
                               <button
