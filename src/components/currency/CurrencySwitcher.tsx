@@ -57,10 +57,22 @@ export default function CurrencySwitcher({
       onClick={() => setOpen((v) => !v)}
       aria-expanded={open}
       aria-label={`${t("selectCurrency")}: ${currency}`}
+      // currency starts as the "IQD" SSR default and is corrected from the
+      // visitor's saved cookie right after mount (see CurrencyProvider) —
+      // a deliberate, expected first-paint difference (the alternative,
+      // reading the cookie server-side, would force this statically
+      // generated layout dynamic on every request). suppressHydrationWarning
+      // tells React that's fine instead of discarding and regenerating the
+      // whole Header subtree over it, which was otherwise resetting
+      // sibling UI state (the mobile menu, form selects) on every load for
+      // any visitor whose saved currency isn't IQD.
+      suppressHydrationWarning
       className={`flex min-h-11 cursor-pointer items-center gap-1.5 px-2 text-sm font-semibold transition-colors ${toneClasses}`}
     >
       <CurrencyCircleDollar size={18} aria-hidden="true" />
-      <span className="uppercase">{currency}</span>
+      <span className="uppercase" suppressHydrationWarning>
+        {currency}
+      </span>
       {layout === "inline" ? (
         <CaretRight
           size={12}

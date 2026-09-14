@@ -88,10 +88,18 @@ export default function Header({
   }, [pathname]);
 
   // Close menus on navigation and lock body scroll for the mobile overlay.
+  // Keyed off the STRING value, not the searchParams object itself: that
+  // object isn't guaranteed referentially stable across re-renders (two
+  // renders for the same URL can hand back different instances), so
+  // depending on it directly reran this effect on renders that weren't a
+  // real navigation — including the very re-render triggered by opening
+  // the menu, immediately stomping mobileOpen back to false and making
+  // the menu impossible to reopen after any earlier navigation.
+  const searchParamsString = searchParams.toString();
   useEffect(() => {
     setPanel(null);
     setMobileOpen(false);
-  }, [pathname, searchParams]);
+  }, [pathname, searchParamsString]);
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
