@@ -7,6 +7,7 @@ import {
   CaretLeft,
   CircleNotch,
   Globe,
+  Info,
   LockSimple,
   ShieldCheck,
   Truck,
@@ -34,6 +35,16 @@ import type { GesCountry, GesRateQuote, GesTierName } from "@/lib/shipping/ges";
  * `displayName` is only ever shown to the customer. */
 export type LocalizedGesCountry = GesCountry & { displayName: string };
 import { FALLBACK_SHIPPING_METHOD } from "@/lib/shipping/constants";
+
+/** GES-confirmed transit-time ranges, per service tier — a fixed company
+ * SLA that holds regardless of destination (unlike price, which varies
+ * per country and isn't ordered consistently by tier name). */
+const DELIVERY_ESTIMATE_KEY: Record<GesTierName, string> = {
+  Prime: "deliveryEstimate.prime",
+  Rapid: "deliveryEstimate.rapid",
+  XLine: "deliveryEstimate.xline",
+  EcoLine: "deliveryEstimate.ecoline",
+};
 import { SHIPPING_RATE_INTL, SHIPPING_RATE_INTL_USD } from "@/lib/commerce/config";
 
 const GOVERNORATES = [
@@ -168,6 +179,24 @@ export default function CheckoutFlow({ countries }: { countries: LocalizedGesCou
   // customer already picked a different country) can't overwrite a
   // newer one that resolved first.
   const quoteRequestIdRef = useRef(0);
+
+  const [customsInfoOpen, setCustomsInfoOpen] = useState(false);
+  const customsInfoRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!customsInfoOpen) return;
+    function onPointerDown(e: PointerEvent) {
+      if (!customsInfoRef.current?.contains(e.target as Node)) setCustomsInfoOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setCustomsInfoOpen(false);
+    }
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [customsInfoOpen]);
 
   // A promo applied earlier in the cart drawer (before region was known)
   // might be restricted to the other region — price the order as if no
@@ -728,11 +757,11 @@ export default function CheckoutFlow({ countries }: { countries: LocalizedGesCou
                         aria-label={t("chooseShippingTitle")}
                         className="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-4"
                       >
-                        {(() => {
-                          const sortedTiers = [...rateQuote.tiers].sort((a, b) => a.priceUsd - b.priceUsd);
-                          return sortedTiers.map((tier, i) => {
+                        {[...rateQuote.tiers]
+                          .sort((a, b) => a.priceUsd - b.priceUsd)
+                          .map((tier) => {
                             const active = selectedTier === tier.name;
-                            const recommended = i === 0 && sortedTiers.length > 1;
+                            const recommended = tier.name === "Rapid";
                             const tierIqd = Math.round(tier.priceUsd * IQD_PER_USD);
                             return (
                               <button
@@ -757,13 +786,38 @@ export default function CheckoutFlow({ countries }: { countries: LocalizedGesCou
                                   </span>
                                 )}
                                 <span className="font-bold">{tier.name}</span>
+                                <span className={`text-xs ${active ? "text-paper/70" : "text-ink/50"}`}>
+                                  {t(DELIVERY_ESTIMATE_KEY[tier.name])}
+                                </span>
                                 <span className="price mt-1.5 text-base font-semibold">
                                   {formatCurrency(convertFromIqd(tierIqd, currency), currency, locale)}
                                 </span>
                               </button>
                             );
-                          });
-                        })()}
+                          })}
+                      </div>
+                    )}
+
+                    {!quoteLoading && !quoteError && rateQuote && (
+                      <div className="relative mt-4 flex items-center gap-1.5" ref={customsInfoRef}>
+                        <span className="text-[11px] font-normal text-ink/40">{t("customsDisclaimer")}</span>
+                        <button
+                          type="button"
+                          aria-expanded={customsInfoOpen}
+                          aria-label={t("customsDisclaimerMore")}
+                          onClick={() => setCustomsInfoOpen((v) => !v)}
+                          className="cursor-pointer text-ink/40 transition-colors hover:text-ink"
+                        >
+                          <Info size={14} aria-hidden="true" />
+                        </button>
+                        {customsInfoOpen && (
+                          <div
+                            role="note"
+                            className="absolute bottom-full left-0 mb-2 w-64 border border-line bg-white p-3 text-xs text-ink/70 shadow-sm rtl:right-0 rtl:left-auto"
+                          >
+                            {t("customsDisclaimerFull")}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

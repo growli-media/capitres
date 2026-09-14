@@ -208,6 +208,15 @@
     "standardShippingNote": "We don't have a courier partner rate for this destination yet — you'll get our standard international shipping rate instead.",
     "calculatingShipping": "Calculating shipping…",
     "recommendedBadge": "Recommended for your order",
+    "deliveryEstimate": {
+      "prime": "7–12 business days",
+      "rapid": "5–10 business days",
+      "xline": "8–14 business days",
+      "ecoline": "7–14 business days"
+    },
+    "customsDisclaimer": "Excludes customs delays",
+    "customsDisclaimerMore": "More about customs and logistics delays",
+    "customsDisclaimerFull": "These are courier transit estimates only. We're not responsible for customs holds, import duties, or other delays once a shipment reaches your country — if it's held up by local customs or the logistics provider, resolving it is your responsibility.",
     "regionIraq": "Iraq",
     "regionInternational": "Rest of the world",
     "chooseMethodTitle": "How would you like to pay?",
