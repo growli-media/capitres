@@ -7,7 +7,6 @@ import {
   CaretLeft,
   CircleNotch,
   Globe,
-  Info,
   LockSimple,
   ShieldCheck,
   Truck,
@@ -179,24 +178,6 @@ export default function CheckoutFlow({ countries }: { countries: LocalizedGesCou
   // customer already picked a different country) can't overwrite a
   // newer one that resolved first.
   const quoteRequestIdRef = useRef(0);
-
-  const [customsInfoOpen, setCustomsInfoOpen] = useState(false);
-  const customsInfoRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!customsInfoOpen) return;
-    function onPointerDown(e: PointerEvent) {
-      if (!customsInfoRef.current?.contains(e.target as Node)) setCustomsInfoOpen(false);
-    }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setCustomsInfoOpen(false);
-    }
-    document.addEventListener("pointerdown", onPointerDown);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("pointerdown", onPointerDown);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [customsInfoOpen]);
 
   // A promo applied earlier in the cart drawer (before region was known)
   // might be restricted to the other region — price the order as if no
@@ -799,25 +780,9 @@ export default function CheckoutFlow({ countries }: { countries: LocalizedGesCou
                     )}
 
                     {!quoteLoading && !quoteError && rateQuote && (
-                      <div className="relative mt-4 flex items-center gap-1.5" ref={customsInfoRef}>
-                        <span className="text-[11px] font-normal text-ink/40">{t("customsDisclaimer")}</span>
-                        <button
-                          type="button"
-                          aria-expanded={customsInfoOpen}
-                          aria-label={t("customsDisclaimerMore")}
-                          onClick={() => setCustomsInfoOpen((v) => !v)}
-                          className="cursor-pointer text-ink/40 transition-colors hover:text-ink"
-                        >
-                          <Info size={14} aria-hidden="true" />
-                        </button>
-                        {customsInfoOpen && (
-                          <div
-                            role="note"
-                            className="absolute bottom-full left-0 mb-2 w-64 border border-line bg-white p-3 text-xs text-ink/70 shadow-sm rtl:right-0 rtl:left-auto"
-                          >
-                            {t("customsDisclaimerFull")}
-                          </div>
-                        )}
+                      <div role="note" className="mt-4 border-2 border-ink p-4">
+                        <p className="text-sm font-bold">{t("customsDisclaimer")}</p>
+                        <p className="mt-1 text-xs font-normal text-ink/60">{t("customsDisclaimerFull")}</p>
                       </div>
                     )}
                   </div>
