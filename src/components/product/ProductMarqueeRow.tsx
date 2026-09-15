@@ -74,7 +74,17 @@ export default function ProductMarqueeRow({
     direction === "left" ? "motion-safe:animate-marquee" : "motion-safe:animate-marquee-reverse";
 
   return (
-    <div className="overflow-hidden">
+    // dir="ltr" here too, not just on the track below: the track is a
+    // shrink-to-fit box wider than this wrapper, and for an oversized
+    // block-level child in normal flow, which edge it rests against
+    // before overflowing is decided by the CONTAINING block's direction,
+    // not the child's own dir attribute. Left this wrapper to inherit
+    // the page's dir="rtl" and the track anchored to the right instead —
+    // same translateX(0 -> -50%) keyframes now sliding a right-anchored
+    // box further right-to-left, which pushed the visible window into
+    // the gap past both copies instead of looping through them, so the
+    // strip looked like it "ran out" of products and went blank.
+    <div className="overflow-hidden" dir="ltr">
       <div
         ref={trackRef}
         dir="ltr"
