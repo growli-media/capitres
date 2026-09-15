@@ -3,6 +3,8 @@ import { useTranslations } from "next-intl";
 import { InstagramLogo } from "@phosphor-icons/react/dist/ssr";
 import { Link } from "@/i18n/navigation";
 import { GIFT_CARDS_ENABLED } from "@/lib/commerce/config";
+import CurrencySwitcher from "@/components/currency/CurrencySwitcher";
+import LanguageSwitcher from "./LanguageSwitcher";
 import NewsletterForm from "./NewsletterForm";
 
 export default function Footer() {
@@ -95,7 +97,13 @@ export default function Footer() {
 
       {/* Bottom bar */}
       <div className="container-x flex flex-col gap-4 border-t border-paper/15 py-6 text-xs text-paper/50 md:flex-row md:items-center md:justify-between">
-        <p>{t("rights", { year })}</p>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <div className="flex items-center">
+            <CurrencySwitcher tone="paper" />
+            <LanguageSwitcher tone="paper" />
+          </div>
+          <p>{t("rights", { year })}</p>
+        </div>
         <div className="flex items-center gap-5">
           <span>{t("madeIn")}</span>
           <span aria-hidden="true">·</span>

@@ -464,6 +464,11 @@ export default function Header({
         inert={!mobileOpen}
       >
         <nav aria-label={tA11y("mainNav")} className="container-x py-8">
+          <div className="mb-8 space-y-4 border-b border-line pb-6 sm:hidden">
+            <CurrencySwitcher layout="inline" />
+            <LanguageSwitcher layout="inline" />
+          </div>
+
           <p className="text-eyebrow mb-4 text-ink/60">{t("shop")}</p>
           <ul className="space-y-1 border-b border-line pb-6">
             {shopLinks.map((l) => (
@@ -510,11 +515,6 @@ export default function Header({
               </li>
             ))}
           </ul>
-
-          <div className="mt-10 space-y-4 border-t border-line pt-6 sm:hidden">
-            <CurrencySwitcher layout="inline" />
-            <LanguageSwitcher layout="inline" />
-          </div>
         </nav>
       </div>
     </header>
