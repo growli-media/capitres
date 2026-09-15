@@ -99,7 +99,10 @@ export default function Footer() {
         <div className="flex items-center gap-5">
           <span>{t("madeIn")}</span>
           <span aria-hidden="true">·</span>
-          <span>{t("paymentNote")}</span>
+          <span className="flex items-center gap-1.5">
+            {t("paymentNote")}
+            <Image src="/brand/wayl-mark.svg" alt="" width={33} height={13} className="h-3 w-auto" />
+          </span>
           <a
             href="https://www.instagram.com/capitres"
             target="_blank"
