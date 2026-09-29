@@ -8,7 +8,7 @@ import type { ActivityEntry } from "@/lib/admin/activity";
 import { glassPanel, glassIconButton } from "../../glass";
 
 const LAST_SEEN_KEY = "capitres-admin-last-seen-activity";
-const POLL_MS = 20000;
+const POLL_MS = 60000;
 
 /** Messages are written to stand alone ("Updated category \"Tees\"") —
  * lowercase the first letter when prefixing the actor's name so the

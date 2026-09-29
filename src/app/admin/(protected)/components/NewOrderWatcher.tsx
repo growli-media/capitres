@@ -5,7 +5,7 @@ import { checkNewOrdersAction } from "../notifications-actions";
 import { useAdminToast } from "./AdminToastProvider";
 import { formatIQD } from "@/lib/money";
 
-const POLL_MS = 20000;
+const POLL_MS = 60000;
 
 /**
  * Silent poller, no UI of its own — fires the branded toast the moment a
