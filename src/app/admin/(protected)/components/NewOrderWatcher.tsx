@@ -29,10 +29,23 @@ export default function NewOrderWatcher() {
         showToast(`New order from ${a.customerName} — ${formatIQD(a.total, "en")}`);
       }
     }
-    const id = setInterval(poll, POLL_MS);
+    // Skip the DB round trip while this tab isn't the one on screen — a
+    // toast in a backgrounded tab was never visible anyway, so nothing is
+    // lost by not fetching for it. The moment the tab comes back into
+    // view we poll immediately (below) instead of waiting out the rest
+    // of the interval, so there's no gap in what you actually see.
+    function tick() {
+      if (document.visibilityState === "visible") poll();
+    }
+    const id = setInterval(tick, POLL_MS);
+    function onVisibilityChange() {
+      if (document.visibilityState === "visible") poll();
+    }
+    document.addEventListener("visibilitychange", onVisibilityChange);
     return () => {
       cancelled = true;
       clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
     };
   }, [showToast]);
 

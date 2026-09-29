@@ -61,10 +61,21 @@ export default function NotificationBell({ className }: { className?: string }) 
       if (!cancelled) setEntries(rows);
     }
     poll();
-    const id = setInterval(poll, POLL_MS);
+    // Same reasoning as NewOrderWatcher.tsx: the unread badge in a
+    // backgrounded tab isn't visible either way, so skip polling it
+    // while hidden and catch up immediately on refocus instead.
+    function tick() {
+      if (document.visibilityState === "visible") poll();
+    }
+    const id = setInterval(tick, POLL_MS);
+    function onVisibilityChange() {
+      if (document.visibilityState === "visible") poll();
+    }
+    document.addEventListener("visibilitychange", onVisibilityChange);
     return () => {
       cancelled = true;
       clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
     };
   }, []);
 
