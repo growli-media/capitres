@@ -218,7 +218,7 @@ export default function AddToCart({ product }: { product: Product }) {
             )}
           </p>
           <div
-            className="flex flex-wrap gap-2"
+            className="flex flex-wrap gap-2 ps-1"
             role="radiogroup"
             aria-label={t("color")}
           >
